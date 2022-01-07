@@ -1,0 +1,31 @@
+{
+  "name": "tiimio-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "nodemon": "npm run dev --host 0.0.0.0 --disable-host-check"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@uppy/companion": "^3.1.4",
+    "aws-sdk": "^2.1048.0",
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.19.1",
+    "coconutjs": "^3.0.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^6.0.1",
+    "express-session": "^1.17.2",
+    "jsonwebtoken": "^8.5.1",
+    "mysql": "^2.18.1",
+    "ngrok": "^4.2.2",
+    "stripe": "^8.195.0",
+    "uuid": "^8.3.2"
+  }
+}
