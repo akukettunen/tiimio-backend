@@ -11,21 +11,23 @@ const   express = require('express')
         companion = require('./utils/uppy/index')
         session = require('express-session')
         user_middleware = require('./middleware/userMiddleware')
+        expressWs = require('express-ws')(app);
 
 app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(cors())
 app.use(user_middleware)
 
-console.log(errorMiddleware)
-// TODO
+// TODO: change secret
 app.use(session({ secret: 'some secrety secret' }))
 
 app.use('/companion', companion)
 
 const auth = require('./routes/auth')
+const plan = require('./routes/plan')
 const video = require('./routes/video')
 const stripe = require('./routes/stripe')
+const team = require('./routes/team')
 
 // rate limiter needs this for usage in heroku
 app.set('trust proxy', 1);
@@ -36,6 +38,8 @@ app.use(requestMethod)
 app.use('/auth', auth)
 app.use('/video', video)
 app.use('/stripe', stripe)
+app.use('/team', team)
+app.use('/plan', plan)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);

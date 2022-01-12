@@ -1,10 +1,10 @@
 const { query } = require('./index.js')
 
-const addUser = ({ email, full_name, tiimio_admin, password_hash }) => {
+const addUser = ({ email, full_name, password_hash }) => {
   return query(`
-    INSERT INTO user (email, full_name, tiimio_admin, password, joined)
-    VALUES( "?", "?", ?, "?", CURDATE() );
-  `, [email, full_name, tiimio_admin, password_hash])
+    INSERT INTO user (email, full_name, password, joined)
+    VALUES( ?, ?, ?, CURDATE() );
+  `, [email, full_name, password_hash])
 }
 
 const getUserByEmail = email => {

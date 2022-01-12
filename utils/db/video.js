@@ -18,9 +18,15 @@ const teamVideos = id => {
 const videoDone = ({ thumb_url, lazy_thumb_url, job_id, mp4_url }) => {
   return query(`
     UPDATE video
-    SET thumb_url = ?, lazy_thumb_url = ?, mp4_url = ?
+    SET thumb_url = ?, lazy_thumb_url = ?, mp4_url = ?, encoded = true
     WHERE job_id = ?;
   `, [thumb_url, lazy_thumb_url, mp4_url, job_id])
 }
 
-module.exports = { postVideo, teamVideos, videoDone }
+const videoById = id => {
+  return query(`
+    SELECT * FROM video
+    WHERE id = ?;
+  `, [id])
+}
+module.exports = { postVideo, teamVideos, videoDone, videoById }

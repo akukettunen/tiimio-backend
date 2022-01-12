@@ -19,6 +19,9 @@ const init = async () => {
     DROP TABLE IF EXISTS league;
   `)
   await query(`
+    DROP TABLE IF EXISTS plan;
+  `)
+  await query(`
     DROP TABLE IF EXISTS team;
   `)
   await query(`
@@ -66,6 +69,33 @@ const init = async () => {
   `)
 
   await query(`
+    CREATE TABLE IF NOT EXISTS plan(
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      created DATE NOT NULL,
+      stripe_price_id VARCHAR(100) NOT NULL,
+      short_name VARCHAR(10) NOT NULL,
+      full_name VARCHAR(40) NOT NULL,
+      description VARCHAR(1000) NOT NULL,
+      price INT NOT NULL
+    );
+  `)
+
+  await query(`
+      INSERT INTO plan (created, stripe_price_id, short_name, full_name, description, price)
+      VALUES ( CURDATE(), '123', 'test', 'Test Plan', 'This is the test plan', 0 );
+  `)
+
+  await query(`
+      INSERT INTO plan (created, stripe_price_id, short_name, full_name, description, price)
+      VALUES ( CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
+  `)
+
+  await query(`
+      INSERT INTO plan (created, stripe_price_id, short_name, full_name, description, price)
+      VALUES ( CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
+  `)
+
+  await query(`
     INSERT INTO league (
       created, league_name, sport_id
     ) VALUES (
@@ -77,10 +107,10 @@ const init = async () => {
     CREATE TABLE IF NOT EXISTS user(
       email VARCHAR(300) NOT NULL PRIMARY KEY,
       full_name VARCHAR(200) NOT NULL,
-      tiimio_admin BOOLEAN NOT NULL,
+      tiimio_admin BOOLEAN NOT NULL DEFAULT false,
       password VARCHAR(300) NOT NULL,
-      email_confirmed BOOLEAN NOT NULL,
-      stripe_customer_id VARCHAR(100) NOT NULL,
+      email_confirmed BOOLEAN NOT NULL DEFAULT false,
+      stripe_customer_id VARCHAR(100),
       joined DATE NOT NULL
     );
   `)
@@ -102,8 +132,8 @@ const init = async () => {
   INSERT INTO team (
     team_name, league_id, sport_id, created, join_code
     ) VALUES 
-    ( "Testi-tiimi", NULL, 1, CURDATE(), "1234-1234" ),
-    ( "Koskenkorvan Urheilijat", NULL, 1, CURDATE(), "A6G6-SIJD" )
+    ( "Testi-tiimi", NULL, 1, CURDATE(), "123456" ),
+    ( "Koskenkorvan Urheilijat", NULL, 1, CURDATE(), "A7RHSK" )
     ;
   `)
 
@@ -161,17 +191,19 @@ const init = async () => {
       league_admin BOOLEAN,
       user_joined_team DATE,
       stripe_id VARCHAR(100),
+      current_plan INT NOT NULL,
       FOREIGN KEY (team_id) REFERENCES team(id),
-      FOREIGN KEY (email) REFERENCES user(email)
+      FOREIGN KEY (email) REFERENCES user(email),
+      FOREIGN KEY (current_plan) REFERENCES plan(id)
     );
   `)
 
   await query(`
     INSERT INTO user_team (
-      email, team_id, team_admin, team_orderer, league_admin, user_joined_team, stripe_id
+      email, team_id, team_admin, team_orderer, league_admin, user_joined_team, stripe_id, current_plan
     ) VALUES
-      ( "aku@kettunen.com", 1, true, true, true, CURDATE(), '${customer1.id}' ),
-      ( "aku@kettunen.com", 2, false, false, false, CURDATE(), NULL )
+      ( "aku@kettunen.com", 1, true, true, true, CURDATE(), '${customer1.id}', 1 ),
+      ( "aku@kettunen.com", 2, false, false, false, CURDATE(), NULL, 1 )
     ;
   `)
 

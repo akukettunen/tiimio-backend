@@ -1,5 +1,4 @@
 require('dotenv').config()
-const { ConnectContactLens } = require('aws-sdk');
 const Coconut = require('coconutjs');
 
 const coconut = new Coconut.Client(process.env.COCONUT_API_KEY);
@@ -31,4 +30,13 @@ const createJob = params => {
   })
 }
 
-module.exports = { coconut, createJob };
+const jobState = job_id => {
+  return new Promise((resolve, reject) => {
+    coconut.Job.retrieve(job_id, (job, err) => {
+      if(err) reject(err)
+      else resolve(job)
+    });
+  })
+}
+
+module.exports = { coconut, createJob, jobState };

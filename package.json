@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "nodemon": "npm run dev --host 0.0.0.0 --disable-host-check"
+    "nodemon": "node index.js  --host 0.0.0.0 --disable-host-check"
   },
   "author": "",
   "license": "ISC",
@@ -22,6 +22,7 @@
     "express-async-errors": "^3.1.1",
     "express-rate-limit": "^6.0.1",
     "express-session": "^1.17.2",
+    "express-ws": "^5.0.2",
     "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1",
     "ngrok": "^4.2.2",

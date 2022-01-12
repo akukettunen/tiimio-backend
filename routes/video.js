@@ -1,7 +1,7 @@
-const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-      db = require('../utils/db/index')
+const express = require('express');
       router = express.Router()
+      db = require('../utils/db/index')
       bcrypt = require('bcrypt');
       jwt = require('jsonwebtoken')
       cookieParser = require('cookie-parser')
@@ -16,21 +16,20 @@ const { v4: uuidv4 } = require('uuid');
 router.post('/', async (req, res) => {
   const id = uuidv4()
 
-  let url
-  try {
-    url = await ngrok.connect({
-      authtoken: '23Kxqjxnw95qyK4s3L9Wblm4lUP_2onZXof3fyYzo13jpL9Hs',
-      addr: 4040
-    });
-  } catch(err) {
-    console.log(err)
+  var url
+  if(process.env.ENVIRONMENT == 'dev') {
+    try {
+      url = await ngrok.connect({
+        authtoken: '23Kxqjxnw95qyK4s3L9Wblm4lUP_2onZXof3fyYzo13jpL9Hs',
+        addr: 4040
+      });
+    } catch(err) {
+      throw new Error('ngrok tunnel failed: ', err)
+    }
   }
 
-  const params = 
-    {
-      "input": {
-        "url": req.body.original_url
-      },
+  const params = {
+      "input": { "url": req.body.original_url },
       "outputs": coconut_configs.normal(`/${id}`),
       "storage": {
         'service': 's3',
@@ -44,9 +43,7 @@ router.post('/', async (req, res) => {
       'notification': {
         'type': 'http',
         'url': `${url}/video/webhook`,
-        'metadata': {
-          id
-        }
+        'metadata': { id }
       }
     }
 
@@ -54,10 +51,10 @@ router.post('/', async (req, res) => {
   try {
     job = await coconut.createJob(params)
   } catch(err) {
-    console.log(err)
+    throw new Error('coconut job create failed')
   }
 
-  let video = await video_db.postVideo({
+  await video_db.postVideo({
     ...req.body,
     id,
     job_id: job.id,
@@ -65,7 +62,25 @@ router.post('/', async (req, res) => {
     uploader: req.tiimio_user.email
   })
 
+  let [ video ] = await video_db.videoById(id)
+
   res.send({ video, job })
+})
+
+router.get('/:id/encoding-state', async (req, res) => {
+  let [ video ] = await video_db.videoById(req.params.id)
+
+  let job_data;
+
+  switch(video.service) {
+    case 'coconut':
+      job_data = await coconut.jobState(video.job_id)
+      break;
+    default:
+      throw new Error('job not found')
+  }
+
+  res.json(job_data)
 })
 
 router.get('/team/:id', async (req, res) => {
@@ -73,6 +88,16 @@ router.get('/team/:id', async (req, res) => {
 
   let videos = await video_db.teamVideos(req.params.id)
   res.send(videos)
+})
+
+router.get('/:id', async (req, res) => {
+  // TODO: vain oman joukkueen videot
+
+  let [ video ] = await video_db.videoById(req.params.id)
+
+  if(!video) throw new Error('video not found')
+
+  res.json( video )
 })
 
 router.post('/webhook', (req, res) => {
