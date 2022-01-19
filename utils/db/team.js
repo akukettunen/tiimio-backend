@@ -15,6 +15,14 @@ const userTeams = email => {
   `, [email])
 }
 
+const teamUsers = team_id => {
+  return query(`
+    SELECT user.email, full_name, team_admin, team_orderer, tiimio_admin, email_confirmed, joined FROM user_team
+    LEFT JOIN user ON user.email = user_team.email
+    WHERE team_id = ?;
+  `, [team_id])
+}
+
 const userTeamByEmailAndTeamId = ({ email, team_id }) => {
   return query(`
     SELECT * FROM user_team
@@ -36,6 +44,13 @@ const teamByJoinCode = code => {
   `, [code.toString()])
 }
 
+const teamById = id => {
+  return query(`
+    SELECT * FROM team
+    WHERE id = ?;
+  `, [id])
+}
+
 const addUserToTeam = ({ email, team_id }) => {
   query(`
     INSERT INTO user_team (
@@ -44,4 +59,27 @@ const addUserToTeam = ({ email, team_id }) => {
   `, [email, team_id])
 }
 
-module.exports = { addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+const changeJoinCode = (team_id, new_code) => {
+  query(`
+    UPDATE team
+    SET join_code = ?
+    WHERE id = ?;
+  `, [new_code, team_id])
+}
+
+const deleteUserFromTeam = (team_id, email) => {
+  return query(`
+    DELETE FROM user_team
+    WHERE email = ? AND team_id = ?;
+  `, [email, team_id])
+}
+
+const setAdminStatus = (team_id, email, team_admin) => {
+  return query(`
+    UPDATE user_team
+    SET team_admin = ?
+    WHERE team_id = ? AND email = ?;
+  `, [team_admin, team_id, email])
+}
+
+module.exports = { setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }

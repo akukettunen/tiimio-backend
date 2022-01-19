@@ -39,6 +39,10 @@ const init = async () => {
   `)
 
   await query(`
+    DROP TABLE IF EXISTS clip;
+  `)
+
+  await query(`
     SET FOREIGN_KEY_CHECKS = 1;
   `)
 
@@ -162,6 +166,19 @@ const init = async () => {
     );
   `)
 
+  await query(`
+      CREATE TABLE IF NOT EXISTS clip(
+        id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+        starttime DECIMAL(15, 5) NOT NULL,
+        endtime DECIMAL(15, 5) NOT NULL,
+        video_id VARCHAR(50) NOT NULL,
+        title VARCHAR(50),
+        description VARCHAR(1000) DEFAULT '',
+        created DATE NOT NULL,
+        FOREIGN KEY (video_id) REFERENCES video(id)
+      );
+  `);
+
   const hash = await bcrypt.hash(plainText, saltRounds)
 
   await query(`
@@ -191,7 +208,7 @@ const init = async () => {
       league_admin BOOLEAN,
       user_joined_team DATE,
       stripe_id VARCHAR(100),
-      current_plan INT NOT NULL,
+      current_plan INT,
       FOREIGN KEY (team_id) REFERENCES team(id),
       FOREIGN KEY (email) REFERENCES user(email),
       FOREIGN KEY (current_plan) REFERENCES plan(id)
