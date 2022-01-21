@@ -33,15 +33,21 @@ const init = async () => {
   await query(`
     DROP TABLE IF EXISTS user_team;
   `)
-
   await query(`
     DROP TABLE IF EXISTS video;
   `)
-
   await query(`
     DROP TABLE IF EXISTS clip;
   `)
-
+  await query(`
+    DROP TABLE IF EXISTS object_tag;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS tag_group;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS tag;
+  `)
   await query(`
     SET FOREIGN_KEY_CHECKS = 1;
   `)
@@ -178,6 +184,55 @@ const init = async () => {
         FOREIGN KEY (video_id) REFERENCES video(id)
       );
   `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS tag_group(
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      group_name VARCHAR(100) NOT NULL,
+      team_id INT,
+      league_id INT,
+
+      CONSTRAINT CHECK (team_id IS NOT NULL OR league_id IS NOT NULL),
+      FOREIGN KEY (league_id) REFERENCES league(id),
+      FOREIGN KEY (team_id) REFERENCES team(id)
+    );
+  `)
+
+  await query(`
+    INSERT INTO tag_group (
+      group_name, team_id
+      ) VALUES 
+      ( "Players", 1 ),
+      ( "Events", 1 )
+      ;
+  `)
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS tag(
+        group_id INT NOT NULL,
+        tag_name VARCHAR(50) NOT NULL,
+        FOREIGN KEY (group_id) REFERENCES tag_group(id)
+      );
+  `)
+
+  await query(`
+    INSERT INTO tag (
+      group_id, tag_name
+      ) VALUES 
+      ( 1, "Mörkö Marko" ),
+      ( 1, "Jari Halttunen" )
+      ;
+  `)
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS object_tag(
+        clip_id INT,
+        video_id VARCHAR(50),
+        CONSTRAINT CHECK (clip_id IS NOT NULL OR video_id IS NOT NULL),
+        FOREIGN KEY (clip_id) REFERENCES clip(id),
+        FOREIGN KEY (video_id) REFERENCES video(id)
+      );
+  `)
 
   const hash = await bcrypt.hash(plainText, saltRounds)
 

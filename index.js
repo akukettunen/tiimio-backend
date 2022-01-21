@@ -29,6 +29,7 @@ const video = require('./routes/video')
 const stripe = require('./routes/stripe')
 const team = require('./routes/team')
 const clip = require('./routes/clip')
+const tag = require('./routes/tag')
 
 // rate limiter needs this for usage in heroku
 app.set('trust proxy', 1);
@@ -42,6 +43,7 @@ app.use('/stripe', stripe)
 app.use('/team', team)
 app.use('/plan', plan)
 app.use('/clip', clip)
+app.use('/tag', tag)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);
