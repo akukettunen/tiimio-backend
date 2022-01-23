@@ -74,6 +74,8 @@ router.post('/', async (req, res) => {
 router.get('/:id/encoding-state', async (req, res) => {
   let [ video ] = await video_db.videoById(req.params.id)
 
+  if(!video) throw new Error('video not found')
+
   let job_data;
 
   switch(video.service) {
@@ -107,8 +109,6 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/webhook', (req, res) => {
-  console.log('Webhook called: ', req.body)
-
   switch (req.body.event) {
     case 'job.completed':
       hook_helper.jobDone(req.body)

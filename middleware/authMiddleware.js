@@ -16,4 +16,19 @@ const user = (req, res, next) => {
   next()
 }
 
-module.exports = { user }
+const is_in_team = (team_id) => {
+  return (req, res, next) => {
+    const team_id = req.body.team_id || req.params.team_id || team_id
+    if(!team_id) throw new Error('no team_id present')
+  
+    const teams = req.tiimio_user.teams
+    if(!teams) throw new Error('no user teams found')
+  
+    const is_in = teams.map(team => team.id).includes(parseInt(team_id))
+    if(!is_in) throw new Error('wrong team')
+  
+    next()
+  }
+}
+
+module.exports = { user, is_in_team }

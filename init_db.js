@@ -209,6 +209,7 @@ const init = async () => {
 
   await query(`
       CREATE TABLE IF NOT EXISTS tag(
+        id INT PRIMARY KEY AUTO_INCREMENT,
         group_id INT NOT NULL,
         tag_name VARCHAR(50) NOT NULL,
         FOREIGN KEY (group_id) REFERENCES tag_group(id)
