@@ -22,7 +22,6 @@
     "express-async-errors": "^3.1.1",
     "express-rate-limit": "^6.0.1",
     "express-session": "^1.17.2",
-    "express-ws": "^5.0.2",
     "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1",
     "ngrok": "^4.2.2",

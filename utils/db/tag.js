@@ -43,6 +43,12 @@ const tagById = id => {
   `, [id])
 }
 
+const deleteObjectTagById = id => {
+  return query(`
+    DELETE FROM object_tag
+    WHERE tag_id = ?;
+  `, [id])
+} 
 const deleteById = id => {
   return query(`
     DELETE FROM tag
@@ -51,4 +57,4 @@ const deleteById = id => {
 }
 
 
-module.exports = { deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

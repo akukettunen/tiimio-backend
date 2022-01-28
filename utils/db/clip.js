@@ -14,10 +14,21 @@ const clipById = id => {
   `, [id])
 }
 
+const batchAddTag = (clip_id, tag_ids) => {
+  return query(`
+    INSERT INTO object_tag( clip_id, tag_id )
+    VALUES ${tag_ids.map(id => `(${clip_id}, ${id})`)};
+  `)
+}
+
 const videoClips = id => {
   return query(`
-    SELECT * FROM clip
-    WHERE video_id = ?;
+    SELECT *, COUNT(object_tag.clip_id) as num_of_tags FROM clip
+    LEFT JOIN object_tag
+    ON clip.id = object_tag.clip_id
+    WHERE clip.video_id = ?
+    GROUP BY clip.id;
   `, [id])
 }
-module.exports = { videoClips, addClip, clipById }
+
+module.exports = { batchAddTag, videoClips, addClip, clipById }

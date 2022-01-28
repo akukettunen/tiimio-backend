@@ -9,18 +9,21 @@ const express = require('express')
       logger = require('../utils/logger')
       clip_db = require('../utils/db/clip')
       require('express-async-errors');
-      const { user } = require('../middleware/authMiddleware')
+      const { user, is_in_team } = require('../middleware/authMiddleware')
 
 router.post('/', user, async (req, res) => {
+  const { title, starttime, endtime, video_id, description, tags } = req.body
   // TOOD: check that clip is saved to same team
+  if(!title || !starttime || !endtime || !video_id ) throw new Error('bad request')
   
   let added = await clip_db.addClip(req.body)
 
   let [ clip ] = await clip_db.clipById(added.insertId)
-
   if(!clip) throw new Error('added clip not found')
+  
+  if(tags && tags.length) await clip_db.batchAddTag(clip.id, tags)
 
-  res.json(clip)
+  res.json({...clip, num_of_tags: tags.length })
 })
 
 

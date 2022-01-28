@@ -1,4 +1,6 @@
 require('dotenv').config()
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_API_KEY);
 const express = require('express');
       db = require('../utils/db/index')
       router = express.Router()
@@ -12,9 +14,8 @@ const express = require('express');
       user_db = require('../utils/db/user')
       coconut = require('../utils/coconut/index')
       coconut_configs = require('../utils/coconut/configs')
-      stripe = require('stripe')(process.env.STRIPE_SECRET_API_KEY);
       //TODO
-      const endpointSecret = 'whsec_Wlnv0c0BiANLlcX3ApAyVCSphmLCkMTT'
+      // const endpointSecret = 'whsec_Wlnv0c0BiANLlcX3ApAyVCSphmLCkMTT'
 
 router.post('/create-customer-portal-session', async (req, res) => {
 
@@ -47,9 +48,8 @@ router.post('/create-checkout-session', async (req, res) => {
   if(!req.body.team_id) throw new Error('team_id missing')
   let success_url = req.body.success_url;
   let cancel_url = req.body.cancel_url;
-  console.log(req.body)
 
-  let user_team = await team_db.userTeamByEmailAndTeamId({
+  let [ user_team ] = await team_db.userTeamByEmailAndTeamId({
     team_id: req.body.team_id,
     email: req.tiimio_user.email
   })
@@ -68,7 +68,7 @@ router.post('/create-checkout-session', async (req, res) => {
       },
     ],
     // todo ??
-    customer: user_team[0].stripe_id,
+    customer: user_team.stripe_id,
     mode: 'subscription',
     success_url: success_url || `http://localhost:8080/success.html?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: cancel_url || `http://localhost:8080/cancel.html`,

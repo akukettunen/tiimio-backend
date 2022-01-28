@@ -12,7 +12,7 @@ const express = require('express');
       require('express-async-errors');
       const { user, is_in_team } = require('../middleware/authMiddleware');
 
-router.get('/team/:team_id', user, is_in_team, async (req, res) => {
+router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
 
   let groups = await tag_db.teamGroups(req.params.team_id)
@@ -25,7 +25,7 @@ router.get('/team/:team_id', user, is_in_team, async (req, res) => {
   res.json(groups)
 })
 
-router.post('/group', user, is_in_team, async (req, res) => {
+router.post('/group', user, is_in_team(), async (req, res) => {
   const { team_id, group_name } = req.body
 
   if(!team_id || !group_name ) throw new Error('bad request')
@@ -42,20 +42,15 @@ router.post('/group', user, is_in_team, async (req, res) => {
   res.json({...tag_group, tags: []})
 })
 
-router.delete('/:id', user, async (req, res) => {
-  // TODO: own team only
-  if(!req.params.id) throw new Error('bad request')
-
-  let del_data = await tag_bd.deleteById(req.params.id)
-
-  res.json('ok!')
-})
-
 router.post('/', user, async (req, res) => {
-  // TODO: own team only
   const { tag_name, group_id } = req.body
 
   if( !tag_name || !group_id) throw new Error('bad request')
+  
+  let [ group ] = await tag_db.tagGroupById(group_id)
+  if(!group) throw new Error('group not found')
+
+  is_in_team(group.team_id)
 
   let add_info = await tag_db.createTag({
     tag_name,
@@ -67,6 +62,20 @@ router.post('/', user, async (req, res) => {
   if(!tag) throw new Error('tag not found :(')
 
   res.json(tag)
+})
+
+router.delete('/:tag_id', async (req, res) => {
+  let [ tag ] = await tag_db.tagById(req.params.tag_id)
+  if(!tag) throw new Error('tag not found')
+  let [ group ] = await tag_db.tagGroupById(tag.group_id)
+  if(!group) throw new Error('group not found')
+
+  is_in_team(group.team_id)
+
+  await tag_db.deleteObjectTagById(req.params.tag_id)
+  await tag_db.deleteById(req.params.tag_id)
+
+  res.send('ok!')
 })
 
 

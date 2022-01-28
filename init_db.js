@@ -229,9 +229,10 @@ const init = async () => {
       CREATE TABLE IF NOT EXISTS object_tag(
         clip_id INT,
         video_id VARCHAR(50),
-        CONSTRAINT CHECK (clip_id IS NOT NULL OR video_id IS NOT NULL),
+        tag_id INT NOT NULL,
         FOREIGN KEY (clip_id) REFERENCES clip(id),
-        FOREIGN KEY (video_id) REFERENCES video(id)
+        FOREIGN KEY (video_id) REFERENCES video(id),
+        FOREIGN KEY (tag_id) REFERENCES tag(id)
       );
   `)
 

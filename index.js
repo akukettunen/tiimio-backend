@@ -11,7 +11,6 @@ const   express = require('express')
         companion = require('./utils/uppy/index')
         session = require('express-session')
         user_middleware = require('./middleware/userMiddleware')
-        expressWs = require('express-ws')(app);
 
 app.use(bodyParser.json())
 app.use(cookieParser())
