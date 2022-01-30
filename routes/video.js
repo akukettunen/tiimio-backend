@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const express = require('express');
       router = express.Router()
       db = require('../utils/db/index')
-      bcrypt = require('bcrypt');
+      bcrypt = require('bcryptjs');
       jwt = require('jsonwebtoken')
       cookieParser = require('cookie-parser')
       router.use(cookieParser())

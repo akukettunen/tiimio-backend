@@ -4,7 +4,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_API_KEY);
 const express = require('express');
       db = require('../utils/db/index')
       router = express.Router()
-      bcrypt = require('bcrypt');
+      bcrypt = require('bcryptjs');
       jwt = require('jsonwebtoken')
       cookieParser = require('cookie-parser')
       router.use(cookieParser())

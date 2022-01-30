@@ -1,7 +1,7 @@
 const express = require('express')
       db = require('../utils/db/index')
       router = express.Router()
-      bcrypt = require('bcrypt')
+      bcrypt = require('bcryptjs')
       saltRounds = 10;
       jwt = require('jsonwebtoken')
       cookieParser = require('cookie-parser')
