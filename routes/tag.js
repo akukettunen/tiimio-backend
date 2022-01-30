@@ -42,6 +42,22 @@ router.post('/group', user, is_in_team(), async (req, res) => {
   res.json({...tag_group, tags: []})
 })
 
+router.put('/group/:group_id/name', user, async (req, res) => {
+  if(!req.body.group_name) throw new Error('bad request')
+
+  await tag_db.updateTagGroupName({ id: req.params.group_id, name: req.body.group_name })
+
+  res.json('ok!')
+})
+
+router.put('/:tag_id/name', user, async (req, res) => {
+  if(!req.body.tag_name) throw new Error('bad request')
+
+  await tag_db.updateTagName({ id: req.params.tag_id, name: req.body.tag_name })
+
+  res.json('ok!')
+})
+
 router.post('/', user, async (req, res) => {
   const { tag_name, group_id } = req.body
 

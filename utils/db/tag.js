@@ -36,6 +36,22 @@ const tagGroupById = id => {
   `, [id])
 }
 
+const updateTagGroupName = ({ name, id }) => {
+  return query(`
+    UPDATE tag_group
+    SET group_name = ?
+    WHERE id = ?;
+  `, [name, id])
+}
+
+const updateTagName = ({ name, id }) => {
+  return query(`
+    UPDATE tag
+    SET tag_name = ?
+    WHERE id = ?;
+  `, [name, id])
+}
+
 const tagById = id => {
   return query(`
     SELECT * FROM tag
@@ -57,4 +73,4 @@ const deleteById = id => {
 }
 
 
-module.exports = { deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
