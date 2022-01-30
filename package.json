@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "nodemon": "node index.js  --host 0.0.0.0 --disable-host-check",
     "start": "node index.js   --host 0.0.0.0 --disable-host-check",
-    "build": "would have build here..."
+    "build": "echo would have build here..."
   },
   "author": "",
   "license": "ISC",
