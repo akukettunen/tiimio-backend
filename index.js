@@ -1,7 +1,7 @@
+require('dotenv').config()
 const   express = require('express')
         app = express()
         cors = require('cors')
-        require('dotenv').config()
         bodyParser = require('body-parser')
         cookieParser = require('cookie-parser')
         // rateLimit = require("express-rate-limit")
@@ -46,6 +46,10 @@ app.use('/tag', tag)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);
+
+app.get('/', (req, res) => {
+    res.send('<h1>Welcome to tiimi api!</h1>')
+})
 
 app.use(errorMiddleware)
 
