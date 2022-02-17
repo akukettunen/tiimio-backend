@@ -14,4 +14,16 @@ const pool = mysql.createPool(databaseConfig)
 const query = promisify.promisify(pool.query).bind(pool)
 const promisePoolEnd = promisify.promisify(pool.end).bind(pool)
 
-module.exports = { query, promisePoolEnd, databaseConfig };
+const deleteObjectById = (table, id) => {
+  return query(`
+    DELETE FROM ?
+    WHERE id = ?;
+  `, table, id)
+}
+
+module.exports = {
+  query,
+  promisePoolEnd,
+  databaseConfig,
+  deleteObjectById
+};

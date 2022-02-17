@@ -96,6 +96,10 @@ router.get('/team/:id', async (req, res) => {
   res.send(videos)
 })
 
+router.delete('/:id', (req, res) => {
+  
+})
+
 router.get('/:id', async (req, res) => {
   // TODO: vain oman joukkueen videot
 
