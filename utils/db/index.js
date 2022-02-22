@@ -21,6 +21,14 @@ const deleteObjectById = (table, id) => {
   `, table, id)
 }
 
+// query('SET time_zone = "+00:00";')
+//   .then(e => {
+//     console.log('DB timezone set to zero ')
+//   })
+//   .catch(e => {
+//     throw new Error(e)
+//   })
+
 module.exports = {
   query,
   promisePoolEnd,

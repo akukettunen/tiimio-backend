@@ -2,7 +2,7 @@
 const stripe = require('./utils/stripe/index')
 
 const { query, promisePoolEnd, databaseConfig } = require('./utils/db/index')
-      bcrypt = require('bcrypt')
+      bcrypt = require('bcryptjs')
       saltRounds = 10;
       plainText = 'secret';
 const { v4: uuidv4 } = require('uuid');
@@ -47,6 +47,9 @@ const init = async () => {
   `)
   await query(`
     DROP TABLE IF EXISTS tag;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS folder;
   `)
   await query(`
     SET FOREIGN_KEY_CHECKS = 1;
@@ -279,6 +282,19 @@ const init = async () => {
       ( "aku@kettunen.com", 1, true, true, true, CURDATE(), '${customer1.id}', 1 ),
       ( "aku@kettunen.com", 2, false, false, false, CURDATE(), NULL, 1 )
     ;
+  `)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS folder(
+      id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+      team_id INT NOT NULL,
+      name VARCHAR(50) NOT NULL,
+      created TIMESTAMP NOT NULL,
+      parent INT,
+      position INT,
+      FOREIGN KEY (parent) REFERENCES folder(id),
+      FOREIGN KEY (team_id) REFERENCES team(id)
+    );
   `)
 
 
