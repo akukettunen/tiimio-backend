@@ -38,8 +38,41 @@ router.post('/', user, async (req, res) => {
   }
 
   const addData = await folder_db.addFolder(folder)
-  const addedFolder = await folder_db.byId(addData.insertId)
+  const [ addedFolder ] = await folder_db.byId(addData.insertId)
   res.json(addedFolder)
+})
+
+router.put('/:id', user, async (req, res) => {
+  // TODO parent cant be one of children or self
+  is_in_team()
+
+  const folder = req.body.folder;
+
+  if(!folder.id || !folder.name) throw new Error('bad request')
+
+  const fol = {
+    ...req.body.folder,
+    id: req.params.id
+  }
+
+  await folder_db.updateFolder(folder)
+  const [ updated ] = await folder_db.byId(folder.id)
+
+  res.json(updated)
+})
+
+router.delete('/:id', user, async (req, res) => {
+  // TODO should delete children also
+
+  if(!req.params.id) throw new Error('bad request')
+  const [ folder ] = await folder_db.byId(req.params.id)
+  if(!folder?.id) throw new Error('bad request')
+
+  is_in_team(folder.team_id)
+
+  await folder_db.deleteById(req.params.id)
+
+  res.json({id: folder.id})
 })
 
 module.exports = router;

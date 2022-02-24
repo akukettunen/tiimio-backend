@@ -25,4 +25,19 @@ const byId = id => {
   `, [id])
 }
 
-module.exports = { byId, byTeamId, addFolder }
+const updateFolder = ({ id, name, parent, position }) => {
+  return query(`
+    UPDATE folder
+    SET name = ?, parent = ?, position = ?
+    WHERE id = ?;
+  `, [ name, parent, position, id ])
+}
+
+const deleteById = id => {
+  return query(`
+    DELETE FROM folder
+    WHERE id = ?;
+  `, [id])
+}
+
+module.exports = { byId, byTeamId, addFolder, updateFolder, deleteById }
