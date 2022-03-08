@@ -1,3 +1,4 @@
+const { user } = require('../middleware/authMiddleware')
 const express = require('express')
       db = require('../utils/db/index')
       router = express.Router()
@@ -83,6 +84,31 @@ router.post('/signin', async (req, res) => {
   )
     
   res.json({ token })
+})
+
+router.get('/refresh', user, async (req, res) => {
+  console.log('GET /auth/refresh')
+  let { email } = req.tiimio_user
+  let [ user ] = await user_db.getUserByEmail(email)
+
+  let teams = await team_db.userTeams(email)
+
+  teams = teams.map(team => {
+    if(!team.team_admin) delete team.join_code
+    return team
+  })
+
+  delete user.password
+
+  user = { ...user, teams }
+
+  const token = jwt.sign(
+    { ...user, teams },
+    process.env.SECRET_KEY,
+    { expiresIn: '1d' }
+  )
+
+  res.send({ token })
 })
 
 module.exports = router;

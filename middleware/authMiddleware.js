@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken")
+require('express-async-errors');
 
 const user = (req, res, next) => {
   const token = req.token
-
+  
   if(!token) {
     throw new Error('authentication error')
   }

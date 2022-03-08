@@ -26,8 +26,11 @@ const jobDone = async job => {
     })
 
   const videos = job.data.outputs.filter(output => output.type == 'video')
-  console.log(job)
+  console.log(job.input)
+  console.log(job.outputs)
   let mp4_url = videos.find(video => video.key.split(':')[0] == 'mp4').url
+
+  console.log(job.data.outputs)
 
   const params = {
     thumb_url: thumb_url.urls[0],

@@ -19,13 +19,41 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
       join_code = require('../utils/video/join_code')
 
 router.get('/team/:team_id', user, async (req, res) => {
-  is_in_team()
-
   if(!req.params.team_id) throw new Error('bad request')
+
+  is_in_team()
 
   const folders = await folder_db.byTeamId(req.params.team_id)
 
   res.json(folders)
+})
+
+router.get('/team/:team_id/parent/:parent_id', user, async (req, res) => {
+  if(!req.params.team_id) throw new Error('bad request')
+  if(!req.params.parent_id) throw new Error('bad request')
+  is_in_team()
+  
+  let folders;
+  let parent = req.params.parent_id
+
+  if(parent === 'root') folders = await await folder_db.byTeamIdRoot(req.params.team_id)
+  else folders = await folder_db.byTeamIdByParent(req.params.team_id, parent)
+
+  res.json(folders)
+})
+
+router.get('/:id/clip', user, async (req, res) => {
+  if(!req.params.id) throw new Error('bad request')
+
+  const [ folder ] = await folder_db.byId(req.params.id)
+
+  if(!folder) throw new Error('bad request')
+
+  is_in_team(folder.team_id)
+
+  const clips = await folder_db.folderClips(folder.id)
+
+  res.json(clips)
 })
 
 router.post('/', user, async (req, res) => {
@@ -33,8 +61,13 @@ router.post('/', user, async (req, res) => {
 
   const folder = req.body.folder;
 
-  if(!folder || !folder.name || !folder.team_id) {
+  if(!folder || !folder.name || !folder.team_id || !folder.type) {
     throw new Error('bad request')
+  }
+
+  console.log(folder)
+  if(folder.type !== 'folder' && folder.type !== 'clip' && folder.type !== 'time') {
+    throw new Error('folder type wrong')
   }
 
   const addData = await folder_db.addFolder(folder)

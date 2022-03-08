@@ -9,6 +9,7 @@ const express = require('express');
       cookieParser = require('cookie-parser')
       router.use(cookieParser())
       logger = require('../utils/logger')
+      stripeHelper = require('../utils/stripe')
       video_db = require('../utils/db/video')
       team_db = require('../utils/db/team')
       user_db = require('../utils/db/user')
@@ -32,7 +33,7 @@ router.post('/create-customer-portal-session', async (req, res) => {
   // Authenticate your user.
   const session = await stripe.billingPortal.sessions.create({
     customer: stripe_id.stripe_id,
-    return_url: 'http://localhost:8080/jea',
+    return_url: 'http://localhost:8080/#/refresh',
   });
 
   res.json({
@@ -46,7 +47,7 @@ router.post('/create-checkout-session', async (req, res) => {
   //   expand: ['data.product'],
   // });
   if(!req.body.team_id) throw new Error('team_id missing')
-  let success_url = req.body.success_url;
+  let success_url = 'http://localhost:8080/#/refresh';
   let cancel_url = req.body.cancel_url;
 
   let [ user_team ] = await team_db.userTeamByEmailAndTeamId({
@@ -72,19 +73,19 @@ router.post('/create-checkout-session', async (req, res) => {
     mode: 'subscription',
     success_url: success_url || `http://localhost:8080/success.html?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: cancel_url || `http://localhost:8080/cancel.html`,
+    'customer_update[address]': 'auto',
+    automatic_tax: {enabled: true}
   });
 
   res.json({ url: session.url });
 })
 
-router.post('/webhook', express.raw({type: 'application/json'}), (req, res) => {
+router.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const event = req.body
-  console.log(event.type)
   // console.log(event.data.object.items.data[0].price)
-  console.log(event)
-
-  const customer_stripe_id = event.data.object.customer
-
+  console.log('pyyntö')
+  let customer_stripe_id = event.data.object.customer
+  let [ userTeam ] = await team_db.userTeamByStripeId(customer_stripe_id)
   // if (endpointSecret) {
   //   // Get the signature sent by Stripe
   //   const signature = req.headers['stripe-signature'];
@@ -99,23 +100,35 @@ router.post('/webhook', express.raw({type: 'application/json'}), (req, res) => {
   //     return res.sendStatus(400);
   //   }
   // }
+  console.log(event.type)
 
   res.send('ok!')
   switch(event.type) {
     // tilausta jatkettu tai peruutettu
     case 'customer.subscription.updated':
       // tämä kertoo loppuuko tilaus
-      event.data.object.cancel_at_period_end
+      // console.log(event.data.object.cancel_at_period_end)
 
       // tämä ketoo milloin tilaus loppuu
-      event.data.object.cancel_at
+      // console.log(event.data.object.cancel_at)
 
       // tämä on uusi tilaus
-      event.data.object.items.data[0].price
+      // console.log(event.data.object.items.data[0].price)
 
+      let [ plan ] = await team_db.planByStripeId(event.data.object.items.data[0].price.id)
+      await team_db.changeTeamPlan({
+        team_id: userTeam.team_id,
+        plan_id: plan.id
+      })
+      break;
     // tilaus loppui
     case 'customer.subscription.deleted':
-      event.data.object
+      await team_db.changeTeamPlan({
+        team_id: userTeam.team_id
+      })
+      break;
+    default:
+      break;
   }
 })
 

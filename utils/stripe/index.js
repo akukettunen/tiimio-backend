@@ -11,4 +11,8 @@ const createCustomer = async c => {
   return customer
 }
 
+const changePlan = ({ plan_id, team_id }) => {
+  
+}
+
 module.exports = { createCustomer }

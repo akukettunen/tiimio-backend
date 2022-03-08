@@ -34,6 +34,15 @@ const init = async () => {
     DROP TABLE IF EXISTS user_team;
   `)
   await query(`
+    DROP TABLE IF EXISTS time;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS timename;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS time_timename;
+  `)
+  await query(`
     DROP TABLE IF EXISTS video;
   `)
   await query(`
@@ -47,6 +56,9 @@ const init = async () => {
   `)
   await query(`
     DROP TABLE IF EXISTS tag;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS folder_object;
   `)
   await query(`
     DROP TABLE IF EXISTS folder;
@@ -123,7 +135,6 @@ const init = async () => {
       tiimio_admin BOOLEAN NOT NULL DEFAULT false,
       password VARCHAR(300) NOT NULL,
       email_confirmed BOOLEAN NOT NULL DEFAULT false,
-      stripe_customer_id VARCHAR(100),
       joined DATE NOT NULL
     );
   `)
@@ -135,6 +146,7 @@ const init = async () => {
       league_id INT,
       sport_id INT NOT NULL,
       created DATE NOT NULL,
+      plan_id INT,
       join_code VARCHAR(20),
       FOREIGN KEY (league_id) REFERENCES league(id),
       FOREIGN KEY (sport_id) REFERENCES sport(id)
@@ -194,8 +206,6 @@ const init = async () => {
       group_name VARCHAR(100) NOT NULL,
       team_id INT,
       league_id INT,
-
-      CONSTRAINT CHECK (team_id IS NOT NULL OR league_id IS NOT NULL),
       FOREIGN KEY (league_id) REFERENCES league(id),
       FOREIGN KEY (team_id) REFERENCES team(id)
     );
@@ -226,17 +236,6 @@ const init = async () => {
       ( 1, "Mörkö Marko" ),
       ( 1, "Jari Halttunen" )
       ;
-  `)
-
-  await query(`
-      CREATE TABLE IF NOT EXISTS object_tag(
-        clip_id INT,
-        video_id VARCHAR(50),
-        tag_id INT NOT NULL,
-        FOREIGN KEY (clip_id) REFERENCES clip(id),
-        FOREIGN KEY (video_id) REFERENCES video(id),
-        FOREIGN KEY (tag_id) REFERENCES tag(id)
-      );
   `)
 
   const hash = await bcrypt.hash(plainText, saltRounds)
@@ -285,18 +284,84 @@ const init = async () => {
   `)
 
   await query(`
+  INSERT INTO video (
+    id, team_id, original_url, service, job_id, title, description, original_type, 
+    original_size, mp4_url, hls_url, duration, thumb_url, lazy_thumb_url, s3_key,
+    uploader, uploaded, encoded
+    ) VALUES 
+    ( 'joujoujou', 1, 'yo', 'coconut', '123', 'Testi', 'Tällainen testi', 'mp4', 1000, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/720p.mp4',
+      '123', 1900, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_medium.jpg',
+      'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_low.jpg',
+      '0365e631-3351-4151-805e-6f812bbc9865', 'aku@kettunen.com', NOW(), true
+    )
+    ;
+  `)
+
+  await query(`
     CREATE TABLE IF NOT EXISTS folder(
       id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
       team_id INT NOT NULL,
-      name VARCHAR(50) NOT NULL,
+      name VARCHAR(50),
       created TIMESTAMP NOT NULL,
       parent INT,
       position INT,
-      FOREIGN KEY (parent) REFERENCES folder(id),
+      clip_id INT,
+      type VARCHAR(10),
+      FOREIGN KEY (parent) REFERENCES folder(id) ON DELETE CASCADE,
       FOREIGN KEY (team_id) REFERENCES team(id)
     );
   `)
 
+  await query(`
+      CREATE TABLE IF NOT EXISTS time(
+        id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+        video_id VARCHAR(50) NOT NULL,
+        title VARCHAR(50),
+        comment VARCHAR(500),
+        created TIMESTAMP NOT NULL,
+        FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE
+      );
+  `)
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS timename(
+        id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+        team_id INT NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        created TIMESTAMP NOT NULL,
+        FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
+      );
+  `)
+
+  await query(`
+      INSERT INTO timename (team_id, name, created)
+      VALUES (1, '0yd', NOW()), (1, '20yd', NOW());
+  `)
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS time_timename(
+        timename_id INT NOT NULL,
+        time_id INT NOT NULL,
+        video_time DECIMAL(10, 4) NOT NULL,
+        time_from_first DECIMAL(8, 4) NOT NULL,
+        pretty_time VARCHAR(5) NOT NULL,
+        FOREIGN KEY (timename_id) REFERENCES timename(id),
+        FOREIGN KEY (time_id) REFERENCES time(id) ON DELETE CASCADE
+      );
+  `)
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS object_tag(
+        clip_id INT,
+        time_id INT,
+        video_id VARCHAR(50),
+        tag_id INT NOT NULL,
+        FOREIGN KEY (clip_id) REFERENCES clip(id) ON DELETE CASCADE,
+        FOREIGN KEY (time_id) REFERENCES time(id) ON DELETE CASCADE,
+        FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id) REFERENCES tag(id) ON DELETE CASCADE
+      );
+  `)
 
   let tables = await query(`show tables;`)
   tables.map(table => {

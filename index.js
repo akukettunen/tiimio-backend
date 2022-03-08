@@ -30,6 +30,7 @@ const team = require('./routes/team')
 const clip = require('./routes/clip')
 const tag = require('./routes/tag')
 const folder = require('./routes/folder')
+const time = require('./routes/time')
 
 // rate limiter needs this for usage in heroku
 app.set('trust proxy', 1);
@@ -45,6 +46,7 @@ app.use('/plan', plan)
 app.use('/clip', clip)
 app.use('/tag', tag)
 app.use('/folder', folder)
+app.use('/time', time)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);

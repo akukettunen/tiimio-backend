@@ -7,21 +7,40 @@ const byTeamId = teamId => {
   `, [teamId])
 }
 
-const addFolder = folder => {
-  const { team_id, name, parent, position } = folder
+const byTeamIdByParent = (teamId, parentId) => {
   return query(`
-    INSERT INTO folder (
-      team_id, name, created, parent, position
-    )
-    VALUES
-    (?, ?, NOW(), ?, ?);
-  `, [ team_id, name, parent, position ])
+    SELECT * FROM folder
+    WHERE team_id = ? AND parent = ?;
+  `, [teamId, parentId])
+}
+
+const byTeamIdRoot = (teamId) => {
+  return query(`
+    SELECT * FROM folder
+    WHERE team_id = ? AND parent IS NULL;
+  `, [teamId])
+}
+
+const addFolder = folder => {
+  const { team_id, name, parent, position, type } = folder
+  return query(`
+    INSERT INTO folder (team_id, name, created, parent, position, type)
+    VALUES (?, ?, NOW(), ?, ?, ?);
+  `, [ team_id, name, parent, position, type ])
 }
 
 const byId = id => {
   return query(`
     SELECT * FROM folder
     WHERE id = ?
+  `, [id])
+}
+
+const folderClips = id => {
+  return query(`
+    SELECT * FROM folder_object
+    LEFT JOIN clip ON clip.id = folder_object.clip_id
+    WHERE folder_id = ?;
   `, [id])
 }
 
@@ -40,4 +59,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { byId, byTeamId, addFolder, updateFolder, deleteById }
+module.exports = { byTeamIdByParent, byTeamIdRoot, folderClips, byId, byTeamId, addFolder, updateFolder, deleteById }

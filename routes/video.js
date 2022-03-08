@@ -1,5 +1,7 @@
+require('dotenv')
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
+const { user, is_in_team } = require('../middleware/authMiddleware');
       router = express.Router()
       db = require('../utils/db/index')
       bcrypt = require('bcryptjs');
@@ -8,25 +10,33 @@ const express = require('express');
       router.use(cookieParser())
       logger = require('../utils/logger')
       video_db = require('../utils/db/video')
+      aws = require('../utils/aws/index')
       clip_db = require('../utils/db/clip')
+      time_db = require('../utils/db/time')
+      timeHelper = require('../utils/time/timeHelper')
       coconut = require('../utils/coconut/index')
       coconut_configs = require('../utils/coconut/configs')
       ngrok = require('ngrok');
       hook_helper = require('../utils/video/hooks')
+      require('express-async-errors');
 
-router.post('/', async (req, res) => {
-  const id = uuidv4()
+router.post('/', user, async (req, res) => {
+  // id should be in form 123-345/123-645
+  const id = req.body.id.split('/')[0] || uuidv4()
 
-  var url
+  let url;
   if(process.env.ENVIRONMENT == 'dev') {
     try {
       url = await ngrok.connect({
-        authtoken: '23Kxqjxnw95qyK4s3L9Wblm4lUP_2onZXof3fyYzo13jpL9Hs',
+        authtoken: '261uxjtMzpNTQCdpidogLCyOjx7_4K8Uyr8va1sTK4uHtpurq',
         addr: 4040
       });
     } catch(err) {
+      console.log(err)
       throw new Error('ngrok tunnel failed: ', err)
     }
+  } else {
+    url = process.env.URL_BASE + '/video/webhook'
   }
 
   const params = {
@@ -48,8 +58,11 @@ router.post('/', async (req, res) => {
       'type': 'http',
       'url': `${url}/video/webhook`,
       'metadata': { id }
-    }
+    },
+    "region": process.env.COCONUT_REGION
   }
+
+  coconut['region'] = "eu-west-1"
 
   let job;
   try {
@@ -71,7 +84,7 @@ router.post('/', async (req, res) => {
   res.send({ video, job })
 })
 
-router.get('/:id/encoding-state', async (req, res) => {
+router.get('/:id/encoding-state', user, async (req, res) => {
   let [ video ] = await video_db.videoById(req.params.id)
 
   if(!video) throw new Error('video not found')
@@ -89,18 +102,14 @@ router.get('/:id/encoding-state', async (req, res) => {
   res.json(job_data)
 })
 
-router.get('/team/:id', async (req, res) => {
+router.get('/team/:id', user, async (req, res) => {
   // TODO: vain oman joukkueen videot
 
   let videos = await video_db.teamVideos(req.params.id)
   res.send(videos)
 })
 
-router.delete('/:id', (req, res) => {
-  
-})
-
-router.get('/:id', async (req, res) => {
+router.get('/:id', user, async (req, res) => {
   // TODO: vain oman joukkueen videot
 
   let [ video ] = await video_db.videoById(req.params.id)
@@ -108,8 +117,9 @@ router.get('/:id', async (req, res) => {
   if(!video) throw new Error('video not found')
   
   let clips = await clip_db.videoClips(video.id)
+  let times = await timeHelper.videoTimes(video.id)
 
-  res.json( { ...video, clips } )
+  res.json( { ...video, clips, times } )
 })
 
 router.post('/webhook', (req, res) => {
@@ -119,6 +129,19 @@ router.post('/webhook', (req, res) => {
   }
 
   res.send('ok!')
+})
+
+router.delete('/:id', user, async (req, res) => {
+  if(!req.params.id) throw new Error('bad request!')
+
+  let [ video ] = await video_db.videoById(req.params.id)
+
+  is_in_team(video.team_id)
+  
+  await aws.deleteByFolder(video.s3_key)
+  await video_db.deleteById(req.params.id)
+
+  res.json('ok!')
 })
 
 module.exports = router;

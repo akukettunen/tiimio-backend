@@ -29,4 +29,12 @@ const videoById = id => {
     WHERE id = ?;
   `, [id])
 }
-module.exports = { postVideo, teamVideos, videoDone, videoById }
+
+const deleteById = id => {
+  return query(`
+    DELETE FROM video
+    WHERE id = ?;
+  `, [id])
+}
+
+module.exports = { deleteById, postVideo, teamVideos, videoDone, videoById }
