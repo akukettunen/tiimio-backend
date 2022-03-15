@@ -26,6 +26,54 @@ router.get('/timename/team/:team_id', user, async (req, res) => {
   res.json(timenames)
 })
 
+router.get('/team/:team_id', async (req, res) => {
+  let { page, itemsPerPage, sortBy, sortDesc, columns } = req.query;
+  //TODO: works with front end not with postman, gives NaN form these Nuber()
+
+  sortBy = sortBy === 'undefined' ? undefined : sortBy
+  sortDesc = sortDesc === 'true'
+
+  columns = columns.split(',').map(t => `'${t}'`)
+  const times = await time_db.teamTimes(
+    Number(page), 
+    Number(itemsPerPage), 
+    sortBy, 
+    sortDesc, 
+    Number(req.params.team_id), 
+    columns
+  )
+  const [ total ] = await time_db.teamTotalTimes(Number(req.params.team_id))
+
+  res.json({times, total: total?.amount})
+})
+
+router.put('/:time_id/tag', user, async (req, res) => {
+  const [ time ] = await time_db.timeAndVideoByTimeId(req.params.time_id)
+
+  is_in_team(time.team_id)
+
+  const current_tags = await time_db.timeTags(req.params.time_id)
+  const new_tags_ids = req.body.tags
+  const current_tags_ids = current_tags.map(t => t.id)
+
+  const addIds = new_tags_ids.filter(n => !current_tags_ids.includes(n))
+  const removeIds = 
+    current_tags_ids
+      .filter(n => !new_tags_ids.includes(n))
+      .map(t => `'${t}'`)
+
+  if(addIds?.length) {
+    await time_db.batchAddTag(req.params.time_id, addIds)
+  }
+  if(removeIds?.length) {
+    await time_db.batchRemoveTag(req.params.time_id, removeIds)
+  }
+
+  const updatedTime = await time_helper.timeById(req.params.time_id)
+
+  res.json(updatedTime)
+})
+
 router.post('/timename', user, async (req, res) => {
   is_in_team()
 
@@ -61,7 +109,7 @@ router.post('/', user, async (req, res) => {
   await time_db.batchCreateTimeTimename(timenames, timeAddData.insertId)
 
   const time = await time_helper.timeById(timeAddData.insertId)
-  
+
   res.json(time)
 })
 
@@ -79,6 +127,12 @@ router.delete('/:id', user, async (req, res) => {
   await time_db.deleteById(req.params.id)
 
   res.json('ok!')
+})
+
+router.get('/:id', user, async (req, res) => {
+  const time = await time_helper.timeById(req.params.id)
+  console.log(time)
+  res.json(time)
 })
 
 module.exports = router;

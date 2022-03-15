@@ -5,7 +5,7 @@ const userTeams = email => {
     SELECT team.created, email, team.id, join_code, league_admin, league_id, 
            league_name, team.sport_id, sport_name, team_admin, team_id,
            team_name, user_joined_team, stripe_id, team_orderer, plan.short_name, 
-           plan.full_name, plan.id as plan_id
+           plan.full_name, plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved
     FROM user_team
     LEFT JOIN team ON user_team.team_id = team.id
     LEFT JOIN plan ON team.plan_id = plan.id

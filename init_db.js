@@ -96,8 +96,11 @@ const init = async () => {
   await query(`
     CREATE TABLE IF NOT EXISTS plan(
       id INT PRIMARY KEY AUTO_INCREMENT,
+      is_the_freemium BOOLEAN NOT NULL,
       created DATE NOT NULL,
-      stripe_price_id VARCHAR(100) NOT NULL,
+      upload_hours_per_month INT NOT NULL,
+      total_hours_saved INT,
+      stripe_price_id VARCHAR(100),
       short_name VARCHAR(10) NOT NULL,
       full_name VARCHAR(40) NOT NULL,
       description VARCHAR(1000) NOT NULL,
@@ -106,18 +109,18 @@ const init = async () => {
   `)
 
   await query(`
-      INSERT INTO plan (created, stripe_price_id, short_name, full_name, description, price)
-      VALUES ( CURDATE(), '123', 'test', 'Test Plan', 'This is the test plan', 0 );
+      INSERT INTO plan (is_the_freemium, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES (true, 5, CURDATE(), null, 'test', 'Test Plan', 'This is the test plan', 0 );
   `)
 
   await query(`
-      INSERT INTO plan (created, stripe_price_id, short_name, full_name, description, price)
-      VALUES ( CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
+      INSERT INTO plan (is_the_freemium, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES (false, 15, CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
   `)
 
   await query(`
-      INSERT INTO plan (created, stripe_price_id, short_name, full_name, description, price)
-      VALUES ( CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
+      INSERT INTO plan (is_the_freemium, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES (false, 40, CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
   `)
 
   await query(`
@@ -146,19 +149,20 @@ const init = async () => {
       league_id INT,
       sport_id INT NOT NULL,
       created DATE NOT NULL,
-      plan_id INT,
+      plan_id INT NOT NULL,
       join_code VARCHAR(20),
       FOREIGN KEY (league_id) REFERENCES league(id),
-      FOREIGN KEY (sport_id) REFERENCES sport(id)
+      FOREIGN KEY (sport_id) REFERENCES sport(id),
+      FOREIGN KEY (plan_id) REFERENCES plan(id)
     );
   `)
 
   await query(`
   INSERT INTO team (
-    team_name, league_id, sport_id, created, join_code
+    team_name, league_id, sport_id, created, join_code, plan_id
     ) VALUES 
-    ( "Testi-tiimi", NULL, 1, CURDATE(), "123456" ),
-    ( "Koskenkorvan Urheilijat", NULL, 1, CURDATE(), "A7RHSK" )
+    ( "Testi-tiimi", NULL, 1, CURDATE(), "123456", 1 ),
+    ( "Koskenkorvan Urheilijat", NULL, 1, CURDATE(), "A7RHSK", 1 )
     ;
   `)
 
@@ -174,8 +178,10 @@ const init = async () => {
       original_type VARCHAR(20) NOT NULL,
       original_size INT NOT NULL,
       mp4_url VARCHAR(1000),
+      deleted BOOLEAN DEFAULT false,
       hls_url VARCHAR(1000),
-      duration VARCHAR(200),
+      duration_ts INT,
+      duration INT,
       thumb_url VARCHAR(300),
       lazy_thumb_url VARCHAR(300),
       s3_key VARCHAR(50) NOT NULL,
@@ -196,7 +202,7 @@ const init = async () => {
         title VARCHAR(50),
         description VARCHAR(1000) DEFAULT '',
         created DATE NOT NULL,
-        FOREIGN KEY (video_id) REFERENCES video(id)
+        FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE
       );
   `);
 
@@ -283,19 +289,19 @@ const init = async () => {
     ;
   `)
 
-  await query(`
-  INSERT INTO video (
-    id, team_id, original_url, service, job_id, title, description, original_type, 
-    original_size, mp4_url, hls_url, duration, thumb_url, lazy_thumb_url, s3_key,
-    uploader, uploaded, encoded
-    ) VALUES 
-    ( 'joujoujou', 1, 'yo', 'coconut', '123', 'Testi', 'Tällainen testi', 'mp4', 1000, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/720p.mp4',
-      '123', 1900, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_medium.jpg',
-      'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_low.jpg',
-      '0365e631-3351-4151-805e-6f812bbc9865', 'aku@kettunen.com', NOW(), true
-    )
-    ;
-  `)
+  // await query(`
+  // INSERT INTO video (
+  //   id, team_id, original_url, service, job_id, title, description, original_type, 
+  //   original_size, mp4_url, hls_url, duration, thumb_url, lazy_thumb_url, s3_key,
+  //   uploader, uploaded, encoded
+  //   ) VALUES 
+  //   ( 'joujoujou', 1, 'yo', 'coconut', '123', 'Testi', 'Tällainen testi', 'mp4', 1000, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/720p.mp4',
+  //     '123', 1900, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_medium.jpg',
+  //     'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_low.jpg',
+  //     '0365e631-3351-4151-805e-6f812bbc9865', 'aku@kettunen.com', NOW(), true
+  //   )
+  //   ;
+  // `)
 
   await query(`
     CREATE TABLE IF NOT EXISTS folder(

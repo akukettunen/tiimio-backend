@@ -23,6 +23,9 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
 router.post('/', user, async (req, res) => {
   // id should be in form 123-345/123-645
   const id = req.body.id.split('/')[0] || uuidv4()
+  const team_id = req.body.team_id;
+
+  is_in_team()
 
   let url;
   if(process.env.ENVIRONMENT == 'dev') {
@@ -90,23 +93,28 @@ router.get('/:id/encoding-state', user, async (req, res) => {
   if(!video) throw new Error('video not found')
 
   let job_data;
-
+  let uploaded;
   switch(video.service) {
     case 'coconut':
       job_data = await coconut.jobState(video.job_id)
+      uploaded = await video_db.uploadedThisMonth(video.team_id)
       break;
     default:
       throw new Error('job not found')
   }
 
-  res.json(job_data)
+  res.json({...job_data, uploaded})
 })
 
 router.get('/team/:id', user, async (req, res) => {
   // TODO: vain oman joukkueen videot
 
   let videos = await video_db.teamVideos(req.params.id)
-  res.send(videos)
+  let [{ uploaded_this_month }] = await video_db.uploadedThisMonth(req.params.id)
+  res.send({
+    videos,
+    uploaded: uploaded_this_month || 0
+  })
 })
 
 router.get('/:id', user, async (req, res) => {
@@ -118,8 +126,15 @@ router.get('/:id', user, async (req, res) => {
   
   let clips = await clip_db.videoClips(video.id)
   let times = await timeHelper.videoTimes(video.id)
+  let mapped_times = times.map(t => {
+    let parsed = JSON.parse(t.tags)
+    return {
+      ...t,
+      tags: parsed[0]?.id ? parsed : []
+    }
+  })
 
-  res.json( { ...video, clips, times } )
+  res.json( { ...video, clips, times: mapped_times } )
 })
 
 router.post('/webhook', (req, res) => {
@@ -131,6 +146,22 @@ router.post('/webhook', (req, res) => {
   res.send('ok!')
 })
 
+router.put('/:id', user, async (req, res) => {
+  const { team_id, title } =  req.body;
+  if(!team_id || !title || !req.params.id) throw new Error('bad request')
+  
+  is_in_team()
+
+  await video_db.updateVideoTitle({
+    id:  req.params.id,
+    title
+  })
+
+  const [ video ] = await video_db.videoById(req.params.id)
+
+  res.json(video)
+})
+
 router.delete('/:id', user, async (req, res) => {
   if(!req.params.id) throw new Error('bad request!')
 
@@ -138,8 +169,8 @@ router.delete('/:id', user, async (req, res) => {
 
   is_in_team(video.team_id)
   
-  await aws.deleteByFolder(video.s3_key)
   await video_db.deleteById(req.params.id)
+  await aws.deleteByFolder(video.s3_key)
 
   res.json('ok!')
 })

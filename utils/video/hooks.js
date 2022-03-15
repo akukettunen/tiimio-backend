@@ -26,21 +26,26 @@ const jobDone = async job => {
     })
 
   const videos = job.data.outputs.filter(output => output.type == 'video')
-  console.log(job.input)
-  console.log(job.outputs)
   let mp4_url = videos.find(video => video.key.split(':')[0] == 'mp4').url
 
-  console.log(job.data.outputs)
-
+  let { duration_ts, duration } = videos[0].metadata.streams[0]
+  duration = parseFloat(duration)
+  
   const params = {
+    duration,
+    duration_ts,
     thumb_url: thumb_url.urls[0],
     lazy_thumb_url: lazy_thumb_url.urls[0],
     job_id: job.job_id,
     mp4_url
   }
 
-  let video = await video_db.videoDone(params)
-  console.log(video)
+  let video
+  try {
+    video = await video_db.videoDone(params)
+  } catch(e) {
+    throw new Error('something went wrong :/')
+  }
 }
 
 module.exports = { jobDone }

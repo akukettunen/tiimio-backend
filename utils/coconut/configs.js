@@ -8,14 +8,39 @@ const normal = (file) => {
     'path': `${file}/thumbnail_low.jpg`,
     "key": "jpg:low"
   },
-  'mp4:720p': {
-    'path': `${file}/720p.mp4`
+  // 'mp4:720p': {
+  //   'path': `${file}/720p.mp4`
+  // },
+  'mp4:480p': {
+    'path': `${file}/480p.mp4`
   }
   // 'httpstream': {
   //   'hls': { 'path': 'hls/' }
   // }
-}
+  }
 }
 
+const high_definition = (file) => {
+  return {
+   'jpg:480x270': {
+     'path': `${file}/thumbnail_medium.jpg`, 
+     "key": "jpg:medium" 
+   },
+   'jpg:60x34': {
+     'path': `${file}/thumbnail_low.jpg`,
+     "key": "jpg:low"
+   },
+   // 'mp4:720p': {
+   //   'path': `${file}/720p.mp4`
+   // },
+   'mp4:720p': {
+     'path': `${file}/720p.mp4`
+   }
+   // 'httpstream': {
+   //   'hls': { 'path': 'hls/' }
+   // }
+   }
+ }
 
-module.exports = { normal }
+
+module.exports = { normal, high_definition }

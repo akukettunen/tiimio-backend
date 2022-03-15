@@ -65,7 +65,6 @@ router.post('/', user, async (req, res) => {
     throw new Error('bad request')
   }
 
-  console.log(folder)
   if(folder.type !== 'folder' && folder.type !== 'clip' && folder.type !== 'time') {
     throw new Error('folder type wrong')
   }
@@ -77,6 +76,7 @@ router.post('/', user, async (req, res) => {
 
 router.put('/:id', user, async (req, res) => {
   // TODO parent cant be one of children or self
+  
   is_in_team()
 
   const folder = req.body.folder;

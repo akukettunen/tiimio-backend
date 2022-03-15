@@ -33,13 +33,17 @@ router.post('/join', user, async (req, res) => {
 
   let user = req.tiimio_user
   user['teams'] = teams.concat(team)
+  user['currentTeamId'] = team.id
 
   const token = jwt.sign(
     user,
     process.env.SECRET_KEY
   )
 
-  res.json({ token, team })
+  res.json({ 
+    token, 
+    team
+  })
 })
 
 router.get('/:id/users', user, async (req, res) => {
@@ -67,7 +71,10 @@ router.put('/:id/joincode', user, async (req, res) => {
   new_teams[i]['join_code'] = code
 
   const token = jwt.sign(
-    { ...user, new_teams },
+    { 
+      ...user, 
+      teams: new_teams
+    },
     process.env.SECRET_KEY
   )
 

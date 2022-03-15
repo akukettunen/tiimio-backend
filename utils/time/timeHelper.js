@@ -1,12 +1,16 @@
 const time_db = require('../db/time')
 
 const timeById = async id => {
-  const timeNames = await time_db.timeTimenameByTimeId(id)
   const [ time ] = await time_db.byId(id)
+
+  const tags = await time_db.timeTags(id)
+  const data = await time_db.timeTimenameByTimeId(id)
 
   return {
     ...time,
-    data: timeNames
+    data,
+    tags,
+    num_of_tags: tags.length
   }
 }
 

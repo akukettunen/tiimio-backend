@@ -10,17 +10,35 @@ const postVideo = ({ id, title, description, original_url, original_type, s3_key
 
 const teamVideos = id => {
   return query(`
-    SELECT * FROM video
-    WHERE team_id = ?;
-  `, [ id ])
+    SELECT
+      *
+    FROM video
+    WHERE team_id = ? AND deleted = false;
+  `, [ id, id ])
 }
 
-const videoDone = ({ thumb_url, lazy_thumb_url, job_id, mp4_url }) => {
+const uploadedThisMonth = team_id => {
+  return query(`
+    SELECT sum(duration) uploaded_this_month
+    FROM video
+    WHERE team_id = ? AND MONTH(uploaded) = MONTH(curdate());
+  `, [team_id])
+}
+
+const videoDone = ({ thumb_url, lazy_thumb_url, job_id, mp4_url, duration, duration_ts }) => {
   return query(`
     UPDATE video
-    SET thumb_url = ?, lazy_thumb_url = ?, mp4_url = ?, encoded = true
+    SET thumb_url = ?, lazy_thumb_url = ?, mp4_url = ?, encoded = true, duration = ?, duration_ts = ?
     WHERE job_id = ?;
-  `, [thumb_url, lazy_thumb_url, mp4_url, job_id])
+  `, [thumb_url, lazy_thumb_url, mp4_url, duration, duration_ts, job_id]) // job id has to be last
+}
+
+const updateVideoTitle = ({ title, id }) => {
+  return query(`
+    UPDATE video
+    SET title = ?
+    WHERE id = ?;
+  `, [title, id])
 }
 
 const videoById = id => {
@@ -32,9 +50,10 @@ const videoById = id => {
 
 const deleteById = id => {
   return query(`
-    DELETE FROM video
+    UPDATE video
+    SET deleted = true
     WHERE id = ?;
   `, [id])
 }
 
-module.exports = { deleteById, postVideo, teamVideos, videoDone, videoById }
+module.exports = { uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }

@@ -15,6 +15,7 @@ const express = require('express')
 
 router.post('/login', async (req, res) => {
   let { password, email } = req.body
+  let { currentTeamId } = req.query
 
   if(!email || !password) throw Error('bad request')
 
@@ -29,7 +30,8 @@ router.post('/login', async (req, res) => {
 
   // get users teams from db
   let teams = await team_db.userTeams(email)
-
+  let teamIds = teams.map(t => t.id)
+  let isInRequestedTeam = teamIds.includes(Number(currentTeamId))
   // parses the teams joincode away if the user isnt an admin
   teams = teams.map(team => {
     if(!team.team_admin) delete team.join_code
@@ -39,12 +41,22 @@ router.post('/login', async (req, res) => {
   // lets not return the password to frontend
   delete user.password
 
-  // combines the user and their team data
-  user = { ...user, teams }
+  // combines the user, their team data and their chosen teamId
+  if(currentTeamId && isInRequestedTeam) {
+    user = { ...user, teams, currentTeamId }
+  } else if(teams.length > 0) {
+    user = { 
+      ...user, 
+      teams, 
+      currentTeamId: teamIds[0]
+    }
+  } else {
+    user = { ...user, teams }
+  }
 
   // creates a token with said data
   const token = jwt.sign(
-    { ...user, teams },
+    user,
     process.env.SECRET_KEY,
     { expiresIn: '1d' }
   )
@@ -87,11 +99,14 @@ router.post('/signin', async (req, res) => {
 })
 
 router.get('/refresh', user, async (req, res) => {
-  console.log('GET /auth/refresh')
+  let { currentTeamId } = req.query
+
   let { email } = req.tiimio_user
   let [ user ] = await user_db.getUserByEmail(email)
 
   let teams = await team_db.userTeams(email)
+  let teamIds = teams.map(t => t.id)
+  let isInRequestedTeam = teamIds.includes(Number(currentTeamId))
 
   teams = teams.map(team => {
     if(!team.team_admin) delete team.join_code
@@ -100,10 +115,21 @@ router.get('/refresh', user, async (req, res) => {
 
   delete user.password
 
-  user = { ...user, teams }
+  // combines the user, their team data and their chosen teamId
+  if(currentTeamId && isInRequestedTeam) {
+    user = { ...user, teams, currentTeamId }
+  } else if(teams.length > 0) {
+    user = { 
+      ...user,
+      teams,
+      currentTeamId: teamIds[0]
+    }
+  } else {
+    user = { ...user, teams }
+  }
 
   const token = jwt.sign(
-    { ...user, teams },
+    user,
     process.env.SECRET_KEY,
     { expiresIn: '1d' }
   )
