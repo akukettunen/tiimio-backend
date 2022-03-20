@@ -179,7 +179,7 @@ const batchCreateTimeTimename = (timenames, time_id) => {
 
 const timeTimenameByTimeId = id => {
   return query(`
-    SELECT *
+    SELECT *, TIME_FORMAT(SEC_TO_TIME(time_from_first),'%i:%s:%f') pretty
     FROM time_timename
     LEFT JOIN timename ON timename.id = time_timename.timename_id
     WHERE time_timename.time_id = ?;

@@ -24,7 +24,8 @@ const options = {
     path: '/companion',
   },
   filePath: './',
-  "secret": process.env.COMPANION_SECRET
+  streamingUpload: true,
+  secret: process.env.COMPANION_SECRET
 }
 
 module.exports = companion.app(options)

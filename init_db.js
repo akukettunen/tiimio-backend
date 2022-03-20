@@ -97,6 +97,7 @@ const init = async () => {
     CREATE TABLE IF NOT EXISTS plan(
       id INT PRIMARY KEY AUTO_INCREMENT,
       is_the_freemium BOOLEAN NOT NULL,
+      is_the_ best BOOLEAN NOT NULL,
       created DATE NOT NULL,
       upload_hours_per_month INT NOT NULL,
       total_hours_saved INT,
@@ -109,18 +110,18 @@ const init = async () => {
   `)
 
   await query(`
-      INSERT INTO plan (is_the_freemium, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (true, 5, CURDATE(), null, 'test', 'Test Plan', 'This is the test plan', 0 );
+      INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES (true, false, 0.5, CURDATE(), null, 'test', 'Test Plan', 'This is the test plan', 0 );
   `)
 
   await query(`
-      INSERT INTO plan (is_the_freemium, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (false, 15, CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
+      INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES (false, false, 15, CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
   `)
 
   await query(`
-      INSERT INTO plan (is_the_freemium, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (false, 40, CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
+      INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES (false, true, 40, CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
   `)
 
   await query(`

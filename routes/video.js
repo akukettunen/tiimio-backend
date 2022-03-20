@@ -23,7 +23,6 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
 router.post('/', user, async (req, res) => {
   // id should be in form 123-345/123-645
   const id = req.body.id.split('/')[0] || uuidv4()
-  const team_id = req.body.team_id;
 
   is_in_team()
 
@@ -62,7 +61,8 @@ router.post('/', user, async (req, res) => {
       'url': `${url}/video/webhook`,
       'metadata': { id }
     },
-    "region": process.env.COCONUT_REGION
+    "region": process.env.COCONUT_REGION,
+    streamingUpload: true
   }
 
   coconut['region'] = "eu-west-1"
@@ -97,7 +97,6 @@ router.get('/:id/encoding-state', user, async (req, res) => {
   switch(video.service) {
     case 'coconut':
       job_data = await coconut.jobState(video.job_id)
-      uploaded = await video_db.uploadedThisMonth(video.team_id)
       break;
     default:
       throw new Error('job not found')
@@ -111,9 +110,11 @@ router.get('/team/:id', user, async (req, res) => {
 
   let videos = await video_db.teamVideos(req.params.id)
   let [{ uploaded_this_month }] = await video_db.uploadedThisMonth(req.params.id)
+  let [{ total_video_saved }] = await video_db.uploadedTotalNotDeleted(req.params.id)
   res.send({
     videos,
-    uploaded: uploaded_this_month || 0
+    uploaded: uploaded_this_month || 0,
+    total: total_video_saved || 0
   })
 })
 
@@ -137,10 +138,22 @@ router.get('/:id', user, async (req, res) => {
   res.json( { ...video, clips, times: mapped_times } )
 })
 
+router.get('/team/:team_id/uploaded', user, async (req, res) => {
+  is_in_team()
+
+  const [{ uploaded_this_month }] = await video_db.uploadedThisMonth(req.params.team_id)
+
+  res.json({ uploaded_this_month })
+})
+
 router.post('/webhook', (req, res) => {
   switch (req.body.event) {
     case 'job.completed':
       hook_helper.jobDone(req.body)
+      break;
+    case 'job.failed':
+      hook_helper.jobFailed(req.body)
+      break;
   }
 
   res.send('ok!')
