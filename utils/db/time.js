@@ -103,21 +103,36 @@ const teamTimenames = team_id => {
   `, [ team_id ])
 }
 
-const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = true, team_id, columns) => {
+const batchAddTimename = (team_id, timenameNames) => {
+  return query(`
+    INSERT INTO timename (team_id, name, created)
+    VALUES ${ timenameNames.map(name => `( ${team_id}, '${name}', NOW() ) `) };
+  `)
+}
+
+const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = true, team_id, columns = [], tags = []) => {
   let start = page * itemsPerPage
+
+  let get_tags = tags.length ? `RIGHT JOIN (
+    SELECT * FROM object_tag
+    WHERE object_tag.tag_id IN (${tags})
+  ) chosen_tags ON chosen_tags.time_id = time.id` : ''
+
+  let limit = itemsPerPage >= 0 ? `LIMIT ?, ?` : ``
 
   return query(`
     SELECT
       mp4_url,
       time.id id,
-      video_id,
+      time.video_id,
       video.title as video_name,
       mp4_url as url,
-      duration, 
+      duration,
+      time.title as title,
       duration_ts,
       lazy_thumb_url,
       thumb_url,
-      time_id,
+      time_timename.time_id as time_id,
       COUNT(chosen_timenames.id) as num_of_points,
       # MAX(time_timename.time_from_first) max_tff,
       # MIN(time_timename.time_from_first) min_tff,
@@ -136,12 +151,13 @@ const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = 
     LEFT JOIN time_timename ON time.id = time_timename.time_id
     RIGHT JOIN (
       SELECT * FROM timename
-      WHERE timename.name IN(${columns})
+      WHERE timename.name IN (${columns})
     ) chosen_timenames ON chosen_timenames.id = time_timename.timename_id
+    ${ get_tags }
     WHERE video.team_id = ?
     GROUP BY time_id
     ORDER BY ${sortBy} ${sortDesc ? 'DESC' : 'ASC'}
-    LIMIT ?, ?;
+    ${limit};
   `, [team_id, start, itemsPerPage])
 }
 
@@ -152,12 +168,40 @@ const timenameByName = name => {
   `, [name])
 }
 
-const teamTotalTimes = team_id => {
+const teamTotalTimes = (team_id, columns, tags) => {
+
+  let get_tags = tags.length ? `RIGHT JOIN (
+    SELECT * FROM object_tag
+    WHERE object_tag.tag_id IN (${tags})
+  ) chosen_tags ON chosen_tags.time_id = time.id` : ''
+
   return query(`
-    SELECT COUNT(*) amount FROM time
-    LEFT JOIN video ON video.id = time.video_id
-    WHERE video.team_id = ?;
+    SELECT
+      COUNT(*) OVER () AS amount,
+      time.id AS timeid
+    FROM timename
+    LEFT JOIN 
+      time_timename 
+      ON time_timename.timename_id = timename.id
+    RIGHT JOIN time ON time.id = time_timename.time_id
+    ${ get_tags }
+    WHERE timename.name IN (${columns}) AND timename.team_id = ?
+    GROUP BY timeid;
   `, [team_id])
+}
+
+const timenameAverages = (team_id, columns) => {
+  return query(`
+    SELECT
+      name,
+      AVG(time_timename.time_from_first) average
+    FROM time_timename
+    LEFT JOIN time ON time.id = time_timename.time_id
+    LEFT JOIN video ON video.id = time.video_id
+    LEFT JOIN timename ON timename.id = time_timename.timename_id
+    WHERE timename.name IN (${columns}) AND video.team_id = ?
+    GROUP BY timename.name;
+  `, [ team_id ])
 }
 
 const createTime = ({video_id, title}) => {
@@ -233,4 +277,4 @@ const timeById = id => {
   `, [id])
 }
 
-module.exports = { timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }
+module.exports = { batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }

@@ -23,6 +23,7 @@ app.use(session({ secret: 'some secrety secret' }))
 app.use('/companion', companion)
 
 const auth = require('./routes/auth')
+const sport = require('./routes/sport')
 const plan = require('./routes/plan')
 const video = require('./routes/video')
 const stripe = require('./routes/stripe')
@@ -39,6 +40,7 @@ app.set('trust proxy', 1);
 app.use(requestMethod)
 
 app.use('/auth', auth)
+app.use('/sport', sport)
 app.use('/video', video)
 app.use('/stripe', stripe)
 app.use('/team', team)

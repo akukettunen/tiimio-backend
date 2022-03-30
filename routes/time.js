@@ -27,24 +27,29 @@ router.get('/timename/team/:team_id', user, async (req, res) => {
 })
 
 router.get('/team/:team_id', async (req, res) => {
-  let { page, itemsPerPage, sortBy, sortDesc, columns } = req.query;
+  let { page, itemsPerPage, sortBy, sortDesc, columns, tags } = req.query;
   //TODO: works with front end not with postman, gives NaN form these Nuber()
+  // TODO columns will have to be sanitized
 
   sortBy = sortBy === 'undefined' ? undefined : sortBy
   sortDesc = sortDesc === 'true'
 
   columns = columns.split(',').map(t => `'${t}'`)
   const times = await time_db.teamTimes(
-    Number(page), 
-    Number(itemsPerPage), 
-    sortBy, 
-    sortDesc, 
-    Number(req.params.team_id), 
-    columns
+    Number(page),
+    Number(itemsPerPage),
+    sortBy,
+    sortDesc,
+    Number(req.params.team_id),
+    columns,
+    tags
   )
-  const [ total ] = await time_db.teamTotalTimes(Number(req.params.team_id))
 
-  res.json({times, total: total?.amount})
+  const avgs = await time_db.timenameAverages(req.params.team_id, columns, tags)
+
+  let [ total ] = await time_db.teamTotalTimes(Number(req.params.team_id), columns, tags)
+
+  res.json({times, total: total?.amount, avgs})
 })
 
 router.put('/:time_id/tag', user, async (req, res) => {
@@ -131,7 +136,7 @@ router.delete('/:id', user, async (req, res) => {
 
 router.get('/:id', user, async (req, res) => {
   const time = await time_helper.timeById(req.params.id)
-  console.log(time)
+
   res.json(time)
 })
 

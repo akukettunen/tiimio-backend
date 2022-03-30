@@ -14,9 +14,30 @@ const clipById = id => {
   `, [id])
 }
 
-const videoByClipId = id => {
+const clipAndVideoByClipId = id => {
   return query(`
     SELECT * FROM clip
+    LEFT JOIN video ON video.id = clip.video_id
+    WHERE clip.id = ?;
+  `, [id])
+}
+
+const clipTagsByClipId = id => {
+  return query(`
+    SELECT * FROM object_tag
+    LEFT JOIN tag ON tag.id = object_tag.tag_id
+    WHERE object_tag.clip_id = ?;
+  `, [id])
+}
+
+const videoByClipId = id => {
+  return query(`
+    SELECT 
+      *,
+      clip.id AS id,
+      clip.title as title,
+      video.id AS video_id
+    FROM clip
     JOIN video ON clip.video_id = video.id
     WHERE clip.id = ?;
   `, [id])
@@ -27,6 +48,13 @@ const batchAddTag = (clip_id, tag_ids) => {
     INSERT INTO object_tag( clip_id, tag_id )
     VALUES ${tag_ids.map(id => `(${clip_id}, ${id})`)};
   `)
+}
+
+const batchRemoveTag = (clip_id, tag_ids) => {
+  return query(`
+    DELETE FROM object_tag
+    WHERE tag_id IN (${tag_ids}) AND clip_id = ?;
+  `, [clip_id])
 }
 
 const addFolderObject = (clip_id, folder_id) => {
@@ -43,13 +71,16 @@ const folderObjectById = (clip_id, folder_id) => {
   `, [clip_id, folder_id])
 }
 
-const videoClips = id => {
+const clipTags = id => {
   return query(`
-    SELECT *, COUNT(object_tag.clip_id) as num_of_tags FROM clip
-    LEFT JOIN object_tag
-    ON clip.id = object_tag.clip_id
-    WHERE clip.video_id = ?
-    GROUP BY clip.id;
+    SELECT 
+      clip_id,
+      tag_id as id,
+      group_id,
+      tag_name as name
+    FROM object_tag
+    LEFT JOIN tag ON tag.id = object_tag.tag_id
+    WHERE clip_id = ?;
   `, [id])
 }
 
@@ -60,4 +91,24 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+const videoClips = id => {
+  return query(`
+    SELECT 
+      clip.*, 
+      COUNT(object_tag.clip_id) as num_of_tags,
+      JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'name', tag.tag_name,
+          'id', tag.id,
+          'group_id', tag.group_id
+        )
+      ) tags
+    FROM clip
+    LEFT JOIN object_tag ON clip.id = object_tag.clip_id
+    LEFT JOIN tag ON object_tag.tag_id = tag.id
+    WHERE clip.video_id = ?
+    GROUP BY clip.id;
+  `, [id])
+}
+
+module.exports = { clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }

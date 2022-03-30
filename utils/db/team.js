@@ -1,11 +1,17 @@
 const { query } = require('./index.js')
 
+const createTeam = ({ sportId, name, joinCode, leagueId, planId }) => {
+  return query(`
+    INSERT INTO team (team_name, league_id, sport_id, created, plan_id, join_code)
+    VALUES (?, ?, ?, NOW(), ?, ?);
+  `, [name, leagueId, sportId, planId, joinCode])
+}
 const userTeams = email => {
   return query(`
     SELECT team.created, email, team.id, join_code, league_admin, league_id, 
            league_name, team.sport_id, sport_name, team_admin, team_id,
            team_name, user_joined_team, stripe_id, team_orderer, plan.short_name, 
-           plan.full_name, plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved, plan.is_the_freemium
+           plan.full_name, plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved, plan.is_the_freemium, plan.is_the_best
     FROM user_team
     LEFT JOIN team ON user_team.team_id = team.id
     LEFT JOIN plan ON team.plan_id = plan.id
@@ -75,12 +81,13 @@ const teamById = id => {
   `, [id])
 }
 
-const addUserToTeam = ({ email, team_id }) => {
+const addUserToTeam = ({ email, team_id, orderer, stripe_id }) => {
+  orderer = orderer || false
   query(`
     INSERT INTO user_team (
-      email, team_id, team_admin, team_orderer, league_admin, user_joined_team
-    ) VALUES ( ?, ?, false, false, false, CURDATE() );
-  `, [email, team_id])
+      email, team_id, team_admin, team_orderer, league_admin, user_joined_team, stripe_id
+    ) VALUES ( ?, ?, ?, ?, false, CURDATE(), ? );
+  `, [email, team_id, orderer, orderer, stripe_id])
 }
 
 const changeJoinCode = (team_id, new_code) => {
@@ -106,4 +113,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }

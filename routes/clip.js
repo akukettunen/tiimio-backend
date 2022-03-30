@@ -9,8 +9,78 @@ const express = require('express')
       logger = require('../utils/logger')
       clip_db = require('../utils/db/clip')
       folder_db = require('../utils/db/folder')
+      clip_helper = require('../utils/clip/clipHelper')
       require('express-async-errors');
       const { user, is_in_team } = require('../middleware/authMiddleware');
+
+router.get('/team/:team_id', user, (req, res) => {
+  // TODO
+  is_in_team()
+
+  res.json('endpint coming soon!')
+})
+
+router.get('/:id', user, async (req, res) => {
+  const clip = await clip_helper.clipById(req.params.id)
+
+  is_in_team(clip.video_id)
+
+  res.json(clip)
+})
+
+router.put('/:clip_id/tag', user, async (req, res) => {
+  const [ clip ] = await clip_db.clipAndVideoByClipId(req.params.clip_id)
+
+  is_in_team(clip.team_id)
+
+  const current_tags = await clip_db.clipTags(req.params.clip_id)
+  const new_tags_ids = req.body.tags
+  const current_tags_ids = current_tags.map(t => t.id)
+  
+  const addIds = new_tags_ids.filter(n => !current_tags_ids.includes(n))
+  const removeIds = 
+    current_tags_ids
+      .filter(n => !new_tags_ids.includes(n))
+      .map(t => `'${t}'`)
+  
+  if(addIds?.length) {
+    await clip_db.batchAddTag(req.params.clip_id, addIds)
+  }
+  if(removeIds?.length) {
+    await clip_db.batchRemoveTag(req.params.clip_id, removeIds)
+  }
+
+  const updatedClip = await clip_helper.clipById(req.params.clip_id)
+  console.log(updatedClip)
+  res.json(updatedClip)
+})
+
+router.put('/:time_id/tag', user, async (req, res) => {
+  const [ time ] = await time_db.timeAndVideoByTimeId(req.params.time_id)
+
+  is_in_team(time.team_id)
+
+  const current_tags = await time_db.timeTags(req.params.time_id)
+  const new_tags_ids = req.body.tags
+  const current_tags_ids = current_tags.map(t => t.id)
+
+  const addIds = new_tags_ids.filter(n => !current_tags_ids.includes(n))
+  const removeIds = 
+    current_tags_ids
+      .filter(n => !new_tags_ids.includes(n))
+      .map(t => `'${t}'`)
+
+  if(addIds?.length) {
+    await time_db.batchAddTag(req.params.time_id, addIds)
+  }
+  if(removeIds?.length) {
+    await time_db.batchRemoveTag(req.params.time_id, removeIds)
+  }
+
+  const updatedTime = await time_helper.timeById(req.params.time_id)
+
+  res.json(updatedTime)
+})
 
 router.post('/', user, async (req, res) => {
   const { title, starttime, endtime, video_id, description, tags } = req.body
@@ -18,11 +88,12 @@ router.post('/', user, async (req, res) => {
   if(!title || !starttime || !endtime || !video_id ) throw new Error('bad request')
   
   let added = await clip_db.addClip(req.body)
-
-  let [ clip ] = await clip_db.clipById(added.insertId)
+  
   if(!clip) throw new Error('added clip not found')
   
-  if(tags && tags.length) await clip_db.batchAddTag(clip.id, tags)
+  if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags)
+  
+  let clip = await clip_helper.clipById(added.insertId)
 
   res.json({...clip, num_of_tags: tags.length })
 })

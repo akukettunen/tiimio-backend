@@ -69,17 +69,34 @@ const init = async () => {
 
   await query(`
     CREATE TABLE IF NOT EXISTS sport(
-      id INT PRIMARY KEY AUTO_INCREMENT,
-      sport_name VARCHAR(100),
+      id VARCHAR(20) PRIMARY KEY NOT NULL,
+      sport_name VARCHAR(100) NOT NULL,
+      specifier VARCHAR(100),
       created DATE
     );
   `)
 
   await query(`
     INSERT INTO sport(
-      created, sport_name
+      id, created, sport_name
     ) VALUES (
-      CURDATE(), 'Pesäpallo'
+      'baseball', CURDATE(), 'Baseball'
+    );
+  `)
+
+  await query(`
+    INSERT INTO sport(
+      id, created, sport_name, specifier
+    ) VALUES (
+      'pesapallo', CURDATE(), 'Pesäpallo', 'Finnish baseball'
+    );
+  `)
+
+  await query(`
+    INSERT INTO sport(
+      id, created, sport_name, specifier
+    ) VALUES (
+      'other', CURDATE(), 'Other', 'Works just as well!'
     );
   `)
 
@@ -88,7 +105,7 @@ const init = async () => {
       id INT PRIMARY KEY AUTO_INCREMENT,
       created DATE NOT NULL,
       league_name VARCHAR(100) NOT NULL,
-      sport_id INT NOT NULL,
+      sport_id VARCHAR(20) NOT NULL,
       FOREIGN KEY (sport_id) REFERENCES sport(id)
     );
   `)
@@ -97,7 +114,7 @@ const init = async () => {
     CREATE TABLE IF NOT EXISTS plan(
       id INT PRIMARY KEY AUTO_INCREMENT,
       is_the_freemium BOOLEAN NOT NULL,
-      is_the_ best BOOLEAN NOT NULL,
+      is_the_best BOOLEAN NOT NULL,
       created DATE NOT NULL,
       upload_hours_per_month INT NOT NULL,
       total_hours_saved INT,
@@ -116,19 +133,19 @@ const init = async () => {
 
   await query(`
       INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (false, false, 15, CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
+      VALUES (false, true, 15, CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
   `)
 
   await query(`
       INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (false, true, 40, CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
+      VALUES (false, false, 40, CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
   `)
 
   await query(`
     INSERT INTO league (
       created, league_name, sport_id
     ) VALUES (
-      CURDATE(), "Testi-liiga", 1
+      CURDATE(), "Testi-liiga", 'baseball'
     );
   `)
 
@@ -148,11 +165,11 @@ const init = async () => {
       id INT PRIMARY KEY AUTO_INCREMENT,
       team_name VARCHAR(100) NOT NULL,
       league_id INT,
-      sport_id INT NOT NULL,
+      sport_id VARCHAR(20) NOT NULL,
       created DATE NOT NULL,
       plan_id INT NOT NULL,
       join_code VARCHAR(20),
-      FOREIGN KEY (league_id) REFERENCES league(id),
+      FOREIGN KEY (league_id) REFERENCES league(id) ON DELETE SET NULL,
       FOREIGN KEY (sport_id) REFERENCES sport(id),
       FOREIGN KEY (plan_id) REFERENCES plan(id)
     );
@@ -162,8 +179,8 @@ const init = async () => {
   INSERT INTO team (
     team_name, league_id, sport_id, created, join_code, plan_id
     ) VALUES 
-    ( "Testi-tiimi", NULL, 1, CURDATE(), "123456", 1 ),
-    ( "Koskenkorvan Urheilijat", NULL, 1, CURDATE(), "A7RHSK", 1 )
+    ( "Testi-tiimi", NULL, 'pesapallo', CURDATE(), "123456", 1 ),
+    ( "Koskenkorvan Urheilijat", NULL, 'baseball', CURDATE(), "A7RHSK", 1 )
     ;
   `)
 
@@ -179,6 +196,7 @@ const init = async () => {
       original_type VARCHAR(20) NOT NULL,
       original_size INT NOT NULL,
       mp4_url VARCHAR(1000),
+      mp4_s3_url VARCHAR(1000),
       deleted BOOLEAN DEFAULT false,
       hls_url VARCHAR(1000),
       duration_ts INT,
@@ -186,11 +204,11 @@ const init = async () => {
       thumb_url VARCHAR(300),
       lazy_thumb_url VARCHAR(300),
       s3_key VARCHAR(50) NOT NULL,
-      uploader VARCHAR(300) NOT NULL,
+      uploader VARCHAR(300),
       uploaded DATE NOT NULL,
       encoded BOOLEAN NOT NULL,
-      FOREIGN KEY (team_id) REFERENCES team(id),
-      FOREIGN KEY (uploader) REFERENCES user(email)
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
+      FOREIGN KEY (uploader) REFERENCES user(email) ON DELETE SET NULL
     );
   `)
 
@@ -212,9 +230,11 @@ const init = async () => {
       id INT PRIMARY KEY AUTO_INCREMENT,
       group_name VARCHAR(100) NOT NULL,
       team_id INT,
+      mirrors INT,
       league_id INT,
-      FOREIGN KEY (league_id) REFERENCES league(id),
-      FOREIGN KEY (team_id) REFERENCES team(id)
+      FOREIGN KEY (league_id) REFERENCES league(id) ON DELETE SET NULL,
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
+      FOREIGN KEY (mirrors) REFERENCES tag_group(id) ON DELETE SET NULL
     );
   `)
 
@@ -232,7 +252,7 @@ const init = async () => {
         id INT PRIMARY KEY AUTO_INCREMENT,
         group_id INT NOT NULL,
         tag_name VARCHAR(50) NOT NULL,
-        FOREIGN KEY (group_id) REFERENCES tag_group(id)
+        FOREIGN KEY (group_id) REFERENCES tag_group(id) ON DELETE CASCADE
       );
   `)
 
@@ -275,8 +295,8 @@ const init = async () => {
       user_joined_team DATE,
       stripe_id VARCHAR(100),
       current_plan INT,
-      FOREIGN KEY (team_id) REFERENCES team(id),
-      FOREIGN KEY (email) REFERENCES user(email),
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
+      FOREIGN KEY (email) REFERENCES user(email) ON DELETE CASCADE,
       FOREIGN KEY (current_plan) REFERENCES plan(id)
     );
   `)
@@ -305,21 +325,6 @@ const init = async () => {
   // `)
 
   await query(`
-    CREATE TABLE IF NOT EXISTS folder(
-      id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-      team_id INT NOT NULL,
-      name VARCHAR(50),
-      created TIMESTAMP NOT NULL,
-      parent INT,
-      position INT,
-      clip_id INT,
-      type VARCHAR(10),
-      FOREIGN KEY (parent) REFERENCES folder(id) ON DELETE CASCADE,
-      FOREIGN KEY (team_id) REFERENCES team(id)
-    );
-  `)
-
-  await query(`
       CREATE TABLE IF NOT EXISTS time(
         id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
         video_id VARCHAR(50) NOT NULL,
@@ -328,6 +333,24 @@ const init = async () => {
         created TIMESTAMP NOT NULL,
         FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE
       );
+  `)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS folder(
+      id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+      team_id INT NOT NULL,
+      name VARCHAR(50),
+      created TIMESTAMP NOT NULL,
+      parent INT,
+      position INT,
+      clip_id INT,
+      time_id INT,
+      type VARCHAR(10),
+      FOREIGN KEY (parent) REFERENCES folder(id) ON DELETE CASCADE,
+      FOREIGN KEY (clip_id) REFERENCES clip(id) ON DELETE CASCADE,
+      FOREIGN KEY (time_id) REFERENCES time(id) ON DELETE CASCADE,
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
+    );
   `)
 
   await query(`
@@ -352,7 +375,7 @@ const init = async () => {
         video_time DECIMAL(10, 4) NOT NULL,
         time_from_first DECIMAL(8, 4) NOT NULL,
         pretty_time VARCHAR(5) NOT NULL,
-        FOREIGN KEY (timename_id) REFERENCES timename(id),
+        FOREIGN KEY (timename_id) REFERENCES timename(id) ON DELETE CASCADE,
         FOREIGN KEY (time_id) REFERENCES time(id) ON DELETE CASCADE
       );
   `)
@@ -369,6 +392,32 @@ const init = async () => {
         FOREIGN KEY (tag_id) REFERENCES tag(id) ON DELETE CASCADE
       );
   `)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS filter(
+      id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, 
+      team_id VARCHAR(100) NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      description VARCHAR(1000),
+      created DATE NOT NULL,
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
+    );
+  `)
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS filter_parameter(
+        id PRIMARY KEY AUTO_INCREMENT NOT NULL,
+        filter_id INT NOT NULL,
+        team_id INT NOT NULL,
+        action VARCHAR(10) NOT NULL, ${/* AND | OR */ ''}
+        FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
+        FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE     
+      );
+  `)
+
+  
+
+  await query(``)
 
   let tables = await query(`show tables;`)
   tables.map(table => {

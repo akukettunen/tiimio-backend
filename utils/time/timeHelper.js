@@ -1,10 +1,22 @@
 const time_db = require('../db/time')
 
 const timeById = async id => {
-  const [ time ] = await time_db.byId(id)
+  let time;
+  try {
+    time = await time_db.byId(id)
+  } catch(e) {
+    throw new Error(e)
+  }
 
-  const tags = await time_db.timeTags(id)
-  const data = await time_db.timeTimenameByTimeId(id)
+  [ time ] = time
+
+  let tags, data;
+  try {
+    tags = await time_db.timeTags(id)
+    data = await time_db.timeTimenameByTimeId(id)
+  } catch(e) {
+    throw new Error(e)
+  }
 
   return {
     ...time,

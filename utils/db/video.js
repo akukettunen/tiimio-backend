@@ -33,12 +33,12 @@ const uploadedTotalNotDeleted = team_id => {
   `, [team_id])
 }
 
-const videoDone = ({ thumb_url, lazy_thumb_url, job_id, mp4_url, duration, duration_ts }) => {
+const videoDone = ({ thumb_url, lazy_thumb_url, job_id, mp4_url, mp4_s3_url, duration, duration_ts }) => {
   return query(`
     UPDATE video
-    SET thumb_url = ?, lazy_thumb_url = ?, mp4_url = ?, encoded = true, duration = ?, duration_ts = ?
+    SET thumb_url = ?, lazy_thumb_url = ?, mp4_url = ?, mp4_s3_url = ?, encoded = true, duration = ?, duration_ts = ?
     WHERE job_id = ?;
-  `, [thumb_url, lazy_thumb_url, mp4_url, duration, duration_ts, job_id]) // job id has to be last
+  `, [thumb_url, lazy_thumb_url, mp4_url, mp4_s3_url, duration, duration_ts, job_id]) // job id has to be last
 }
 
 const videoByJobId = job_id => {

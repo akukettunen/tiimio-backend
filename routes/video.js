@@ -135,7 +135,15 @@ router.get('/:id', user, async (req, res) => {
     }
   })
 
-  res.json( { ...video, clips, times: mapped_times } )
+  let mapped_clips = clips.map(t => {
+    let parsed = JSON.parse(t.tags)
+    return {
+      ...t,
+      tags: parsed[0]?.id ? parsed : []
+    }
+  })
+
+  res.json( { ...video, clips: mapped_clips, times: mapped_times } )
 })
 
 router.get('/team/:team_id/uploaded', user, async (req, res) => {

@@ -65,6 +65,14 @@ const deleteObjectTagById = id => {
     WHERE tag_id = ?;
   `, [id])
 } 
+
+const deleteGroupById = id => {
+  return query(`
+    DELETE FROM tag_group
+    WHERE id = ?;
+  `, [id])
+}
+
 const deleteById = id => {
   return query(`
     DELETE FROM tag
@@ -73,4 +81,4 @@ const deleteById = id => {
 }
 
 
-module.exports = { updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

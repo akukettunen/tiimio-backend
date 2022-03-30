@@ -94,5 +94,16 @@ router.delete('/:tag_id', async (req, res) => {
   res.send('ok!')
 })
 
+router.delete('/group/:tag_group_id', user, async (req, res) => {
+  let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
+  if(!group) throw new Error('group not found')
+
+  is_in_team(group.team_id)
+
+  await tag_db.deleteGroupById(req.params.tag_group_id)
+
+  res.send('ok!')
+})
+
 
 module.exports = router;

@@ -64,7 +64,7 @@ router.post('/', user, async (req, res) => {
   if(!folder || !folder.name || !folder.team_id || !folder.type) {
     throw new Error('bad request')
   }
-
+  console.log(folder)
   if(folder.type !== 'folder' && folder.type !== 'clip' && folder.type !== 'time') {
     throw new Error('folder type wrong')
   }

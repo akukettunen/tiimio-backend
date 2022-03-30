@@ -9,6 +9,10 @@
     "start": "node index.js   --host 0.0.0.0 --disable-host-check",
     "build": "echo would have build here..."
   },
+  "overrides": {
+    "node-ipc@>9.2.1 <10": "9.2.1",
+    "node-ipc@>10.1.0": "10.1.0"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {

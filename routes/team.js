@@ -1,7 +1,9 @@
 require('dotenv').config()
 const express = require('express');
-const { user } = require('../middleware/authMiddleware')
-      db = require('../utils/db/index')
+const { query } = require('../utils/db/index')
+const { user } = require('../middleware/authMiddleware');
+const { createCustomer } = require('../utils/stripe/index')
+const db = require('../utils/db/index')
       router = express.Router()
       bcrypt = require('bcryptjs');
       jwt = require('jsonwebtoken')
@@ -13,8 +15,64 @@ const { user } = require('../middleware/authMiddleware')
       user_db = require('../utils/db/user')
       coconut = require('../utils/coconut/index')
       coconut_configs = require('../utils/coconut/configs')
-      stripe = require('stripe')(process.env.STRIPE_SECRET_API_KEY);
       join_code = require('../utils/video/join_code')
+      team_helper = require('../utils/team/teamHelper')
+      initialValues = require('../utils/team/initialValues')
+      require('express-async-errors');
+
+router.post('/', user, async (req, res) => {
+  const { team_name, sport_id } = req.body
+  if(!team_name || !sport_id) throw new Error('bad request')
+
+  const joinCode = await team_helper.generateJoinCode()
+
+  const [{ planId }] = await query(`
+    SELECT id AS planId 
+    FROM plan 
+    WHERE is_the_freemium = true;
+  `)
+
+  const { insertId } = await team_db.createTeam({
+    sportId: sport_id,
+    name: team_name,
+    joinCode, 
+    leagueId: undefined, 
+    joinCode,
+    planId
+  })
+
+  const stripeCustomer = await createCustomer({ 
+    full_name: req.tiimio_user.name,
+    email: req.tiimio_user.email,
+    meta: {
+      team_id: insertId,
+      team_name: team_name
+    }
+  })
+
+  await team_db.addUserToTeam({
+    email: req.tiimio_user.email,
+    team_id: insertId,
+    orderer: true,
+    stripe_id: stripeCustomer.id
+  })
+
+  const initial = initialValues[sport_id]()
+  await time_db.batchAddTimename(insertId, initial['timenames'])
+
+  let teams = await team_db.userTeams(req.tiimio_user.email)
+
+  const token = jwt.sign(
+    {
+      ...req.tiimio_user,
+      currentTeamId: Number(insertId),
+      teams
+    },
+    process.env.SECRET_KEY
+  )
+
+  res.json({ token })
+})
 
 router.post('/join', user, async (req, res) => {
   if(!req.body.join_code) throw new Error('no join code!')
