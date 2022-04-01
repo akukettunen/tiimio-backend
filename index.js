@@ -12,9 +12,9 @@ const   express = require('express')
         session = require('express-session')
         user_middleware = require('./middleware/userMiddleware')
 
+app.use(cors())
 app.use(bodyParser.json())
 app.use(cookieParser())
-app.use(cors())
 app.use(user_middleware)
 
 // TODO: change secret

@@ -393,31 +393,27 @@ const init = async () => {
       );
   `)
 
-  await query(`
-    CREATE TABLE IF NOT EXISTS filter(
-      id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, 
-      team_id VARCHAR(100) NOT NULL,
-      title VARCHAR(200) NOT NULL,
-      description VARCHAR(1000),
-      created DATE NOT NULL,
-      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
-    );
-  `)
+  // await query(`
+  //   CREATE TABLE IF NOT EXISTS filter(
+  //     id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, 
+  //     team_id INT NOT NULL,
+  //     title VARCHAR(200) NOT NULL,
+  //     description VARCHAR(1000),
+  //     created DATE NOT NULL,
+  //     FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
+  //   );
+  // `)
 
-  await query(`
-      CREATE TABLE IF NOT EXISTS filter_parameter(
-        id PRIMARY KEY AUTO_INCREMENT NOT NULL,
-        filter_id INT NOT NULL,
-        team_id INT NOT NULL,
-        action VARCHAR(10) NOT NULL, ${/* AND | OR */ ''}
-        FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
-        FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE     
-      );
-  `)
-
-  
-
-  await query(``)
+  // await query(`
+  //     CREATE TABLE IF NOT EXISTS filter_parameter(
+  //       id PRIMARY KEY AUTO_INCREMENT NOT NULL,
+  //       filter_id INT NOT NULL,
+  //       team_id INT NOT NULL,
+  //       action VARCHAR(10) NOT NULL, ${/* AND | OR */ ''}
+  //       FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
+  //       FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE     
+  //     );
+  // `)
 
   let tables = await query(`show tables;`)
   tables.map(table => {

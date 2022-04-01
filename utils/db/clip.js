@@ -1,5 +1,24 @@
 const { query } = require('./index.js')
 
+const teamClips = (team_id, index = 0, limit = 5) => {
+  return query(`
+    SELECT 
+      video.id,
+      video.title,
+      JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'title', clip.title,
+          'id', clip.id
+        )
+      ) clips
+    FROM clip
+    LEFT JOIN video ON video.id = clip.video_id
+    WHERE video.team_id = ?
+    GROUP BY video.id
+    LIMIT ?, ?;
+  `, [team_id, index, limit])
+}
+
 const addClip = ({ title, starttime, endtime, video_id, description }) => {
   return query(`
     INSERT INTO clip ( title, starttime, endtime, video_id, description, created )
@@ -111,4 +130,4 @@ const videoClips = id => {
   `, [id])
 }
 
-module.exports = { clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+module.exports = { teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }

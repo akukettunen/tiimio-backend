@@ -13,11 +13,21 @@ const express = require('express')
       require('express-async-errors');
       const { user, is_in_team } = require('../middleware/authMiddleware');
 
-router.get('/team/:team_id', user, (req, res) => {
-  // TODO
+router.get('/team/:team_id', async (req, res) => {
+  const { index, limit } = req.query;
+
+  const videos = await clip_db.teamClips(req.params.team_id, index, limit)
+
   is_in_team()
 
-  res.json('endpint coming soon!')
+  const parsed_videos = videos.map(video => {
+    return {
+      ...video,
+      clips: JSON.parse(video?.clips)
+    }
+  })
+
+  res.json({ videos: parsed_videos })
 })
 
 router.get('/:id', user, async (req, res) => {
@@ -89,11 +99,10 @@ router.post('/', user, async (req, res) => {
   
   let added = await clip_db.addClip(req.body)
   
-  if(!clip) throw new Error('added clip not found')
-  
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags)
   
   let clip = await clip_helper.clipById(added.insertId)
+  if(!clip) throw new Error('added clip not found')
 
   res.json({...clip, num_of_tags: tags.length })
 })

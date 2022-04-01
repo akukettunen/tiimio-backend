@@ -91,4 +91,4 @@ const other = () => {
   }
 }
 
-module.exports = { pesapallo, baseball }
+module.exports = { pesapallo, baseball, other }

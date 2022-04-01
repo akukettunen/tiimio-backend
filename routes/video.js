@@ -27,7 +27,7 @@ router.post('/', user, async (req, res) => {
   is_in_team()
 
   let url;
-  if(process.env.ENVIRONMENT == 'dev') {
+  if(process.env.ENVIRONMENT == 'deve') {
     try {
       url = await ngrok.connect({
         authtoken: '261uxjtMzpNTQCdpidogLCyOjx7_4K8Uyr8va1sTK4uHtpurq',
@@ -38,7 +38,7 @@ router.post('/', user, async (req, res) => {
       throw new Error('ngrok tunnel failed: ', err)
     }
   } else {
-    url = process.env.URL_BASE + '/video/webhook'
+    url = process.env.URL_BASE
   }
 
   const params = {
