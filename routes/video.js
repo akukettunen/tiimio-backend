@@ -102,7 +102,7 @@ router.get('/:id/encoding-state', user, async (req, res) => {
       throw new Error('job not found')
   }
 
-  res.json({...job_data, uploaded})
+  res.json({...{...job_data, id: null}, ...video, uploaded})
 })
 
 router.get('/team/:id', user, async (req, res) => {
