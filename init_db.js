@@ -155,7 +155,7 @@ const init = async () => {
       full_name VARCHAR(200) NOT NULL,
       tiimio_admin BOOLEAN NOT NULL DEFAULT false,
       password VARCHAR(300) NOT NULL,
-      email_confirmed BOOLEAN NOT NULL DEFAULT false,
+      email_confirmed x NOT NULL DEFAULT false,
       joined DATE NOT NULL
     );
   `)

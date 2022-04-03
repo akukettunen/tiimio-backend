@@ -18,6 +18,7 @@ const db = require('../utils/db/index')
       join_code = require('../utils/video/join_code')
       team_helper = require('../utils/team/teamHelper')
       initialValues = require('../utils/team/initialValues')
+      userHelper = require('../utils/user/userHelper')
       require('express-async-errors');
 
 router.post('/', user, async (req, res) => {
@@ -60,14 +61,10 @@ router.post('/', user, async (req, res) => {
   const initial = initialValues[sport_id]()
   await time_db.batchAddTimename(insertId, initial['timenames'])
 
-  let teams = await team_db.userTeams(req.tiimio_user.email)
-
+  const user = await userHelper.createUserData(insertId, req.tiimio_user)
+  console.log(user)
   const token = jwt.sign(
-    {
-      ...req.tiimio_user,
-      currentTeamId: Number(insertId),
-      teams
-    },
+    user,
     process.env.SECRET_KEY
   )
 
@@ -89,9 +86,7 @@ router.post('/join', user, async (req, res) => {
     team_id: team.id
   })
 
-  let user = req.tiimio_user
-  user['teams'] = teams.concat(team)
-  user['currentTeamId'] = team.id
+  const user = await userHelper.createUserData(team.id, req.tiimio_user)
 
   const token = jwt.sign(
     user,

@@ -11,6 +11,7 @@ const express = require('express')
       user_db = require('../utils/db/user')
       team_db = require('../utils/db/team')
       stripe = require('../utils/stripe/index')
+      userHelper = require('../utils/user/userHelper')
       require('express-async-errors');
 
 router.post('/login', async (req, res) => {
@@ -28,31 +29,10 @@ router.post('/login', async (req, res) => {
 
   if(!result) throw Error('wrong password or email')
 
-  // get users teams from db
-  let teams = await team_db.userTeams(email)
-  let teamIds = teams.map(t => t.id)
-  let isInRequestedTeam = teamIds.includes(Number(currentTeamId))
-  // parses the teams joincode away if the user isnt an admin
-  teams = teams.map(team => {
-    if(!team.team_admin) delete team.join_code
-    return team
-  })
-
   // lets not return the password to frontend
   delete user.password
 
-  // combines the user, their team data and their chosen teamId
-  if(currentTeamId && isInRequestedTeam) {
-    user = { ...user, teams, currentTeamId }
-  } else if(teams.length > 0) {
-    user = { 
-      ...user, 
-      teams, 
-      currentTeamId: teamIds[0]
-    }
-  } else {
-    user = { ...user, teams }
-  }
+  user = await userHelper.createUserData(currentTeamId, user)
 
   // creates a token with said data
   const token = jwt.sign(
@@ -61,8 +41,6 @@ router.post('/login', async (req, res) => {
     { expiresIn: '1d' }
   )
 
-  // more straightforward to send the user data seperately
-  // allthough the token contains that data too
   res.send({ token })
 })
 
@@ -104,29 +82,9 @@ router.get('/refresh', user, async (req, res) => {
   let { email } = req.tiimio_user
   let [ user ] = await user_db.getUserByEmail(email)
 
-  let teams = await team_db.userTeams(email)
-  let teamIds = teams.map(t => t.id)
-  let isInRequestedTeam = teamIds.includes(Number(currentTeamId))
-
-  teams = teams.map(team => {
-    if(!team.team_admin) delete team.join_code
-    return team
-  })
-
   delete user.password
 
-  // combines the user, their team data and their chosen teamId
-  if(currentTeamId && isInRequestedTeam) {
-    user = { ...user, teams, currentTeamId }
-  } else if(teams.length > 0) {
-    user = { 
-      ...user,
-      teams,
-      currentTeamId: teamIds[0]
-    }
-  } else {
-    user = { ...user, teams }
-  }
+  user = await userHelper.createUserData(currentTeamId, user)
 
   const token = jwt.sign(
     user,
