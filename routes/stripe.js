@@ -37,7 +37,7 @@ router.post('/customer-session-url', user, async (req, res) => {
   const num_of_subscriptions = subscriptions_object.data.length
 
   let session
-  if(num_of_subscriptions > 0) {
+  if(num_of_subscriptions > 0 || !req.body.lookup_key) {
     session = await stripeHelper.portalSessionUrlByStripeId(userTeam.stripe_id)
   } else {
     session = await stripeHelper.checkoutSessionUrlByStripeId(userTeam.stripe_id, req.body.lookup_key)
