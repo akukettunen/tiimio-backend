@@ -6,9 +6,9 @@ const createUserData = async (currentTeamId, user) => {
   // get users teams from db
   let teams = await team_db.userTeams(email)
   let teamIds = teams.map(t => t.id)
-  console.log(teams)
-  currentTeamId = currentTeamId || teams[0].id
+
   let isInRequestedTeam = teamIds.includes(Number(currentTeamId))
+  if(!isInRequestedTeam) currentTeamId = teamIds[0]
 
   // parses the teams joincode away if the user isnt an admin
   teams = teams.map(team => {
@@ -22,13 +22,11 @@ const createUserData = async (currentTeamId, user) => {
   })
 
   // combines the user, their team data and their chosen teamId
-  if(isInRequestedTeam) {
-    user = { ...user, teams, currentTeamId }
-  } else if(teams.length > 0) {
+  if(teams.length > 0) {
     user = { 
-      ...user, 
-      teams, 
-      currentTeamId: teamIds[0]
+      ...user,
+      teams,
+      currentTeamId
     }
   } else {
     user = { ...user, teams, currentTeamId: null }
