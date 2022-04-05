@@ -113,6 +113,10 @@ const init = async () => {
   await query(`
     CREATE TABLE IF NOT EXISTS plan(
       id INT PRIMARY KEY AUTO_INCREMENT,
+      chip_phrase VARCHAR(20) NOT NULL,
+      price INT NOT NULL,
+      users INT NOT NULL,
+      quality VARCHAR(30) NOT NULL,
       is_the_freemium BOOLEAN NOT NULL,
       is_the_best BOOLEAN NOT NULL,
       created DATE NOT NULL,
@@ -122,23 +126,23 @@ const init = async () => {
       short_name VARCHAR(10) NOT NULL,
       full_name VARCHAR(40) NOT NULL,
       description VARCHAR(1000) NOT NULL,
-      price INT NOT NULL
+      price_per_month VARCHAR(10) NOT NULL
     );
   `)
 
   await query(`
-      INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (true, false, 0.5, CURDATE(), null, 'test', 'Test Plan', 'This is the test plan', 0 );
+      INSERT INTO plan (chip_phrase, users, price_per_month, quality, is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES ('Basic', 5, '0', '480', true, false, 3, CURDATE(), null, 'test', 'Test Plan', 'This is the test plan', 0 );
   `)
 
   await query(`
-      INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (false, true, 15, CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
+      INSERT INTO plan (chip_phrase, users, price_per_month, quality, is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES ('Better', 12, '19.90', '480', false, false, 15, CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
   `)
 
   await query(`
-      INSERT INTO plan (is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
-      VALUES (false, false, 40, CURDATE(), 'price_1KDwlGA2CHRD2pUGzsaCaX2k', 'basic', 'Basic Plan', 'This is the basic plan', 15 );
+      INSERT INTO plan (chip_phrase, users, price_per_month, quality, is_the_freemium, is_the_best, upload_hours_per_month, created, stripe_price_id, short_name, full_name, description, price)
+      VALUES ('Best!', 25, '29.90', '720', false, true, 30, CURDATE(), 'price_1KEFwZA2CHRD2pUGhaehEJpN', 'gold', 'Gold Plan', 'This is the gold plan', 25 );
   `)
 
   await query(`
@@ -155,7 +159,7 @@ const init = async () => {
       full_name VARCHAR(200) NOT NULL,
       tiimio_admin BOOLEAN NOT NULL DEFAULT false,
       password VARCHAR(300) NOT NULL,
-      email_confirmed x NOT NULL DEFAULT false,
+      email_confirmed boolean NOT NULL DEFAULT false,
       joined DATE NOT NULL
     );
   `)

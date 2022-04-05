@@ -12,7 +12,7 @@ const createUserData = async (currentTeamId, user) => {
 
   // parses the teams joincode away if the user isnt an admin
   teams = teams.map(team => {
-    if(!team.team_admin) delete team.join_code
+    if(!team.team_admin && !team.team_orderer) delete team.join_code
     return team
   })
 
