@@ -87,6 +87,10 @@ const other = () => {
           'Defense'
         ]
       }
+    ],
+    timenames: [
+      "Start",
+      "End"
     ]
   }
 }

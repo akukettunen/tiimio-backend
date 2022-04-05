@@ -8,10 +8,11 @@ const createTeam = ({ sportId, name, joinCode, leagueId, planId }) => {
 }
 const userTeams = email => {
   return query(`
-    SELECT email, team.id, join_code, league_admin, league_id, 
-           league_name, team.sport_id, sport_name, team_admin, team_id,
-           team_name, stripe_id, plan.short_name, team_orderer,
-           plan.full_name, plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved, plan.is_the_freemium, plan.is_the_best
+    SELECT email, team.id AS id, league.id as league_id, join_code, 
+      league_admin, league_id, league_name, team.sport_id, sport_name, team_admin, 
+      team_name, stripe_id, plan.short_name, team_orderer, plan.full_name, 
+      plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved, 
+      plan.is_the_freemium, plan.is_the_best
     FROM user_team
     LEFT JOIN team ON user_team.team_id = team.id
     LEFT JOIN plan ON team.plan_id = plan.id
@@ -19,6 +20,13 @@ const userTeams = email => {
     LEFT JOIN sport ON team.sport_id = sport.id
     WHERE user_team.email = ?;
   `, [email])
+}
+
+const deleteUserTeam = (email, team_id) => {
+  return query(`
+    DELETE FROM user_team
+    WHERE email = ? AND team_id = ?;
+  `, [email, team_id])
 }
 
 const teamUsers = team_id => {
@@ -67,7 +75,7 @@ const changeTeamPlan = ({team_id, plan_id}) => {
 
 const teamByJoinCode = code => {
   return query(`
-    SELECT * FROM team
+    SELECT team.* FROM team
     LEFT JOIN plan ON plan.id = team.plan_id
     WHERE join_code = ?;
   `, [code.toString()])
@@ -113,4 +121,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }

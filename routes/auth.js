@@ -78,13 +78,13 @@ router.post('/signin', async (req, res) => {
 
 router.get('/refresh', user, async (req, res) => {
   let { currentTeamId } = req.query
-
+  let inUserCurrentTeamId = req.tiimio_user.currentTeamId 
   let { email } = req.tiimio_user
   let [ user ] = await user_db.getUserByEmail(email)
 
   delete user.password
-
-  user = await userHelper.createUserData(currentTeamId, user)
+  console.log('alksdjnk')
+  user = await userHelper.createUserData(currentTeamId || inUserCurrentTeamId, user)
 
   const token = jwt.sign(
     user,

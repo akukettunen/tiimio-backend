@@ -1,9 +1,9 @@
 require('dotenv').config()
 const express = require('express');
 const { query } = require('../utils/db/index')
-const { user } = require('../middleware/authMiddleware');
+const { user, is_in_team } = require('../middleware/authMiddleware');
 const { createCustomer } = require('../utils/stripe/index')
-const db = require('../utils/db/index')
+const db = require('../utils/db/index');
       router = express.Router()
       bcrypt = require('bcryptjs');
       jwt = require('jsonwebtoken')
@@ -62,7 +62,7 @@ router.post('/', user, async (req, res) => {
   await time_db.batchAddTimename(insertId, initial['timenames'])
 
   const user = await userHelper.createUserData(insertId, req.tiimio_user)
-  console.log(user)
+
   const token = jwt.sign(
     user,
     process.env.SECRET_KEY
@@ -79,13 +79,12 @@ router.post('/join', user, async (req, res) => {
 
   if(!team) throw new Error('team not found :(')
   
-  if(teams.find(tea => tea.id == team.id)) throw new Error(`you belong to ${team.team_name} already!`)  
+  if(teams.find(t => t.id == team.id)) throw new Error(`you belong to ${team.team_name} already!`)  
 
   await team_db.addUserToTeam({
     email: req.tiimio_user.email,
     team_id: team.id
   })
-
   const user = await userHelper.createUserData(team.id, req.tiimio_user)
 
   const token = jwt.sign(
@@ -150,6 +149,23 @@ router.delete('/:id/user/:email', user, async (req, res) => {
   let data = await team_db.deleteUserFromTeam(req.params.id, req.params.email)
 
   res.send('user deleted!')
+})
+
+router.delete('/userteam/:team_id/user/:email', user, async (req, res) => {
+  is_in_team()
+
+  const { team_id, email } = req.params;
+
+  await team_db.deleteUserTeam(email, team_id)
+
+  const user = await userHelper.createUserData(team_id, req.tiimio_user)
+
+  const token = jwt.sign(
+    user,
+    process.env.SECRET_KEY
+  )
+
+  res.json({ token })
 })
 
 module.exports = router;
