@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_API_KEY);
+const { user, is_in_team } = require('../middleware/authMiddleware');
 const express = require('express');
       db = require('../utils/db/index')
       router = express.Router()
@@ -18,13 +19,12 @@ const express = require('express');
       //TODO
       // const endpointSecret = 'whsec_Wlnv0c0BiANLlcX3ApAyVCSphmLCkMTT'
 
-router.post('/create-customer-portal-session', async (req, res) => {
+router.post('/create-customer-portal-session', user, async (req, res) => {
 
   const [ user ] = await user_db.getUserByEmail(req.tiimio_user.email)
   const team_id = req.body.team_id
 
   // TODO check if user in fact is in team
-
   const [ stripe_id ] = await team_db.userTeamStripeId({
     team_id: team_id,
     email: user.email
@@ -33,7 +33,7 @@ router.post('/create-customer-portal-session', async (req, res) => {
   // Authenticate your user.
   const session = await stripe.billingPortal.sessions.create({
     customer: stripe_id.stripe_id,
-    return_url: 'http://localhost:8080/#/refresh',
+    return_url: process.env.FRONTEND_BASE_URL + '/#/refresh',
   });
 
   res.json({
@@ -41,14 +41,14 @@ router.post('/create-customer-portal-session', async (req, res) => {
   });
 })
 
-router.post('/create-checkout-session', async (req, res) => {
+router.post('/create-checkout-session', user, async (req, res) => {
   // const prices = await stripe.prices.list({
   //   lookup_keys: [req.body.lookup_key],
   //   expand: ['data.product'],
   // });
   if(!req.body.team_id) throw new Error('team_id missing')
-  let success_url = 'http://localhost:8080/#/refresh';
-  let cancel_url = req.body.cancel_url;
+  let success_url = process.env.FRONTEND_BASE_URL + '/#/refresh?session_id={CHECKOUT_SESSION_ID}';
+  let cancel_url = process.env.FRONTEND_BASE_URL + '/#/videos';
 
   let [ user_team ] = await team_db.userTeamByEmailAndTeamId({
     team_id: req.body.team_id,
@@ -65,14 +65,14 @@ router.post('/create-checkout-session', async (req, res) => {
     line_items: [
       {
         price: req.body.lookup_key,
-        quantity: 1,
+        quantity: 1
       },
     ],
     // todo ??
     customer: user_team.stripe_id,
     mode: 'subscription',
-    success_url: success_url || `http://localhost:8080/success.html?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: cancel_url || `http://localhost:8080/cancel.html`,
+    success_url: success_url,
+    cancel_url: cancel_url,
     'customer_update[address]': 'auto',
     automatic_tax: {enabled: true}
   });
@@ -83,7 +83,6 @@ router.post('/create-checkout-session', async (req, res) => {
 router.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const event = req.body
   // console.log(event.data.object.items.data[0].price)
-  console.log('pyyntö')
   let customer_stripe_id = event.data.object.customer
   let [ userTeam ] = await team_db.userTeamByStripeId(customer_stripe_id)
   // if (endpointSecret) {
@@ -136,6 +135,12 @@ router.get('/team/:id', async (req, res) => {
   // TODO: vain oman joukkueen videod
   let videos = await video_db.teamVideos(req.params.id)
   res.send(videos)
+})
+
+router.get('/session/:session_id', user, async (req, res) => {
+  let session = await stripeHelper.sessionById(req.params.session_id)
+
+  res.json(session)
 })
 
 module.exports = router;

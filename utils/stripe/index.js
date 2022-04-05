@@ -11,8 +11,10 @@ const createCustomer = async c => {
   return customer
 }
 
-const changePlan = ({ plan_id, team_id }) => {
-  
+const sessionById = async id => {
+  const session = await stripe.checkout.sessions.retrieve(id);
+
+  return session
 }
 
-module.exports = { createCustomer }
+module.exports = { createCustomer, sessionById }
