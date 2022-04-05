@@ -41,12 +41,23 @@ router.post('/', user, async (req, res) => {
     url = process.env.URL_BASE
   }
 
+  let [ plan ] = await  video_db.planByTeamId(req.body.team_id)
+
+  let coconut_config
+  if(plan?.quality == 480) {
+    coconut_config = coconut_configs.normal(`/${id}`)
+  } else if(plan?.quality == 720) {
+    coconut_config = coconut_configs.high_definition(`/${id}`)
+  } else {
+    coconut_config = coconut_configs.normal(`/${id}`)
+  }
+
   const params = {
     "settings": {
       "ultrafast": true
     },
     "input": { "url": req.body.original_url },
-    "outputs": coconut_configs.normal(`/${id}`),
+    "outputs": coconut_config,
     "storage": {
       'service': 's3',
       'bucket': process.env.COCONUT_BUCKET,

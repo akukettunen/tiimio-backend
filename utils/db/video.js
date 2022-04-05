@@ -8,6 +8,14 @@ const postVideo = ({ duration, id, title, description, original_url, original_ty
   `, [ id, title, description, original_url, original_type, original_size, s3_key, uploader, team_id, job_id, service, duration ])
 }
 
+const planByTeamId = id => {
+  return query(`
+    SELECT * FROM plan
+    LEFT JOIN team ON plan.id = team.plan_id
+    WHERE team.id = ?;
+  `, [id])
+}
+
 const teamVideos = id => {
   return query(`
     SELECT
@@ -71,4 +79,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }
+module.exports = { planByTeamId, videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }
