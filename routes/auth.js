@@ -83,7 +83,8 @@ router.get('/refresh', user, async (req, res) => {
   let [ user ] = await user_db.getUserByEmail(email)
 
   delete user.password
-  console.log('alksdjnk')
+  console.log(currentTeamId)
+  console.log(inUserCurrentTeamId)
   user = await userHelper.createUserData(currentTeamId || inUserCurrentTeamId, user)
 
   const token = jwt.sign(

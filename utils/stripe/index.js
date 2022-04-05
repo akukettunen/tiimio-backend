@@ -17,4 +17,46 @@ const sessionById = async id => {
   return session
 }
 
-module.exports = { createCustomer, sessionById }
+const customerById = async id => {
+  const customer = await stripe.customers.retrieve(
+    'cus_Ku7r2iRWZe1anB'
+  );
+
+  return customer
+}
+
+const customerSubscriptionsById = async id => {
+  const subscriptions = await stripe.subscriptions.list({
+    customer: id
+  });
+  
+  return subscriptions
+}
+
+const portalSessionUrlByStripeId = async id => {
+  return await stripe.billingPortal.sessions.create({
+    customer: id,
+    return_url: process.env.FRONTEND_BASE_URL + '/#/refresh',
+  });
+}
+
+const checkoutSessionUrlByStripeId = async (id, lookup_key) => {
+  return await stripe.checkout.sessions.create({
+    billing_address_collection: 'auto',
+    line_items: [
+      {
+        price: lookup_key,
+        quantity: 1
+      },
+    ],
+    // todo ??
+    customer: id,
+    mode: 'subscription',
+    success_url: process.env.FRONTEND_BASE_URL + '/#/refresh?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url: process.env.FRONTEND_BASE_URL + '/#/plans',
+    'customer_update[address]': 'auto',
+    automatic_tax: {enabled: true}
+  });
+}
+
+module.exports = { checkoutSessionUrlByStripeId, portalSessionUrlByStripeId, createCustomer, sessionById, customerById, customerSubscriptionsById }
