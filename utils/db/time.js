@@ -110,6 +110,14 @@ const batchAddTimename = (team_id, timenameNames) => {
   `)
 }
 
+const teamTimesByVideo = team_id => {
+  return query(`
+    SELECT * FROM time
+    LEFT JOIN video ON video.id = time.video_id
+
+  `)
+}
+
 const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = true, team_id, columns = [], tags = []) => {
   let start = page * itemsPerPage
 
@@ -204,12 +212,12 @@ const timenameAverages = (team_id, columns) => {
   `, [ team_id ])
 }
 
-const createTime = ({video_id, title}) => {
+const createTime = ({video_id, title, total_in_seconds}) => {
   return query(`
     INSERT INTO time
-    (video_id, title, created)
-    VALUES (?, ?, NOW());
-  `, [ video_id, title ])
+    (video_id, title, created, total_in_seconds)
+    VALUES (?, ?, NOW(), ?);
+  `, [ video_id, title, total_in_seconds ])
 }
 
 const batchCreateTimeTimename = (timenames, time_id) => {

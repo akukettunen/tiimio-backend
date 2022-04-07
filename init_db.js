@@ -333,6 +333,7 @@ const init = async () => {
         id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
         video_id VARCHAR(50) NOT NULL,
         title VARCHAR(50),
+        total_in_seconds DECIMAL(10, 4) NOT NULL,
         comment VARCHAR(500),
         created TIMESTAMP NOT NULL,
         FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE
@@ -403,18 +404,19 @@ const init = async () => {
   //     team_id INT NOT NULL,
   //     title VARCHAR(200) NOT NULL,
   //     description VARCHAR(1000),
+  //     videos BOOLEAN,
+  //     clips BOOLEAN,
+  //     times BOOLEAN,
   //     created DATE NOT NULL,
   //     FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
   //   );
   // `)
 
   // await query(`
-  //     CREATE TABLE IF NOT EXISTS filter_parameter(
+  //     CREATE TABLE IF NOT EXISTS filter_tag(
   //       id PRIMARY KEY AUTO_INCREMENT NOT NULL,
   //       filter_id INT NOT NULL,
-  //       team_id INT NOT NULL,
-  //       action VARCHAR(10) NOT NULL, ${/* AND | OR */ ''}
-  //       FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
+        
   //       FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE     
   //     );
   // `)

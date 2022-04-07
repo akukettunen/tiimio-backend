@@ -102,11 +102,17 @@ router.post('/', user, async (req, res) => {
 
   const [ video ] = await video_db.videoById(video_id)
 
+  let largest;
+  this.timenames.forEach(t => {
+    if(!largest || largest < t.time_from_first) largest = t.time_from_first
+  })
+
   if(!video || !video.team_id) throw new Error('something went wrong :(')
 
   const timeAddData = await time_db.createTime({
     video_id,
-    title
+    title,
+    total_in_seconds: largest
   })
 
   if(tag_ids?.length) await time_db.batchAddTag(timeAddData.insertId, tag_ids)

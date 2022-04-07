@@ -74,6 +74,38 @@ router.post('/', user, async (req, res) => {
   res.json(addedFolder)
 })
 
+router.post('/clip-batch', user, async (req, res) => {
+  const clips = req.body.clips; // { id: 1, title: 'Jea' }
+  const parentId = req.body.parent_id;
+  const team_id = req.body.team_id;
+  console.log(clips, parentId, team_id)
+  is_in_team()
+
+  if(!clips || !clips.length) {
+    throw new Error('bad request')
+  }
+
+  const promises = clips.map(clip => {
+    return folder_db.addFolder({
+      team_id,
+      clip_id: clip.id,
+      name: clip.title,
+      parent: parentId,
+      type: 'clip'
+    })
+  })
+
+  Promise.all(promises)
+    .then(async () => {
+      const folders = await folder_db.byTeamId(team_id)
+
+      res.json(folders)
+    })
+    .catch(e => {
+      throw new Error(e)
+    })
+})
+
 router.put('/:id', user, async (req, res) => {
   // TODO parent cant be one of children or self
   
