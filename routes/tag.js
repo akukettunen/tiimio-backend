@@ -16,7 +16,13 @@ router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
 
   let groups = await tag_db.teamGroups(req.params.team_id)
+  let mirrors = await tag_db.teamMirrors(req.params.team_id)
+  console.log(mirrors)
   let tags = await tag_db.teamTags(req.params.team_id)
+
+  groups.forEach((group, i) => {
+    groups[i] = {...group, mirrors: mirrors.filter(m => m.tag_group_id == group.id)}
+  })
 
   groups.forEach((group, i) => {
     groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
@@ -26,7 +32,7 @@ router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
 })
 
 router.post('/group', user, is_in_team(), async (req, res) => {
-  const { team_id, group_name } = req.body
+  const { team_id, group_name, mirrors } = req.body
 
   if(!team_id || !group_name ) throw new Error('bad request')
 
@@ -37,7 +43,25 @@ router.post('/group', user, is_in_team(), async (req, res) => {
 
   let [ tag_group ] = await tag_db.tagGroupById(add_info.insertId)
 
-  if(!tag_group) throw new Error('tag not found :(')
+  if(mirrors && mirrors.length) {
+    let mirrorsPromises = mirrors.map(m => {
+      return tag_db.addMirrors(add_info.insertId, Number(m))
+    })
+
+    let tagsPromises = mirrors.map(m => {
+      return tag_db.groupTags(m)
+    })
+
+    let tags = await Promise.all(tagsPromises)
+    tags = tags.flat()
+
+    
+
+    await Promise.all(mirrorsPromises)
+  }
+
+
+  if(!tag_group) throw new Error('tag group not found :(')
 
   res.json({...tag_group, tags: []})
 })
@@ -51,6 +75,8 @@ router.put('/group/:group_id/name', user, async (req, res) => {
 })
 
 router.put('/:tag_id/name', user, async (req, res) => {
+  // TODO update mirroring too
+
   if(!req.body.tag_name) throw new Error('bad request')
 
   await tag_db.updateTagName({ id: req.params.tag_id, name: req.body.tag_name })
@@ -59,6 +85,8 @@ router.put('/:tag_id/name', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res) => {
+  // TODO post to mirroring
+
   const { tag_name, group_id } = req.body
 
   if( !tag_name || !group_id) throw new Error('bad request')
@@ -81,6 +109,7 @@ router.post('/', user, async (req, res) => {
 })
 
 router.delete('/:tag_id', async (req, res) => {
+  // TODO delete from mirroring
   let [ tag ] = await tag_db.tagById(req.params.tag_id)
   if(!tag) throw new Error('tag not found')
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
@@ -95,6 +124,7 @@ router.delete('/:tag_id', async (req, res) => {
 })
 
 router.delete('/group/:tag_group_id', user, async (req, res) => {
+  // TODO delete mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
 
