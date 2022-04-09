@@ -64,6 +64,12 @@ const init = async () => {
     DROP TABLE IF EXISTS folder;
   `)
   await query(`
+    DROP TABLE IF EXISTS filter;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS filter_param;
+  `)
+  await query(`
     SET FOREIGN_KEY_CHECKS = 1;
   `)
 
@@ -398,28 +404,30 @@ const init = async () => {
       );
   `)
 
-  // await query(`
-  //   CREATE TABLE IF NOT EXISTS filter(
-  //     id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, 
-  //     team_id INT NOT NULL,
-  //     title VARCHAR(200) NOT NULL,
-  //     description VARCHAR(1000),
-  //     videos BOOLEAN,
-  //     clips BOOLEAN,
-  //     times BOOLEAN,
-  //     created DATE NOT NULL,
-  //     FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
-  //   );
-  // `)
+  await query(`
+    CREATE TABLE IF NOT EXISTS filter(
+      id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, 
+      team_id INT NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      description VARCHAR(1000),
+      videos BOOLEAN,
+      clips BOOLEAN,
+      times BOOLEAN,
+      created DATE NOT NULL,
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
+    );
+  `)
 
-  // await query(`
-  //     CREATE TABLE IF NOT EXISTS filter_tag(
-  //       id PRIMARY KEY AUTO_INCREMENT NOT NULL,
-  //       filter_id INT NOT NULL,
-        
-  //       FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE     
-  //     );
-  // `)
+  await query(`
+    CREATE TABLE IF NOT EXISTS filter_param(
+      filter_id INT NOT NULL,
+      tag_id INT,
+      video_id VARCHAR(50),
+      FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tag(id) ON DELETE CASCADE,
+      FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE
+    );
+  `)
 
   let tables = await query(`show tables;`)
   tables.map(table => {

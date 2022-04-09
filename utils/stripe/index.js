@@ -55,6 +55,7 @@ const checkoutSessionUrlByStripeId = async (id, lookup_key) => {
     success_url: process.env.FRONTEND_BASE_URL + '/#/refresh?session_id={CHECKOUT_SESSION_ID}',
     cancel_url: process.env.FRONTEND_BASE_URL + '/#/plans',
     'customer_update[address]': 'auto',
+    allow_promotion_codes: 'true',
     automatic_tax: {enabled: true}
   });
 }

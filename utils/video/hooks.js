@@ -40,7 +40,8 @@ const jobDone = async job => {
 
   let { duration_ts, duration } = videos[0].metadata.streams[0]
   duration = parseFloat(duration)
-  const validated = (uploaded_this_month + duration) < (threshold_hours * 60 * 60)
+
+  const validated = uploaded_this_month < (threshold_hours * 60 * 60)
 
   const params = {
     duration,
@@ -59,10 +60,6 @@ const jobDone = async job => {
   } catch(e) {
     throw new Error('Something went wrong :/')
   }
-}
-
-const jobFailed = async job => {
-  
 }
 
 module.exports = { jobDone }

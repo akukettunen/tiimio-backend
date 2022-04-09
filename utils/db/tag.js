@@ -7,12 +7,27 @@ const teamGroups = team_id => {
   `, [team_id])
 }
 
+const teamGroupsIds = team_id => {
+  return query(`
+    SELECT id FROM tag_group
+    WHERE team_id = ?;
+  `, [team_id])
+}
+
 const teamTags = team_id => {
   return query(`
     SELECT tag_name, tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ?;
   `, [team_id])
+}
+
+const teamTagsIdsFilter = (team_id, ids) => {
+  return query(`
+    SELECT tag.id AS id, group_id FROM tag
+    LEFT JOIN tag_group ON tag_group.id = tag.group_id
+    WHERE tag_group.team_id = ? AND tag.id IN (?);
+  `, [team_id, ids])
 }
 
 const createTagGroup = ({ team_id, group_name }) => {
@@ -81,4 +96,4 @@ const deleteById = id => {
 }
 
 
-module.exports = { deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { teamTagsIdsFilter, teamGroupsIds, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
