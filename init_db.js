@@ -265,7 +265,7 @@ const init = async () => {
         original_id INT,
         tag_name VARCHAR(50) NOT NULL,
         FOREIGN KEY (group_id) REFERENCES tag_group(id) ON DELETE CASCADE,
-        FOREIGN KEY (original_id) REFERENCES tag(id) ON DELETE SET NULL
+        FOREIGN KEY (original_id) REFERENCES tag(id) ON DELETE CASCADE
       );
   `)
 

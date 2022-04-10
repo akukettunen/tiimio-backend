@@ -7,11 +7,28 @@ const teamGroups = team_id => {
   `, [team_id])
 }
 
-const batchAddTag = (group_id, tag_id) => {
+const groupById = id => {
   return query(`
-    INSERT INTO tag( clip_id, tag_id )
-    VALUES ${tag_ids.map(id => `(${clip_id}, ${id})`)};
+    SELECT * FROM tag_group
+    WHERE id = ?;
+  `, [id])
+}
+
+const batchAddMirrorTag = (tags, group_id) => {
+  return query(`
+    INSERT INTO tag( original_id, tag_name, group_id )
+    VALUES ${tags.map(tag => `(${tag.id}, '${tag.tag_name}', ${group_id})`)}
+    ;
   `)
+}
+
+const groupMirrors = id => {
+  return query(`
+    SELECT * FROM tag_group_mirrors
+    LEFT JOIN tag_group ON tag_group.id = tag_group_mirrors.tag_group_id
+    LEFT JOIN tag_group AS mirroring ON mirroring.id = tag_group_mirrors.mirrors
+    WHERE tag_group.id = ?;
+  `, [id])
 }
 
 const groupTags = id => {
@@ -111,4 +128,4 @@ const deleteById = id => {
 }
 
 
-module.exports = { groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

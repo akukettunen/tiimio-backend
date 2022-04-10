@@ -9,24 +9,19 @@ const express = require('express');
       logger = require('../utils/logger')
       tag_db = require('../utils/db/tag')
       stripe = require('../utils/stripe/index')
+      tagHelper = require('../utils/tag')
       require('express-async-errors');
       const { user, is_in_team } = require('../middleware/authMiddleware');
 
 router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
 
-  let groups = await tag_db.teamGroups(req.params.team_id)
-  let mirrors = await tag_db.teamMirrors(req.params.team_id)
-  console.log(mirrors)
-  let tags = await tag_db.teamTags(req.params.team_id)
-
-  groups.forEach((group, i) => {
-    groups[i] = {...group, mirrors: mirrors.filter(m => m.tag_group_id == group.id)}
-  })
-
-  groups.forEach((group, i) => {
-    groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
-  })
+  let groups;
+  try {
+    groups = await tagHelper.getTeamTagGroups(req.params.team_id)
+  } catch(err) {
+    throw new Error(err)
+  }
 
   res.json(groups)
 })
@@ -42,28 +37,34 @@ router.post('/group', user, is_in_team(), async (req, res) => {
   })
 
   let [ tag_group ] = await tag_db.tagGroupById(add_info.insertId)
+  if(!tag_group) throw new Error('tag group not found :(')
 
+  let tags = []
+  let groupMirrors = []
   if(mirrors && mirrors.length) {
+    // add mirrorIndicators to this new group
     let mirrorsPromises = mirrors.map(m => {
       return tag_db.addMirrors(add_info.insertId, Number(m))
     })
+    await Promise.all(mirrorsPromises)
 
+    // get all tags in the groups that were mirroring at the moment
     let tagsPromises = mirrors.map(m => {
       return tag_db.groupTags(m)
     })
-
-    let tags = await Promise.all(tagsPromises)
+    tags = await Promise.all(tagsPromises)
     tags = tags.flat()
 
-    
+    // ass those tags to db
+    await tag_db.batchAddMirrorTag(tags, tag_group.id)
 
-    await Promise.all(mirrorsPromises)
+    // fetch the groups that it mirrors
+    groupMirrors = await tag_db.groupMirrors(tag_group.id)
   }
 
+  const newGroup = await tagHelper.groupById(add_info.insertId)
 
-  if(!tag_group) throw new Error('tag group not found :(')
-
-  res.json({...tag_group, tags: []})
+  res.json(newGroup)
 })
 
 router.put('/group/:group_id/name', user, async (req, res) => {
