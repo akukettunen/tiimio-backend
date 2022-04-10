@@ -240,11 +240,9 @@ const init = async () => {
       id INT PRIMARY KEY AUTO_INCREMENT,
       group_name VARCHAR(100) NOT NULL,
       team_id INT,
-      mirrors INT,
       league_id INT,
       FOREIGN KEY (league_id) REFERENCES league(id) ON DELETE SET NULL,
-      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE,
-      FOREIGN KEY (mirrors) REFERENCES tag_group(id) ON DELETE SET NULL
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
     );
   `)
 
@@ -258,11 +256,22 @@ const init = async () => {
   `)
 
   await query(`
+      CREATE TABLE IF NOT EXISTS tag_group_mirrors(
+        tag_group_id INT NOT NULL,
+        mirrors INT NOT NULL,
+        FOREIGN KEY (tag_group_id) REFERENCES tag_group(id) ON DELETE CASCADE,
+        FOREIGN KEY (mirrors) REFERENCES tag_group(id) ON DELETE CASCADE
+      );
+  `)
+
+  await query(`
       CREATE TABLE IF NOT EXISTS tag(
         id INT PRIMARY KEY AUTO_INCREMENT,
         group_id INT NOT NULL,
+        original_id INT,
         tag_name VARCHAR(50) NOT NULL,
-        FOREIGN KEY (group_id) REFERENCES tag_group(id) ON DELETE CASCADE
+        FOREIGN KEY (group_id) REFERENCES tag_group(id) ON DELETE CASCADE,
+        FOREIGN KEY (original_id) REFERENCES tag(id) ON DELETE CASCADE
       );
   `)
 
