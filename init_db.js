@@ -262,8 +262,10 @@ const init = async () => {
       CREATE TABLE IF NOT EXISTS tag(
         id INT PRIMARY KEY AUTO_INCREMENT,
         group_id INT NOT NULL,
+        original_id INT,
         tag_name VARCHAR(50) NOT NULL,
-        FOREIGN KEY (group_id) REFERENCES tag_group(id) ON DELETE CASCADE
+        FOREIGN KEY (group_id) REFERENCES tag_group(id) ON DELETE CASCADE,
+        FOREIGN KEY (original_id) REFERENCES tag(id) ON DELETE SET NULL
       );
   `)
 
