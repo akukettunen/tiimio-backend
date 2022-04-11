@@ -55,11 +55,8 @@ router.post('/group', user, is_in_team(), async (req, res) => {
     tags = await Promise.all(tagsPromises)
     tags = tags.flat()
 
-    // ass those tags to db
+    // add those tags to db
     await tag_db.batchAddMirrorTag(tags, tag_group.id)
-
-    // fetch the groups that it mirrors
-    groupMirrors = await tag_db.groupMirrors(tag_group.id)
   }
 
   const newGroup = await tagHelper.groupById(add_info.insertId)
@@ -95,6 +92,9 @@ router.post('/', user, async (req, res) => {
   let [ group ] = await tag_db.tagGroupById(group_id)
   if(!group) throw new Error('group not found')
 
+  let mirrors = await tag_db.mirroringGroups(group_id)
+  mirrors = mirrors.map(m => m.tag_group_id)
+
   is_in_team(group.team_id)
 
   let add_info = await tag_db.createTag({
@@ -102,26 +102,21 @@ router.post('/', user, async (req, res) => {
     group_id
   })
 
-  let [ tag ] = await tag_db.tagById(add_info.insertId)
+  mirrors = mirrors.map(m => {
+    return tag_db.createTag({
+      tag_name,
+      group_id: m,
+      original_id: add_info.insertId
+    })
+  })
 
-  if(!tag) throw new Error('tag not found :(')
+  await Promise.all(mirrors)
 
-  res.json(tag)
-})
+  let tags = await tag_db.tagAndMirrorsById(add_info.insertId)
 
-router.delete('/:tag_id', async (req, res) => {
-  // TODO delete from mirroring
-  let [ tag ] = await tag_db.tagById(req.params.tag_id)
-  if(!tag) throw new Error('tag not found')
-  let [ group ] = await tag_db.tagGroupById(tag.group_id)
-  if(!group) throw new Error('group not found')
+  if(!tags) throw new Error('tag not found :(')
 
-  is_in_team(group.team_id)
-
-  await tag_db.deleteObjectTagById(req.params.tag_id)
-  await tag_db.deleteById(req.params.tag_id)
-
-  res.send('ok!')
+  res.json(tags)
 })
 
 router.delete('/group/:tag_group_id', user, async (req, res) => {
@@ -135,6 +130,21 @@ router.delete('/group/:tag_group_id', user, async (req, res) => {
 
   res.send('ok!')
 })
+
+router.delete('/tag/:tag_id', async (req, res) => {
+  // TODO delete from mirroring
+  let [ tag ] = await tag_db.tagById(req.params.tag_id)
+  if(!tag) throw new Error('tag not found')
+  let [ group ] = await tag_db.tagGroupById(tag.group_id)
+  if(!group) throw new Error('group not found')
+
+  is_in_team(group.team_id)
+
+  await tag_db.deleteById(req.params.tag_id)
+
+  res.send('ok!')
+})
+
 
 
 module.exports = router;
