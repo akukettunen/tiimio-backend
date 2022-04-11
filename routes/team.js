@@ -59,7 +59,18 @@ router.post('/', user, async (req, res) => {
   })
 
   const initial = initialValues[sport_id]()
-  await time_db.batchAddTimename(insertId, initial['timenames'])
+
+  try {
+    await time_db.batchAddTimename(insertId, initial['timenames'])
+  } catch(err) {
+    throw new Error(err)
+  }
+
+  try {
+    await team_helper.addInitialTags(insertId, sport_id)
+  } catch(err) {
+    throw new Error(err)
+  }
 
   const user = await userHelper.createUserData(insertId, req.tiimio_user)
 

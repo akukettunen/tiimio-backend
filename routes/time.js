@@ -103,7 +103,7 @@ router.post('/', user, async (req, res) => {
   const [ video ] = await video_db.videoById(video_id)
 
   let largest;
-  this.timenames.forEach(t => {
+  timenames.forEach(t => {
     if(!largest || largest < t.time_from_first) largest = t.time_from_first
   })
 

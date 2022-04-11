@@ -1,5 +1,6 @@
 // a dangerous file
 const stripe = require('./utils/stripe/index')
+const team_helper = require('./utils/team/teamHelper')
 
 const { query, promisePoolEnd, databaseConfig } = require('./utils/db/index')
       bcrypt = require('bcryptjs')
@@ -62,6 +63,12 @@ const init = async () => {
   `)
   await query(`
     DROP TABLE IF EXISTS folder;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS filter;
+  `)
+  await query(`
+    DROP TABLE IF EXISTS filter_param;
   `)
   await query(`
     SET FOREIGN_KEY_CHECKS = 1;
@@ -241,15 +248,6 @@ const init = async () => {
   `)
 
   await query(`
-    INSERT INTO tag_group (
-      group_name, team_id
-      ) VALUES 
-      ( "Players", 1 ),
-      ( "Events", 1 )
-      ;
-  `)
-
-  await query(`
       CREATE TABLE IF NOT EXISTS tag_group_mirrors(
         tag_group_id INT NOT NULL,
         mirrors INT NOT NULL,
@@ -267,15 +265,6 @@ const init = async () => {
         FOREIGN KEY (group_id) REFERENCES tag_group(id) ON DELETE CASCADE,
         FOREIGN KEY (original_id) REFERENCES tag(id) ON DELETE CASCADE
       );
-  `)
-
-  await query(`
-    INSERT INTO tag (
-      group_id, tag_name
-      ) VALUES 
-      ( 1, "Mörkö Marko" ),
-      ( 1, "Jari Halttunen" )
-      ;
   `)
 
   const hash = await bcrypt.hash(plainText, saltRounds)
@@ -323,19 +312,19 @@ const init = async () => {
     ;
   `)
 
-  // await query(`
-  // INSERT INTO video (
-  //   id, team_id, original_url, service, job_id, title, description, original_type, 
-  //   original_size, mp4_url, hls_url, duration, thumb_url, lazy_thumb_url, s3_key,
-  //   uploader, uploaded, encoded
-  //   ) VALUES 
-  //   ( 'joujoujou', 1, 'yo', 'coconut', '123', 'Testi', 'Tällainen testi', 'mp4', 1000, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/720p.mp4',
-  //     '123', 1900, 'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_medium.jpg',
-  //     'https://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/0365e631-3351-4151-805e-6f812bbc9865/thumbnail_low.jpg',
-  //     '0365e631-3351-4151-805e-6f812bbc9865', 'aku@kettunen.com', NOW(), true
-  //   )
-  //   ;
-  // `)
+  await query(`
+  INSERT INTO video (
+    id, team_id, original_url, service, job_id, title, description, original_type, 
+    original_size, mp4_url, hls_url, duration, thumb_url, lazy_thumb_url, s3_key,
+    uploader, uploaded, encoded
+    ) VALUES 
+    ( 'joujoujou', 1, 'yo', 'coconut', '123', 'Testi', 'Tällainen testi', 'mp4', 1000, 'https://dt8fyoomqo9y2.cloudfront.net/b1aec6ae-044e-400d-ad57-e28d7fa2b492/480p.mp4',
+      '123', 1900, 'http://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/b1aec6ae-044e-400d-ad57-e28d7fa2b492/thumbnail_medium.jpg',
+      'http://tiimio-vid-dev.s3.eu-west-1.amazonaws.com/b1aec6ae-044e-400d-ad57-e28d7fa2b492/thumbnail_low.jpg',
+      'b1aec6ae-044e-400d-ad57-e28d7fa2b492', 'aku@kettunen.com', NOW(), true
+    )
+    ;
+  `)
 
   await query(`
       CREATE TABLE IF NOT EXISTS time(
@@ -407,28 +396,32 @@ const init = async () => {
       );
   `)
 
-  // await query(`
-  //   CREATE TABLE IF NOT EXISTS filter(
-  //     id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, 
-  //     team_id INT NOT NULL,
-  //     title VARCHAR(200) NOT NULL,
-  //     description VARCHAR(1000),
-  //     videos BOOLEAN,
-  //     clips BOOLEAN,
-  //     times BOOLEAN,
-  //     created DATE NOT NULL,
-  //     FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
-  //   );
-  // `)
+  await query(`
+    CREATE TABLE IF NOT EXISTS filter(
+      id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, 
+      team_id INT NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      description VARCHAR(1000),
+      videos BOOLEAN,
+      clips BOOLEAN,
+      times BOOLEAN,
+      created DATE NOT NULL,
+      FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
+    );
+  `)
 
-  // await query(`
-  //     CREATE TABLE IF NOT EXISTS filter_tag(
-  //       id PRIMARY KEY AUTO_INCREMENT NOT NULL,
-  //       filter_id INT NOT NULL,
-        
-  //       FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE     
-  //     );
-  // `)
+  await query(`
+    CREATE TABLE IF NOT EXISTS filter_param(
+      filter_id INT NOT NULL,
+      tag_id INT,
+      video_id VARCHAR(50),
+      FOREIGN KEY (filter_id) REFERENCES filter(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tag(id) ON DELETE CASCADE,
+      FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE
+    );
+  `)
+
+  await team_helper.addInitialTags('1', 'pesapallo')
 
   let tables = await query(`show tables;`)
   tables.map(table => {

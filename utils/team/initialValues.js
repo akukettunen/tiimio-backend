@@ -1,6 +1,6 @@
 const baseball = () => {
   return {
-    groups: [
+    tags: [
       {
         name: 'Base', 
         tags: [
@@ -46,6 +46,13 @@ const pesapallo = () => {
   return {
     tags: [
       {
+        name: 'Pelaajat',
+        tags: [
+          'Maija Meikäläinen',
+          'Matti Meikäläinen'
+        ]
+      },
+      {
         name: 'Pesänväli',
         tags: [
           'K-1',
@@ -55,10 +62,51 @@ const pesapallo = () => {
         ]
       },
       {
-        name: 'Pelaajat',
+        name: 'Palot',
         tags: [
-          'Maija Meikäläinen',
-          'Matti Meikäläinen'
+          '0',
+          '1',
+          '2'
+        ]
+      },
+      {
+        name: 'Lyönnin tyyppi',
+        tags: [
+          'Vaakamaila',
+          'Kumura',
+          'Näppi',
+          'Pussari',
+          'Varsi',
+          'Kopinnosto',
+          'Viisto / Pyke',
+          'Pomppu',
+          'Muu'
+        ]
+      },
+      {
+        name: 'Tulos',
+        tags: [
+          'Palo',
+          'Haava',
+          'Kärkilyönti',
+          'Takapalo',
+          'Vapaa',
+          'Haava kärjen takana'
+        ]
+      },
+      {
+        name: 'Merkattu',
+        tags: [
+          'Kyllä',
+          'Ei'
+        ]
+      },
+      {
+        name: 'Lyönnin numero',
+        tags: [
+          '1',
+          '2',
+          '3'
         ]
       }
     ],

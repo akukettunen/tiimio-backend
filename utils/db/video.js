@@ -21,8 +21,31 @@ const teamVideos = id => {
     SELECT
       *
     FROM video
-    WHERE team_id = ? AND deleted = false;
+    WHERE team_id = ? AND deleted = false
+    ORDER BY uploaded DESC;
   `, [ id, id ])
+}
+
+const teamVideosIdsOnly = (id, limit) => {
+  return query(`
+    SELECT
+      id
+    FROM video
+    WHERE team_id = ? AND deleted = false
+    ORDER BY uploaded DESC
+    ${ limit ? 'LIMIT ?' : '' };
+  `, [ id, limit ])
+}
+
+const teamVideosByIds = (id, ids, limit) => {
+  return query(`
+    SELECT
+      id
+    FROM video
+    WHERE team_id = ? AND deleted = false AND id IN (?)
+    ORDER BY uploaded DESC
+    ${ limit ? 'LIMIT ?' : ''};
+  `, [ id,  ids, limit])
 }
 
 const uploadedThisMonth = team_id => {
@@ -79,4 +102,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { planByTeamId, videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }
+module.exports = { teamVideosIdsOnly, teamVideosByIds, planByTeamId, videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }
