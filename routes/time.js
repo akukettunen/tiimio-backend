@@ -26,6 +26,32 @@ router.get('/timename/team/:team_id', user, async (req, res) => {
   res.json(timenames)
 })
 
+router.put('/timename', user, async (req, res) => {
+  is_in_team()
+
+  if(!req.body.name || !req.body.id) throw new Error('bad request')
+
+  await time_db.updateTimename(req.body.name, req.body.hidden || false, req.body.id)
+
+  const [timename] = await time_db.timenameById(req.body.id)
+
+  res.json(timename)
+})
+
+router.put('/timename/order', user, async (req, res) => {
+  if(!req.body.timenames || !req.body.team_id) throw new Error('bad request')
+
+  is_in_team()
+
+  const promises = req.body.timenames.map((t, i) => {
+    return time_db.editTimenameOrder(t.id, i)
+  })
+
+  await Promise.all(promises)
+
+  res.json('ok!')
+})
+
 router.get('/team/:team_id', async (req, res) => {
   let { page, itemsPerPage, sortBy, sortDesc, columns, tags } = req.query;
   //TODO: works with front end not with postman, gives NaN form these Nuber()

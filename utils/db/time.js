@@ -12,6 +12,14 @@ const byId = id => {
   `, [ id ])
 }
 
+const editTimenameOrder = (id, order) => {
+  return query(`
+    UPDATE timename
+    SET position = ?
+    WHERE id = ?;
+  `, [order, id])
+}
+
 const fullById = id => {
   return query(`
     SELECT
@@ -66,6 +74,14 @@ const batchAddTag = (time_id, tag_ids) => {
   `)
 }
 
+const updateTimename = (name, hidden, id) => {
+  return query(`
+    UPDATE timename
+    SET name = ?, hidden = ?
+    WHERE id = ?;
+  `, [name, hidden, id])
+} 
+
 const batchRemoveTag = (time_id, tag_ids) => {
   return query(`
     DELETE FROM object_tag
@@ -99,7 +115,10 @@ const teamTimenames = team_id => {
   return query(`
     SELECT * FROM timename
     WHERE team_id = ?
-    ORDER BY name;
+    ORDER BY 
+      hidden ASC,
+      position
+    ;
   `, [ team_id ])
 }
 
@@ -285,4 +304,4 @@ const timeById = id => {
   `, [id])
 }
 
-module.exports = { batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }
+module.exports = { editTimenameOrder, updateTimename, batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }

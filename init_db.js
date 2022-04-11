@@ -360,6 +360,8 @@ const init = async () => {
       CREATE TABLE IF NOT EXISTS timename(
         id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
         team_id INT NOT NULL,
+        hidden BOOLEAN,
+        position INT,
         name VARCHAR(100) NOT NULL,
         created TIMESTAMP NOT NULL,
         FOREIGN KEY (team_id) REFERENCES team(id) ON DELETE CASCADE
