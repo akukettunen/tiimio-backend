@@ -423,6 +423,18 @@ const init = async () => {
     );
   `)
 
+  await query(`
+      CREATE TABLE clipper_rule(
+        id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+        if_rule JSON NOT NULL,
+        then_rule JSON NOT NULL,
+        when_rule VARCHAR(4) NOT NULL,
+        else_rule JSON,
+        user_id VARCHAR(300) NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES user(email) ON DELETE CASCADE
+      );
+  `)
+
   await team_helper.addInitialTags('1', 'pesapallo')
 
   let tables = await query(`show tables;`)

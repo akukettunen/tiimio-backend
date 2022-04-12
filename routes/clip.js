@@ -158,6 +158,20 @@ router.delete('/:id', user, async (req, res) => {
   res.json('ok!')
 })
 
+router.post('/rule', user, async (req, res) => {
+  is_in_team()
+
+  const { rule_id } = req.body;
+
+  let insertData
+  if(rule_id) {
+    await clip_db.putRule(req.body)
+  } else {
+    insertData = await clip_db.postRule(req.body)
+  }
+
+})
+
 
 
 module.exports = router;

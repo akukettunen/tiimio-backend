@@ -130,4 +130,26 @@ const videoClips = id => {
   `, [id])
 }
 
-module.exports = { teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+const ruleById = id => {
+  return query(`
+    SELECT * FROM clipper_rule
+    WHERE id = ?;
+  `, [id])
+}
+
+const putRule = rule => {
+  return query(`
+    UPDATE clipper_rule
+    SET if_rule = ?, then_rule = ?, when_rule = ?, else_rule = ?
+    WHERE id = ?;
+  `, [ rule.if_rule, rule.then_rule, rule.when_rule, rule.else_rule, rule.id ])
+}
+
+const postRule = rule => {
+  return query(`
+    INSERT INTO clipper_rule(if_rule, then_rule, when_rule, else_rule)
+    VALUES( if_rule, then_rule, when_rule, else_rule );
+  `, [ rule.if_rule, rule.then_rule, rule.when_rule, rule.else_rule ])
+}
+
+module.exports = { postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
