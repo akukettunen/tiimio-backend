@@ -21,6 +21,14 @@ const groupById = id => {
   `, [id])
 }
 
+const editTagOrder = (tag_id, position) => {
+  return query(`
+    UPDATE tag
+    SET position = ?
+    WHERE id = ?;
+  `, [position, tag_id])
+}
+
 const batchAddMirrorTag = (tags, group_id) => {
   return query(`
     INSERT INTO tag( original_id, tag_name, group_id )
@@ -64,7 +72,8 @@ const mirroringGroups = id => {
 const groupTags = id => {
   return query(`
     SELECT * FROM tag
-    WHERE group_id = ?;
+    WHERE group_id = ?
+    ORDER BY position;
   `, [id])
 }
 
@@ -72,7 +81,8 @@ const teamTags = team_id => {
   return query(`
     SELECT original_id, tag_name, tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
-    WHERE tag_group.team_id = ?;
+    WHERE tag_group.team_id = ?
+    ORDER BY position;
   `, [team_id])
 }
 
@@ -80,7 +90,8 @@ const teamTagsIdsFilter = (team_id, ids) => {
   return query(`
     SELECT tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
-    WHERE tag_group.team_id = ? AND tag.id IN (?);
+    WHERE tag_group.team_id = ? AND tag.id IN (?)
+    ORDER BY position;
   `, [team_id, ids])
 }
 
@@ -172,4 +183,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

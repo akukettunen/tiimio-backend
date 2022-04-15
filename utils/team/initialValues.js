@@ -108,6 +108,52 @@ const pesapallo = () => {
           '2',
           '3'
         ]
+      },
+      {
+        name: 'Tilanne',
+        tags: [
+          '0',
+          '1',
+          '2',
+          '0-3',
+          '1-2',
+          '1-3',
+          '2-3',
+          '0-2',
+          'Ajo'
+        ]
+      },
+      {
+        name: 'Tulos 0-1',
+        tags: [
+          'Palo',
+          'Haava',
+          'Eteneminen'
+        ]
+      },
+      {
+        name: 'Tulos 1-2',
+        tags: [
+          'Palo',
+          'Haava',
+          'Eteneminen'
+        ]
+      },
+      {
+        name: 'Tulos 2-3',
+        tags: [
+          'Palo',
+          'Haava',
+          'Eteneminen'
+        ]
+      },
+      {
+        name: 'Tulos 3-K',
+        tags: [
+          'Palo',
+          'Haava',
+          'Eteneminen'
+        ]
       }
     ],
     timenames: [

@@ -169,7 +169,6 @@ router.post('/rule', user, async (req, res) => {
   } else {
     insertData = await clip_db.postRule(req.body)
   }
-
 })
 
 

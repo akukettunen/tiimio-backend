@@ -82,6 +82,19 @@ router.put('/:tag_id/name', user, async (req, res) => {
   res.json('ok!')
 })
 
+router.put('/order', user, async (req, res) => {
+  if(!req.body.tags || !req.body.team_id) throw new Error('bad request')
+  is_in_team()
+
+  const promises = req.body.tags.map((t, i) => {
+    return tag_db.editTagOrder(t, i)
+  })
+
+  await Promise.all(promises)
+
+  res.json('ok!')
+})
+
 router.post('/', user, async (req, res) => {
   // TODO post to mirroring
 

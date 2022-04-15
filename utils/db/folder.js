@@ -36,6 +36,14 @@ const byId = id => {
   `, [id])
 }
 
+const editFolderOrder = (id, position) => {
+  return query(`
+    UPDATE folder
+    SET POSITION = ?
+    WHERE id = ?;
+  `, [position, id])
+}
+
 const folderClips = id => {
   return query(`
     SELECT * FROM folder_object
@@ -59,4 +67,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { byTeamIdByParent, byTeamIdRoot, folderClips, byId, byTeamId, addFolder, updateFolder, deleteById }
+module.exports = { editFolderOrder, byTeamIdByParent, byTeamIdRoot, folderClips, byId, byTeamId, addFolder, updateFolder, deleteById }

@@ -56,6 +56,19 @@ router.get('/:id/clip', user, async (req, res) => {
   res.json(clips)
 })
 
+router.put('/order', user, async (req, res) => {
+  if(!req.body.folders || !req.body.team_id) throw new Error('bad request')
+  is_in_team()
+
+  const promises = req.body.folders.map((t, i) => {
+    return tag_db.editFolderOrder(t, i)
+  })
+
+  await Promise.all(promises)
+
+  res.json('ok!')
+})
+
 router.post('/', user, async (req, res) => {
   is_in_team()
 
