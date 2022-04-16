@@ -3,21 +3,24 @@ const { query } = require('./index.js')
 const byTeamId = teamId => {
   return query(`
     SELECT * FROM folder
-    WHERE team_id = ?;
+    WHERE team_id = ?
+    ORDER BY position;
   `, [teamId])
 }
 
 const byTeamIdByParent = (teamId, parentId) => {
   return query(`
     SELECT * FROM folder
-    WHERE team_id = ? AND parent = ?;
+    WHERE team_id = ? AND parent = ?
+    ORDER BY position;;
   `, [teamId, parentId])
 }
 
 const byTeamIdRoot = (teamId) => {
   return query(`
     SELECT * FROM folder
-    WHERE team_id = ? AND parent IS NULL;
+    WHERE team_id = ? AND parent IS NULL
+    ORDER BY position;
   `, [teamId])
 }
 

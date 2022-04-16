@@ -61,7 +61,7 @@ router.put('/order', user, async (req, res) => {
   is_in_team()
 
   const promises = req.body.folders.map((t, i) => {
-    return tag_db.editFolderOrder(t, i)
+    return folder_db.editFolderOrder(t, i)
   })
 
   await Promise.all(promises)
