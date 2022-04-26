@@ -45,22 +45,24 @@ router.post('/login', async (req, res) => {
 })
 
 router.post('/signin', async (req, res) => {
-  const { email, password, full_name, password_again } = req.body;
+  const { email, password, full_name, password_again, language } = req.body;
   if(password !== password_again) {
     throw new Error("passwords don't match, try again!")
   }
 
   if(!full_name.length) throw new Error("name missing!")
-
-  const hash = await bcrypt.hash(password, saltRounds)
-
-  const isAlready = await user_db.getUserByEmail(email)
   
-  if(isAlready.length) throw new Error("this user already exists!")
+  const hash = await bcrypt.hash(password, saltRounds)
+  if(!password || password.length < 8) throw new Error('invalid password')
+
+  const [ oldUser ] = await user_db.getUserByEmail(email)
+  
+  if(oldUser) throw new Error("this user already exists!")
 
   await user_db.addUser({
     password_hash: hash,
     email,
+    language,
     full_name
   })
 

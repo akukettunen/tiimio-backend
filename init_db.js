@@ -167,6 +167,7 @@ const init = async () => {
     CREATE TABLE IF NOT EXISTS user(
       email VARCHAR(300) NOT NULL PRIMARY KEY,
       full_name VARCHAR(200) NOT NULL,
+      language VARCHAR(5),
       tiimio_admin BOOLEAN NOT NULL DEFAULT false,
       password VARCHAR(300) NOT NULL,
       email_confirmed boolean NOT NULL DEFAULT false,

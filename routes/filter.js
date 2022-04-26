@@ -81,6 +81,28 @@ router.get('/:id/clip', async (req, res) => {
   // })
 })
 
+router.put('/:id', user, async (req, res) => {
+  is_in_team()
+
+  if(!req.body.title) throw new Error('bad request')
+  
+  await filter_db.updateTitle(req.body.id, req.body.title)
+
+  const [ filter ] = await filter_db.byId(req.body.id)
+
+  res.json(filter)
+})
+
+router.delete('/:id', user, async (req, res) => {
+  const [ filter ] = await filter_db.byId(req.params.id)
+
+  is_in_team(filter.team_id)
+
+  await filter_db.deleteById(filter.id)
+  
+  res.send('ok!')
+})
+
 router.get('/team/:team_id', user, async (req, res) => {
   is_in_team()
 

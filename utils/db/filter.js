@@ -30,6 +30,14 @@ const batchAddFilterParamClip = (filter_id, tag_ids) => {
   `)
 }
 
+const updateTitle = (id, name) => {
+  return query(`
+    UPDATE filter
+    SET title = ?
+    WHERE id = ?;
+  `, [name, id])
+}
+
 const batchAddFilterParamVideo = (filter_id, video_ids) => {
   return query(`
     INSERT INTO filter_param
@@ -53,4 +61,11 @@ const byId = id => {
   `, [id])
 }
 
-module.exports = { filterTagIds, filterVideoIds, batchAddFilterParamVideo, teamFilters, addFilter, byId, batchAddFilterParamClip }
+const deleteById = id => {
+  return query(`
+    DELETE FROM filter
+    WHERE id = ?;
+  `, [id])
+}
+
+module.exports = { deleteById, updateTitle, filterTagIds, filterVideoIds, batchAddFilterParamVideo, teamFilters, addFilter, byId, batchAddFilterParamClip }

@@ -96,9 +96,7 @@ router.put('/order', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res) => {
-  // TODO post to mirroring
-
-  const { tag_name, group_id } = req.body
+  const { tag_name, group_id, position } = req.body
 
   if( !tag_name || !group_id) throw new Error('bad request')
   
@@ -112,7 +110,8 @@ router.post('/', user, async (req, res) => {
 
   let add_info = await tag_db.createTag({
     tag_name,
-    group_id
+    group_id,
+    position: position || 0
   })
 
   mirrors = mirrors.map(m => {

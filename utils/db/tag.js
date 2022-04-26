@@ -118,11 +118,11 @@ const addMirrors = (group_id, mirrors) => {
   `, [group_id, mirrors])
 }
 
-const createTag = ({ tag_name, group_id, original_id }) => {
+const createTag = ({ tag_name, group_id, original_id, position }) => {
   return query(`
-    INSERT INTO tag( tag_name, group_id, original_id )
-    VALUES (?, ?, ?);
-  `, [ tag_name, group_id, original_id ])
+    INSERT INTO tag( tag_name, group_id, original_id, position )
+    VALUES (?, ?, ?, ?);
+  `, [ tag_name, group_id, original_id, position ])
 }
 
 const tagGroupById = id => {
