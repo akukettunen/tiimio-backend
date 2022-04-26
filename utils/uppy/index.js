@@ -23,7 +23,7 @@ const options = {
     // This MUST match the path you specify in `app.use()` below:
     path: '/companion',
   },
-  sendSelfEndpoint: process.env.URL_BASE,
+  sendSelfEndpoint: process.env.URL_BASE + '/companion',
   filePath: './',
   streamingUpload: true,
   secret: process.env.COMPANION_SECRET
