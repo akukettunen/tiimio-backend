@@ -24,7 +24,7 @@ const options = {
     path: '/companion',
   },
   sendSelfEndpoint: process.env.URL_BASE + '/companion',
-  filePath: './',
+  filePath: './files',
   streamingUpload: true,
   secret: process.env.COMPANION_SECRET
 }
