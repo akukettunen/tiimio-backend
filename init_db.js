@@ -59,6 +59,9 @@ const init = async () => {
     DROP TABLE IF EXISTS tag;
   `)
   await query(`
+    DROP TABLE IF EXISTS password_reset_tokens;
+  `)
+  await query(`
     DROP TABLE IF EXISTS folder_object;
   `)
   await query(`
@@ -173,6 +176,15 @@ const init = async () => {
       email_confirmed boolean NOT NULL DEFAULT false,
       joined DATE NOT NULL
     );
+  `)
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens(
+        user_id VARCHAR(300) NOT NULL,
+        expiry BIGINT UNSIGNED NOT NULL,
+        token VARCHAR(128) NOT NULL,
+        PRIMARY KEY(user_id, token)
+      );
   `)
 
   await query(`

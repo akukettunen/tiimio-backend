@@ -1,5 +1,6 @@
 require('dotenv').config()
 const   express = require('express')
+const { comp, instance } = require('./utils/uppy/index')
         app = express()
         cors = require('cors')
         bodyParser = require('body-parser')
@@ -8,19 +9,25 @@ const   express = require('express')
         // limiter = rateLimit({ windowMs: 60 * 1000, max: 500, legacyHeaders: false })
         requestMethod = require('./middleware/requestMethod.js')
         errorMiddleware = require('./middleware/error.js')
-        companion = require('./utils/uppy/index')
         session = require('express-session')
         user_middleware = require('./middleware/userMiddleware')
 
-app.use(cors())
+const corsOptions = {
+    origin: '*',
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    optionsSuccessStatus: 200
+}
+// TODO: change secret
+app.use(session({ secret: 'some secrety secret' }))
+
+app.use(cors(corsOptions))
 app.use(bodyParser.json())
 app.use(cookieParser())
 app.use(user_middleware)
 
-// TODO: change secret
-app.use(session({ secret: 'some secrety secret' }))
 
-app.use('/companion', companion)
+app.options('*', cors(corsOptions));
+app.use('/companion', comp)
 
 const auth = require('./routes/auth')
 const sport = require('./routes/sport')
@@ -65,6 +72,8 @@ app.use(errorMiddleware)
 
 var port = process.env.PORT || 4040;
 
-app.listen(port, process.env.IP, function() {
+const server = app.listen(port, process.env.IP, function() {
     console.log("🚀 tiimi.io server started at port " + port + " 🚀")
 });
+
+instance.socket(server)

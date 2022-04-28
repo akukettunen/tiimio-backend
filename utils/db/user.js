@@ -14,4 +14,12 @@ const getUserByEmail = email => {
   `, [email])
 }
 
-module.exports = { addUser, getUserByEmail }
+const addPasswordResetToken = (email, hashed_token, expiry) => {
+  return query(`
+    INSERT INTO password_reset_tokens (user_id, token, expiry) 
+    VALUES(?, ?, ?);
+  }
+  `, [email, hashed_token, expiry])
+}
+
+module.exports = { addUser, getUserByEmail, addPasswordResetToken }

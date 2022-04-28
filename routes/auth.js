@@ -12,6 +12,7 @@ const express = require('express')
       team_db = require('../utils/db/team')
       stripe = require('../utils/stripe/index')
       userHelper = require('../utils/user/userHelper')
+      nanoid = require('nanoid')
       require('express-async-errors');
 
 router.post('/login', async (req, res) => {
@@ -96,6 +97,29 @@ router.get('/refresh', user, async (req, res) => {
   )
 
   res.send({ token })
+})
+
+router.post('/forgot-password/:email', async () =>  {
+  const email = req.params.email
+  const [ user ] = await user_db.getUserByEmail(email)
+
+  if(!user) {
+    // this is a security feature
+    res.send(`link send to ${email}!`)
+    return
+  }
+
+  const raw_token = nanoid(40)
+  const hashed_token = await bcrypt.hash(raw_token, saltRounds)
+  const expiry_unix_seconds = parseInt(Date.now() / 1000) + 60 * 60
+
+  await user_db.addPasswordResetToken(email, hashed_token, expiry_unix_seconds)
+
+  res.send(`link send to ${email}!`)
+})
+
+router.get('/forgot-password/:hash', () => {
+
 })
 
 module.exports = router;

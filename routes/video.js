@@ -21,6 +21,7 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
       require('express-async-errors');
 
 router.post('/', user, async (req, res) => {
+  console.log(req.body)
   // id should be in form 123-345/123-645
   const id = req.body.id.split('/')[0] || uuidv4()
 

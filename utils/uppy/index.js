@@ -23,10 +23,14 @@ const options = {
     // This MUST match the path you specify in `app.use()` below:
     path: '/companion',
   },
-  sendSelfEndpoint: process.env.URL_BASE + '/companion',
+  debug: false,
+  metrics: false,
   filePath: './files',
   streamingUpload: true,
   secret: process.env.COMPANION_SECRET
 }
 
-module.exports = companion.app(options)
+module.exports = {
+  comp: companion.app(options),
+  instance: companion
+}
