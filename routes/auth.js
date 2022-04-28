@@ -13,6 +13,7 @@ const express = require('express')
       stripe = require('../utils/stripe/index')
       userHelper = require('../utils/user/userHelper')
       nanoid = require('nanoid')
+      emailService = require('../utils/aws/email')
       require('express-async-errors');
 
 router.post('/login', async (req, res) => {
@@ -66,6 +67,8 @@ router.post('/signin', async (req, res) => {
     language,
     full_name
   })
+
+  await emailService.sendWelcomeEmail(email)
 
   let [ user ] = await user_db.getUserByEmail(email)
   const teams = []

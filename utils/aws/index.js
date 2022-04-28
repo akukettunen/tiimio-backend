@@ -34,4 +34,4 @@ const deleteByFolder = async key => {
   return Promise.all(promises)
 }
 
-module.exports = { deleteByFolder }
+module.exports = { deleteByFolder, ses }
