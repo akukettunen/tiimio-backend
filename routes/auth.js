@@ -1,4 +1,5 @@
 const { user } = require('../middleware/authMiddleware')
+const { nanoid } = require('nanoid')
 const express = require('express')
       db = require('../utils/db/index')
       router = express.Router()
@@ -12,8 +13,8 @@ const express = require('express')
       team_db = require('../utils/db/team')
       stripe = require('../utils/stripe/index')
       userHelper = require('../utils/user/userHelper')
-      nanoid = require('nanoid')
       emailService = require('../utils/aws/email')
+      crypto = require('crypto')
       require('express-async-errors');
 
 router.post('/login', async (req, res) => {
@@ -102,27 +103,64 @@ router.get('/refresh', user, async (req, res) => {
   res.send({ token })
 })
 
-router.post('/forgot-password/:email', async () =>  {
+router.post('/forgot-password/:email', async (req, res) =>  {
   const email = req.params.email
   const [ user ] = await user_db.getUserByEmail(email)
 
   if(!user) {
     // this is a security feature
-    res.send(`link send to ${email}!`)
+    res.send(`link sent to ${email}!`)
     return
   }
 
   const raw_token = nanoid(40)
-  const hashed_token = await bcrypt.hash(raw_token, saltRounds)
+  const hashed_token = crypto.createHash('sha256').update(raw_token).digest('base64');
   const expiry_unix_seconds = parseInt(Date.now() / 1000) + 60 * 60
-
+  const link = process.env.FRONTEND_BASE_URL + '/#/reset/' + raw_token
   await user_db.addPasswordResetToken(email, hashed_token, expiry_unix_seconds)
+  await emailService.sendRefreshEmail(email, link, 60, expiry_unix_seconds * 1000)
 
-  res.send(`link send to ${email}!`)
+  res.send(`link sent to ${email}!`)
 })
 
-router.get('/forgot-password/:hash', () => {
+router.post('/change-password/code', async (req, res) => {
+  const { passwrd, passwrd_again, token } = req.body
+  console.log(req.body)
+  if(!passwrd || !passwrd_again || !token) throw new Error('bad request')
+  if(!passwrd || passwrd.length < 8) throw new Error('invalid password')
+  if(passwrd !== passwrd_again) throw new Error("passwords don't match, try again!")
+  const hashed_token = crypto.createHash('sha256').update(token).digest('base64');
 
+  // get reset token and email out of it
+  const [ reset_token ] = await user_db.resetTokenByHash(hashed_token)
+
+  if(!reset_token || !reset_token.user_id) throw new Error('Invalid link :(')
+  const { user_id } = reset_token
+  const email = user_id
+
+  // create hash and refresh user password
+  const hash = await bcrypt.hash(passwrd, saltRounds)
+  await user_db.setNewPassword(email, hash)
+
+  // delete all users password-refresh-tokens
+  await user_db.deleteAllResetTokensByEmail(email)
+  
+  // create user token and send it to frontend
+  let [ user ] = await user_db.getUserByEmail(email)
+  // lets not return the password to frontend
+  delete user.password
+
+  // create user data
+  user = await userHelper.createUserData(0, user)
+
+  // creates a token with said data
+  const user_token = jwt.sign(
+    user,
+    process.env.SECRET_KEY,
+    { expiresIn: '1d' }
+  )
+
+  res.send({ token: user_token })
 })
 
 module.exports = router;

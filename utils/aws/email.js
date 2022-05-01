@@ -72,4 +72,44 @@ const sendWelcomeEmail = email => {
    return ses.sendEmail(params).promise()
 }
 
-module.exports = { sendWelcomeEmail }
+const sendRefreshEmail = (email, link, minutes, expiry) => {
+    const date = new Date(expiry)
+    const params = {
+      Destination: {
+       BccAddresses: [],
+       CcAddresses: [],
+       ToAddresses: [ email ]
+      },
+      Message: {
+       Body: {
+        Text: {
+         Charset: "UTF-8", 
+         Data: `
+            Hi!
+
+            You recently requested to change your Tiimi password.
+
+            Follow this link to do so: 
+            ${link}
+
+            Link will be active for the next ${minutes} minutes ( until ${date} )
+
+            Do not give this link to anyone else. If you did not request to change your password or have questions,
+            please contact help@tiimi.io .
+
+            - Tiimi team
+        `
+        }
+       }, 
+       Subject: {
+        Charset: "UTF-8", 
+        Data: "Password reset"
+       }
+      }, 
+      Source: "Tiimi <help@tiimi.io>",
+     };
+  
+     return ses.sendEmail(params).promise()
+  }
+
+module.exports = { sendWelcomeEmail, sendRefreshEmail }
