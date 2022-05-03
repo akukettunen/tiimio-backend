@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
   // gets user data from db and hashes the password
   let [ user ] = await user_db.getUserByEmail(email)
 
-  if(!user) throw Error('wrong password or email') 
+  if(!user) throw Error('wrong password or email')
 
   const result = await bcrypt.compare(password, user.password)
 
@@ -66,7 +66,8 @@ router.post('/signin', async (req, res) => {
     password_hash: hash,
     email,
     language,
-    full_name
+    full_name,
+    email_confirmation_string: nanoid(40)
   })
 
   await emailService.sendWelcomeEmail(email)
@@ -90,8 +91,6 @@ router.get('/refresh', user, async (req, res) => {
   let [ user ] = await user_db.getUserByEmail(email)
 
   delete user.password
-  console.log(currentTeamId)
-  console.log(inUserCurrentTeamId)
   user = await userHelper.createUserData(currentTeamId || inUserCurrentTeamId, user)
 
   const token = jwt.sign(
@@ -101,6 +100,16 @@ router.get('/refresh', user, async (req, res) => {
   )
 
   res.send({ token })
+})
+
+router.post('/confirm-email/:code', async (req, res) => {
+  const [ user ] = await user_db.userByConfirmationToken(req.params.code)
+
+  if(!user) throw new Error('Invalid link :/')
+
+  await user_db.confirmEmail(user.email)
+
+  res.send('ok!')
 })
 
 router.post('/forgot-password/:email', async (req, res) =>  {

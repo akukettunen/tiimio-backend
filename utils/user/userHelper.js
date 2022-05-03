@@ -1,12 +1,11 @@
 const team_db = require('../db/team')
 
-const createUserData = async (currentTeamId, user) => {
+const createUserData = async (currentTeamId, user, teams) => {
   const email = user.email
 
   // get users teams from db
-  let teams = await team_db.userTeams(email)
+  if(!teams) teams = await team_db.userTeams(email)
   let teamIds = teams.map(t => t.id)
-
   let isInRequestedTeam = teamIds.includes(Number(currentTeamId))
   if(!isInRequestedTeam) currentTeamId = teamIds[0]
 

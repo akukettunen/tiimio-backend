@@ -174,6 +174,7 @@ const init = async () => {
       tiimio_admin BOOLEAN NOT NULL DEFAULT false,
       password VARCHAR(300) NOT NULL,
       email_confirmed boolean NOT NULL DEFAULT false,
+      email_confirmation_string VARCHAR(50),
       joined DATE NOT NULL
     );
   `)

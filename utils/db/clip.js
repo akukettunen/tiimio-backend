@@ -65,7 +65,7 @@ const videoByClipId = id => {
 const batchAddTag = (clip_id, tag_ids) => {
   return query(`
     INSERT INTO object_tag( clip_id, tag_id )
-    VALUES ${tag_ids.map(id => `(${clip_id}, ${id})`)};
+    VALUES ${tag_ids.map(id => `(${Number(clip_id)}, ${Number(id)})`)};
   `)
 }
 

@@ -70,7 +70,7 @@ const timenameById = id => {
 const batchAddTag = (time_id, tag_ids) => {
   return query(`
     INSERT INTO object_tag( time_id, tag_id )
-    VALUES ${tag_ids.map(id => `(${time_id}, ${id})`)};
+    VALUES ${tag_ids.map(id => `(${Number(time_id)}, ${Number(id)})`)};
   `)
 }
 
@@ -123,6 +123,7 @@ const teamTimenames = team_id => {
 }
 
 const batchAddTimename = (team_id, timenameNames) => {
+  // needs to be sanitized if used by user data
   return query(`
     INSERT INTO timename (team_id, name, created)
     VALUES ${ timenameNames.map(name => `( ${team_id}, '${name}', NOW() ) `) };
@@ -243,7 +244,7 @@ const batchCreateTimeTimename = (timenames, time_id) => {
   return query(`
     INSERT INTO time_timename
     (timename_id, time_id, video_time, time_from_first)
-    VALUES ${timenames.map(t =>  `(${t.timename_id}, ${time_id}, ${t.video_time}, ${t.time_from_first})`)}
+    VALUES ${timenames.map(t =>  `(${Number(t.timename_id)}, ${Number(time_id)}, ${Number(t.video_time)}, ${Number(t.time_from_first)})`)}
     ;
   `, [ time_id ])
 }

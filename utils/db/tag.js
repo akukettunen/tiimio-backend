@@ -30,6 +30,7 @@ const editTagOrder = (tag_id, position) => {
 }
 
 const batchAddMirrorTag = (tags, group_id) => {
+  // no need to sanitize data fetched from db by backend
   return query(`
     INSERT INTO tag( original_id, tag_name, group_id )
     VALUES ${tags.map(tag => `(${tag.id}, '${tag.tag_name}', ${group_id})`)}
@@ -38,6 +39,7 @@ const batchAddMirrorTag = (tags, group_id) => {
 }
 
 const batchAddGroups = (groups, team_id) => {
+  // needs to be sanitized is used by user reqs
   return query(`
     INSERT INTO tag_group( team_id, group_name )
     VALUES ${groups.map(group => `(${team_id}, '${group}')`)}
@@ -46,6 +48,7 @@ const batchAddGroups = (groups, team_id) => {
 }
 
 const batchAddTags = (group_id, tags) => {
+  // needs to be sanitized is used by user reqs
   return query(`
     INSERT INTO tag( tag_name, group_id )
     VALUES ${tags.map(tag => `('${tag}', ${group_id})`)}

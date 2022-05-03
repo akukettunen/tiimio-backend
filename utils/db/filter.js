@@ -25,7 +25,7 @@ const batchAddFilterParamClip = (filter_id, tag_ids) => {
   return query(`
     INSERT INTO filter_param
     (filter_id, tag_id)
-    VALUES ${tag_ids.map(t =>  `(${filter_id}, ${t})`)}
+    VALUES ${tag_ids.map(t => `(${Number(filter_id)}, ${Number(t)})`)}
     ;
   `)
 }
@@ -42,9 +42,9 @@ const batchAddFilterParamVideo = (filter_id, video_ids) => {
   return query(`
     INSERT INTO filter_param
     (filter_id, video_id)
-    VALUES ${video_ids.map(t =>  `(${filter_id}, '${t}')`)}
+    VALUES ${video_ids.map(() =>  `(${Number(filter_id)}, ?)`)}
     ;
-  `)
+  `, [video_ids])
 }
 
 const teamFilters = id => {

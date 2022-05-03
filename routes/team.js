@@ -37,7 +37,7 @@ router.post('/', user, async (req, res) => {
     sportId: sport_id,
     name: team_name,
     joinCode, 
-    leagueId: undefined, 
+    leagueId: undefined,
     joinCode,
     planId
   })
@@ -90,13 +90,18 @@ router.post('/join', user, async (req, res) => {
 
   if(!team) throw new Error('team not found :(')
   
-  if(teams.find(t => t.id == team.id)) throw new Error(`you belong to ${team.team_name} already!`)  
+  if(teams.find(t => t.id == team.id)) throw new Error(`You belong to ${team.team_name} already!`)  
 
   await team_db.addUserToTeam({
     email: req.tiimio_user.email,
     team_id: team.id
   })
-  const user = await userHelper.createUserData(team.id, req.tiimio_user)
+
+  // this is a workaround
+  const [ added_to_team ] = await team_db.teamById(team.id)
+  teams = teams.concat(added_to_team)
+
+  const user = await userHelper.createUserData(team.id, req.tiimio_user, teams)
 
   const token = jwt.sign(
     user,
@@ -122,7 +127,7 @@ router.get('/:id/users', user, async (req, res) => {
 router.put('/:id/joincode', user, async (req, res) => {
   // TODO check admin
   let user = req.tiimio_user
-  let code = join_code.generate(6)
+  const code = await team_helper.generateJoinCode()
   let team = user.teams.find(team => team.id == req.params.id)
 
   if(!team) throw new Error('invalid auth')
