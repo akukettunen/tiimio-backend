@@ -26,26 +26,48 @@ const teamVideos = id => {
   `, [ id, id ])
 }
 
-const teamVideosIdsOnly = (id, limit) => {
+const teamVideosIdsOnly = (id, index, limit) => {
   return query(`
     SELECT
       id
     FROM video
     WHERE team_id = ? AND deleted = false
     ORDER BY uploaded DESC
-    ${ limit ? 'LIMIT ?' : '' };
-  `, [ id, limit ])
+    ${ limit ? 'LIMIT ?, ?' : '' };
+  `, [ id, index, limit ])
 }
 
-const teamVideosByIds = (id, ids, limit) => {
+const teamVideosLimits = (id, index, limit) => {
+  return query(`
+    SELECT
+      *
+    FROM video
+    WHERE team_id = ? AND deleted = false
+    ORDER BY uploaded DESC
+    ${ limit ? 'LIMIT ?, ?' : '' };
+  `, [ id, index, limit ])
+}
+
+const teamVideosByIds = (id, ids, index, limit) => {
   return query(`
     SELECT
       id
     FROM video
     WHERE team_id = ? AND deleted = false AND id IN (?)
     ORDER BY uploaded DESC
-    ${ limit ? 'LIMIT ?' : ''};
-  `, [ id,  ids, limit])
+    ${ limit ? 'LIMIT ?, ?' : ''};
+  `, [ id,  ids, index, limit])
+}
+
+const teamVideosByIdsLimits = (id, ids, index, limit) => {
+  return query(`
+    SELECT
+      *
+    FROM video
+    WHERE team_id = ? AND deleted = false AND id IN (?)
+    ORDER BY uploaded DESC
+    ${ limit ? 'LIMIT ?, ?' : ''};
+  `, [ id,  ids, index, limit])
 }
 
 const uploadedThisMonth = team_id => {
@@ -102,4 +124,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { teamVideosIdsOnly, teamVideosByIds, planByTeamId, videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }
+module.exports = { teamVideosByIdsLimits, teamVideosLimits, teamVideosIdsOnly, teamVideosByIds, planByTeamId, videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }

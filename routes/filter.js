@@ -26,16 +26,15 @@ router.post('/', user, async (req, res) => {
 
   const addData = await filter_db.addFilter(req.body);
   const [ filter ] = await filter_db.byId(addData.insertId)
-
   await filter_db.batchAddFilterParamClip(addData.insertId, tags.flat())
   if(videos && videos.length) await filter_db.batchAddFilterParamVideo(addData.insertId, videos)
   
   res.json(filter)
 })
 
-// TODO add user
-router.get('/:id/clip', async (req, res) => {
+router.get('/:id/clip', user, async (req, res) => {
   let [ filter ] = await filter_db.byId(req.params.id)
+  let { limit, index } = req.query
 
   if(!filter) throw new Error('filter not found :(')
   if(!filter.team_id) throw new Error('bad request')
@@ -58,15 +57,15 @@ router.get('/:id/clip', async (req, res) => {
   let videos;
   if(!filterVideoIds || !filterVideoIds.length) {
     // all videos so let's get them
-    videos = await video_db.teamVideosIdsOnly(filter.team_id, filter.limit)
+    videos = await video_db.teamVideosLimits(filter.team_id, Number(index), Number(limit))
   } else {
-    videos = await video_db.teamVideosByIds(filter.team_id, filterVideoIds, filter.limit)
+    videos = await video_db.teamVideosByIdsLimits(filter.team_id, filterVideoIds, Number(index), Number(limit))
   }
 
-  videos = videos.map(video => video.id)
-
-  let clipsPromises = videos.map(videoId => {
-    return clipHelper.videoClips(videoId, groups)
+  // videos = videos.map(video => video.id)
+  console.log(videos)
+  let clipsPromises = videos.map(video => {
+    return clipHelper.videoClips(video, groups)
   })
 
   let allClips = await Promise.all(clipsPromises)

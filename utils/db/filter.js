@@ -44,7 +44,7 @@ const batchAddFilterParamVideo = (filter_id, video_ids) => {
     (filter_id, video_id)
     VALUES ${video_ids.map(() =>  `(${Number(filter_id)}, ?)`)}
     ;
-  `, [video_ids])
+  `, [...video_ids])
 }
 
 const teamFilters = id => {

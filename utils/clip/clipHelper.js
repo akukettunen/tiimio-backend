@@ -8,9 +8,9 @@ const clipById = async id => {
   return { ...clip, tags, num_of_tags: tags.length }
 }
 
-const videoClips = (id, groups) => {
+const videoClips = (video, groups) => {
   return new Promise((resolve, reject) => {
-    clip_db.videoClips(id)
+    clip_db.videoClips(video.id)
       .then(clips => {
         clips = clips.map(c => {
           return {
@@ -19,7 +19,7 @@ const videoClips = (id, groups) => {
           }
         }).filter(clip => clipIsIn(clip, groups))
         resolve({
-          video_id: id,
+          ...video,
           clips
         })
       })
