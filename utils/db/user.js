@@ -22,6 +22,12 @@ const confirmEmail = email => {
   `, [ email ])
 }
 
+const userByConfirmationCode = code => {
+  return query(`
+    SELECT * FROM user WHERE email_confirmation_string = ?;
+  `, [code])
+}
+
 const userByConfirmationToken = code => {
   return query(`
     SELECT * FROM user
@@ -58,4 +64,4 @@ const setNewPassword = (email, hash) => {
   `, [ hash, email ])
 }
  
-module.exports = { userByConfirmationToken, confirmEmail, setNewPassword, resetTokenByHash, deleteAllResetTokensByEmail, addUser, getUserByEmail, addPasswordResetToken }
+module.exports = { userByConfirmationCode, userByConfirmationToken, confirmEmail, setNewPassword, resetTokenByHash, deleteAllResetTokensByEmail, addUser, getUserByEmail, addPasswordResetToken }

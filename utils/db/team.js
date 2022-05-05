@@ -12,7 +12,7 @@ const userTeams = email => {
       league_admin, league_id, league_name, team.sport_id, sport_name, team_admin, 
       team_name, stripe_id, plan.short_name, team_orderer, plan.full_name, 
       plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved, 
-      plan.is_the_freemium, plan.is_the_best
+      plan.is_the_freemium, plan.is_the_best, users
     FROM user_team
     LEFT JOIN team ON user_team.team_id = team.id
     LEFT JOIN plan ON team.plan_id = plan.id
@@ -75,15 +75,22 @@ const changeTeamPlan = ({team_id, plan_id}) => {
 
 const teamByJoinCode = code => {
   return query(`
-    SELECT team.* FROM team
+    SELECT team.*, users FROM team
     LEFT JOIN plan ON plan.id = team.plan_id
     WHERE join_code = ?;
   `, [code.toString()])
 }
 
+const numOfUsersInTeam = team_id => {
+  return query(`
+    SELECT COUNT(*) as number_of_users FROM user_team
+    WHERE team_id = ?;
+  `, [team_id])
+}
+
 const teamById = id => {
   return query(`
-    SELECT * FROM team
+    SELECT *, team.id as id, plan.id as plan_id FROM team
     LEFT JOIN plan ON plan.id = team.plan_id
     WHERE team.id = ?;
   `, [id])
@@ -121,4 +128,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }

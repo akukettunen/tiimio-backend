@@ -62,15 +62,18 @@ router.post('/signin', async (req, res) => {
   
   if(oldUser) throw new Error("this user already exists!")
 
+  const email_conf_string = nanoid(8)
   await user_db.addUser({
     password_hash: hash,
     email,
     language,
     full_name,
-    email_confirmation_string: nanoid(40)
+    email_confirmation_string: email_conf_string
   })
 
-  await emailService.sendWelcomeEmail(email)
+  const link = process.env.FRONTEND_BASE_URL + '/#/confirm/' + email_conf_string
+
+  await emailService.sendWelcomeEmail(email, link)
 
   let [ user ] = await user_db.getUserByEmail(email)
   const teams = []
@@ -102,14 +105,27 @@ router.get('/refresh', user, async (req, res) => {
   res.send({ token })
 })
 
-router.post('/confirm-email/:code', async (req, res) => {
-  const [ user ] = await user_db.userByConfirmationToken(req.params.code)
+router.post('/confirm-email', async (req, res) => {
+  const { code } = req.body
+
+  if(!code) throw new Error('bad request')
+
+  const [ user ] = await user_db.userByConfirmationCode(code)
 
   if(!user) throw new Error('Invalid link :/')
 
   await user_db.confirmEmail(user.email)
 
-  res.send('ok!')
+  delete user.password
+  user = await userHelper.createUserData(undefined, user)
+
+  const token = jwt.sign(
+    user,
+    process.env.SECRET_KEY,
+    { expiresIn: '1d' }
+  )
+
+  res.send({ token })
 })
 
 router.post('/forgot-password/:email', async (req, res) =>  {

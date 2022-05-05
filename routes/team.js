@@ -89,9 +89,12 @@ router.post('/join', user, async (req, res) => {
   let teams = await team_db.userTeams(req.tiimio_user.email)
 
   if(!team) throw new Error('team not found :(')
-  
   if(teams.find(t => t.id == team.id)) throw new Error(`You belong to ${team.team_name} already!`)  
+  
+  const [{ number_of_users }] = await team_db.numOfUsersInTeam(team.id)
 
+  if(number_of_users >= team.users) throw new Error('Teams user limit reached :/')
+  console.log(number_of_users, team)
   await team_db.addUserToTeam({
     email: req.tiimio_user.email,
     team_id: team.id
