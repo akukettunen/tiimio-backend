@@ -70,7 +70,7 @@ router.get('/:id/clip', user, async (req, res) => {
 
   let allClips = await Promise.all(clipsPromises)
 
-  res.json(allClips)
+  res.json({ filter, clips: allClips })
   // let db_groups = await tag_db.teamGroups(req.params.team_id)
   // let db_tags = await tag_db.teamTags(req.params.team_id)
 
