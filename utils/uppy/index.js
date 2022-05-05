@@ -25,7 +25,7 @@ const options = {
   },
   debug: false,
   metrics: false,
-  filePath: './files',
+  filePath: './',
   streamingUpload: true,
   secret: process.env.COMPANION_SECRET
 }
