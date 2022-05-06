@@ -72,6 +72,13 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
   res.send('ok!')
   switch(event.type) {
     // tilausta jatkettu tai peruutettu
+    case 'customer.subscription.created':
+      let [ new_plan ] = await team_db.planByStripeId(event.data.object.items.data[0].price.id)
+      await team_db.changeTeamPlan({
+        team_id: userTeam.team_id,
+        plan_id: new_plan.id
+      })
+      break;
     case 'customer.subscription.updated':
       // tämä kertoo loppuuko tilaus
       // console.log(event.data.object.cancel_at_period_end)
