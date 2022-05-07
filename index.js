@@ -30,6 +30,7 @@ app.options('*', cors(corsOptions));
 app.use('/companion', comp)
 
 const auth = require('./routes/auth')
+const admin = require('./routes/admin')
 const sport = require('./routes/sport')
 const plan = require('./routes/plan')
 const video = require('./routes/video')
@@ -49,6 +50,7 @@ app.set('trust proxy', 1);
 app.use(requestMethod)
 
 app.use('/auth', auth)
+app.use('/admin', admin)
 app.use('/sport', sport)
 app.use('/video', video)
 app.use('/stripe', stripe)

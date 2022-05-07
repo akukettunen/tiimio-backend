@@ -119,6 +119,7 @@ const init = async () => {
       created DATE NOT NULL,
       league_name VARCHAR(100) NOT NULL,
       sport_id VARCHAR(20) NOT NULL,
+      logo_url VARCHAR(500),
       FOREIGN KEY (sport_id) REFERENCES sport(id)
     );
   `)
@@ -452,6 +453,10 @@ const init = async () => {
         FOREIGN KEY (user_id) REFERENCES user(email) ON DELETE CASCADE
       );
   `)
+
+  // here is the prod db
+
+
 
   await team_helper.addInitialTags('1', 'pesapallo')
 

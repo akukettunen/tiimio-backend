@@ -17,6 +17,23 @@ const user = (req, res, next) => {
   next()
 }
 
+const tiimi_admin = (req, res, next) => {
+  const token = req.token
+  
+  if(!token) {
+    throw new Error('authentication error')
+  }
+
+  let verified = jwt.verify(token, process.env.SECRET_KEY)
+  let is_admin = req.tiimio_user.tiimio_admin
+
+  if(!verified || !is_admin) {
+    throw new Error('authentication error')
+  }
+
+  next()
+}
+
 const is_in_team = (team_id) => {
   var team_id = team_id
   return (req, _res, next) => {
@@ -33,4 +50,4 @@ const is_in_team = (team_id) => {
   }
 }
 
-module.exports = { user, is_in_team }
+module.exports = { tiimi_admin, user, is_in_team }

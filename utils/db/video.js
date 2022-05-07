@@ -4,7 +4,7 @@ const postVideo = ({ duration, id, title, description, original_url, original_ty
   return query(`
     INSERT INTO video
     (id, title, description, original_url, original_type, original_size, s3_key, uploader, team_id, encoded, uploaded, job_id, service, duration)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, false, CURDATE(), ?, ?, ?);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, false, NOW(), ?, ?, ?);
   `, [ id, title, description, original_url, original_type, original_size, s3_key, uploader, team_id, job_id, service, duration ])
 }
 

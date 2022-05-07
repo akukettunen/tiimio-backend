@@ -81,6 +81,15 @@ const teamByJoinCode = code => {
   `, [code.toString()])
 }
 
+const allTeams = (index = 0, limit = 10) => {
+  return query(`
+    SELECT *, plan.id as plan_id, team.id as id FROM team
+    LEFT JOIN plan ON plan.id = team.plan_id
+    ORDER BY team.created
+    LIMIT ?, ?;
+  `, [index, limit])
+}
+
 const numOfUsersInTeam = team_id => {
   return query(`
     SELECT COUNT(*) as number_of_users FROM user_team
@@ -128,4 +137,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }

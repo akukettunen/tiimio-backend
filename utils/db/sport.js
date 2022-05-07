@@ -7,5 +7,11 @@ const getSports = () => {
   `)
 }
 
+const allSports = () => {
+  return query(`
+    SELECT * FROM sport;
+  `)
+}
 
-module.exports = { getSports }
+
+module.exports = { getSports, allSports }
