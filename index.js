@@ -30,6 +30,7 @@ app.options('*', cors(corsOptions));
 app.use('/companion', comp)
 
 const auth = require('./routes/auth')
+const maps = require('./routes/maps')
 const admin = require('./routes/admin')
 const sport = require('./routes/sport')
 const plan = require('./routes/plan')
@@ -62,6 +63,7 @@ app.use('/folder', folder)
 app.use('/time', time)
 app.use('/filter', filter)
 app.use('/rule', rule)
+app.use('/maps', maps)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);
