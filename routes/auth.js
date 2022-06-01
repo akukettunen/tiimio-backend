@@ -117,10 +117,10 @@ router.post('/confirm-email', async (req, res) => {
   await user_db.confirmEmail(user.email)
 
   delete user.password
-  user = await userHelper.createUserData(undefined, user)
+  const userData = await userHelper.createUserData(undefined, user)
 
   const token = jwt.sign(
-    user,
+    userData,
     process.env.SECRET_KEY,
     { expiresIn: '1d' }
   )
