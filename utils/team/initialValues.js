@@ -189,4 +189,47 @@ const other = () => {
   }
 }
 
-module.exports = { pesapallo, baseball, other }
+const basketball = () => {
+  return {
+    tags: [
+      {
+        name: 'Players',
+        tags: [
+          'John Doe',
+          'Jane Doe'
+        ]
+      },
+      {
+        name: 'Event',
+        tags: [
+          'Attack', 
+          'Defense'
+        ]
+      },
+      {
+        name: 'Shot value',
+        tags: [
+          '1pt', 
+          '2pt',
+          '3pt'
+        ]
+      },
+      {
+        name: 'Shot type',
+        tags: [
+          'Alley oop', 
+          'Floater',
+          'Jump shot',
+          'Dunk',
+          'Layup'
+        ]
+      }
+    ],
+    timenames: [
+      "Attack starts",
+      "Attack end"
+    ]
+  }
+}
+
+module.exports = { pesapallo, baseball, other, basketball }
