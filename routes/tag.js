@@ -72,6 +72,23 @@ router.put('/group/:group_id/name', user, async (req, res) => {
   res.json('ok!')
 })
 
+router.put('/group/:group_id/show_in_tagging', user, async (req, res) => {
+  if(req.body.show_in_tagging === undefined) throw new Error('bad request')
+
+  await tag_db.updateTagGroupShowInTagging({ id: req.params.group_id, show_in_tagging: req.body.show_in_tagging })
+
+  res.json('ok!')
+})
+
+router.put('/group/:group_id/show_in_filtering', user, async (req, res) => {
+  console.log(req.body)
+  if(req.body.show_in_filtering === undefined) throw new Error('bad request')
+
+  await tag_db.updateTagGroupShowInFiltering({ id: req.params.group_id, show_in_filtering: req.body.show_in_filtering })
+
+  res.json('ok!')
+})
+
 router.put('/:tag_id/name', user, async (req, res) => {
   // TODO update mirroring too
 

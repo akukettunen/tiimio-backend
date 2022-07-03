@@ -13,39 +13,80 @@ const express = require('express');
       tagHelper = require('../utils/tag')
       require('express-async-errors');
       const { user, is_in_team } = require('../middleware/authMiddleware');
+const { deleteById } = require('../utils/db/tag');
 
-router.post('/batch', user, async (req, res) => {
-  const email = req.tiimio_user['email']
-  console.log(req.body)
-  const promises = req.body.map(r => {
-    // r = {
-    //   ...r,
-    //   if_rule: JSON.stringify(r.if_rule),
-    //   then_rule: JSON.stringify(r.then_rule)
-    // }
+// router.post('/batch', user, async (req, res) => {
+//   const email = req.tiimio_user['email']
+//   console.log(req.body)
+//   const promises = req.body.map(r => {
+//     // r = {
+//     //   ...r,
+//     //   if_rule: JSON.stringify(r.if_rule),
+//     //   then_rule: JSON.stringify(r.then_rule)
+//     // }
 
-    return rule_db.saveRule(r, email)
-  })
+//     return rule_db.saveRule(r, email)
+//   })
 
-  await Promise.all(promises)
+//   await Promise.all(promises)
 
-  const rules = await rule_db.userRules(req.tiimio_user.email)
+//   const rules = await rule_db.userRules(req.tiimio_user.email)
+
+//   res.json(rules)
+// })
+
+router.post('/team/:team_id', user, async (req, res) => {
+  is_in_team()
+  let rule = req.body
+  rule = { ...rule, team_id: req.params.team_id}
+
+  const insertData = await rule_db.saveTeamRule(rule)
+  const [saved_rule] = await rule_db.byId(insertData.insertId)
+
+  res.json(saved_rule)
+})
+
+router.get('/team/:team_id', user, async (req, res) => {
+  is_in_team()
+  
+  let rules = await rule_db.teamRules(req.params.team_id)
 
   res.json(rules)
 })
 
-router.get('/', user, async (req, res) => {
-  let rules = await rule_db.userRules(req.tiimio_user.email)
+router.delete('/:id', user, async (req, res) => {
+  const [rule] = await rule_db.byId(req.params.id)
 
-  rules = rules.map(r => {
-    return {
-      ...r,
-      if_rule: JSON.parse(r.if_rule),
-      then_rule: JSON.parse(r.then_rule)
-    }
-  })
+  if(!rule) throw new Error('rule not found')
 
-  res.json(rules)
+  is_in_team(rule.team_id) 
+
+  await rule_db.deleteById(rule.id)
+
+  res.json('ok!')
+})
+
+router.put('/:id', user, async (req, res) => {
+  let { rule } = req.body
+  if(!rule) throw new Error('empty rule')
+  console.log(req.body)
+  const insertData = await rule_db.putRule({...req.body, id: req.params.id})
+
+  const [saved_rule] = await rule_db.byId(req.params.id)
+  console.log(saved_rule)
+  res.json(saved_rule)
+})
+
+router.put('/active/:id', user, async (req, res) => {
+  let { active } = req.body;
+
+  if(active === undefined) throw new Error('bad request')
+
+  await rule_db.setActive({ active, id: req.params.id })
+
+  const [saved_rule] = await rule_db.byId(req.params.id)
+
+  res.json({...saved_rule, active})
 })
 
 module.exports = router;

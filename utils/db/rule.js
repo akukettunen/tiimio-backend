@@ -1,18 +1,47 @@
 const { query } = require('./index.js')
 
-const saveRule = (rule, email) => {
+const saveTeamRule = ({ rule, rule_name, team_id, position }) => {
   return query(`
-    INSERT INTO clipper_rule (if_rule, then_rule, when_rule, user_id) 
-    VALUES (?, ?, ?, ?);
-  `, [rule.if_rule, rule.then_rule, rule.when_rule, email])
-}
-module.exports = {saveRule}
-
-const userRules = (email) => {
-  return query(`
-    SELECT * FROM clipper _rule
-    WHERE user_id = ?;
-  `, [ email ])
+    INSERT INTO rule(rule, rule_name, position, active, team_id) 
+    VALUES (?, ?, ?, true, ?);
+  `, [rule, rule_name, position, team_id])
 }
 
-module.exports = { userRules, saveRule }
+const teamRules = (team_id) => {
+  return query(`
+    SELECT * FROM rule
+    WHERE team_id = ?;
+  `, [ team_id ])
+}
+
+const byId = id => {
+  return query(`
+    SELECT * FROM rule
+    WHERE id = ?;
+  `, [ id ])
+}
+
+const deleteById = id => {
+  return query(`
+    DELETE FROM rule
+    WHERE id = ?;
+  `, [id])
+}
+
+const putRule = ({ name, rule, id }) => {
+  return query(`
+    UPDATE rule
+    SET rule_name = ?, rule = ?
+    WHERE id = ?;
+  `, [ name, rule, id ])
+}
+
+const setActive = ({ active, id }) => {
+  return query(`
+    UPDATE rule
+    SET active = ?
+    WHERE id = ?;
+  `, [ active, id ])
+}
+
+module.exports = { setActive, teamRules, saveTeamRule, byId, deleteById, putRule }

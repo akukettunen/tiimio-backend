@@ -82,7 +82,7 @@ const groupTags = id => {
 
 const teamTags = team_id => {
   return query(`
-    SELECT original_id, tag_name, tag.id AS id, group_id FROM tag
+    SELECT original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ?
     ORDER BY position;
@@ -94,7 +94,7 @@ const teamTagsIdsFilter = (team_id, ids) => {
     SELECT tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ? AND tag.id IN (?)
-    ORDER BY position;
+    ORDER BY tag.position;
   `, [team_id, ids])
 }
 
@@ -151,6 +151,22 @@ const updateTagName = ({ name, id }) => {
   `, [name, id, id])
 }
 
+const updateTagGroupShowInTagging = ({ show_in_tagging, id }) => {
+  return query(`
+    UPDATE tag_group
+    SET show_in_tagging = ?
+    WHERE id = ?;
+  `, [show_in_tagging, id, id])
+}
+
+const updateTagGroupShowInFiltering = ({ show_in_filtering, id }) => {
+  return query(`
+    UPDATE tag_group
+    SET show_in_filtering = ?
+    WHERE id = ?;
+  `, [show_in_filtering, id, id])
+}
+
 const tagById = id => {
   return query(`
     SELECT * FROM tag
@@ -186,4 +202,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
