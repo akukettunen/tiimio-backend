@@ -3,7 +3,8 @@ const { query } = require('./index.js')
 const teamGroups = team_id => {
   return query(`
     SELECT * FROM tag_group
-    WHERE team_id = ?;
+    WHERE team_id = ?
+    ORDER BY position;
   `, [team_id])
 }
 
@@ -12,6 +13,14 @@ const teamGroupsIds = team_id => {
     SELECT id FROM tag_group
     WHERE team_id = ?;
   `, [team_id])
+}
+
+const editGroupOrder = (id, i) => {
+  return query(`
+    UPDATE tag_group
+    SET position = ?
+    WHERE id = ?;
+  `, [i, id])
 }
 
 const groupById = id => {
@@ -36,6 +45,20 @@ const batchAddMirrorTag = (tags, group_id) => {
     VALUES ${tags.map(tag => `(${tag.id}, '${tag.tag_name}', ${group_id})`)}
     ;
   `)
+}
+
+const deleteGroupTags = (group_id) => {
+  return query(`
+    DELETE FROM tag
+    WHERE group_id = ?;
+  `, [group_id])
+}
+
+const deleteGroupMirrors = group_id => {
+  return query(`
+    DELETE FROM tag_group_mirrors
+    WHERE tag_group_id = ?;
+  `, [group_id])
 }
 
 const batchAddGroups = (groups, team_id) => {
@@ -202,4 +225,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

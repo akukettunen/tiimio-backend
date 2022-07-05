@@ -40,7 +40,6 @@ router.post('/group', user, is_in_team(), async (req, res) => {
   if(!tag_group) throw new Error('tag group not found :(')
 
   let tags = []
-  let groupMirrors = []
   if(mirrors && mirrors.length) {
     // add mirrorIndicators to this new group
     let mirrorsPromises = mirrors.map(m => {
@@ -64,6 +63,40 @@ router.post('/group', user, is_in_team(), async (req, res) => {
   res.json(newGroup)
 })
 
+router.put('/group/:group_id/mirror', async (req, res) => {
+  let group = await tagHelper.groupById(req.params.group_id)
+  if(!group) throw new Error('Group not found')
+  const new_mirror_ids = req.body.new_mirror_ids;
+
+  if(!new_mirror_ids) throw new Error('bad request')
+
+
+  await tag_db.deleteGroupMirrors(req.params.group_id)
+  await tag_db.deleteGroupTags(req.params.group_id)
+
+  // add mirrors object
+  let mirrorsPromises = new_mirror_ids.map(m => {
+    return tag_db.addMirrors(req.params.group_id, Number(m))
+  })
+
+  await Promise.all(mirrorsPromises)
+
+  //add mirrors tags
+  let tags = []
+  // get all tags in the groups that were mirroring at the moment
+  let tagsPromises = new_mirror_ids.map(m => {
+    return tag_db.groupTags(m)
+  })
+  tags = await Promise.all(tagsPromises)
+  tags = tags.flat()
+
+  // add those tags to db
+  if(tags.length) await tag_db.batchAddMirrorTag(tags, req.params.group_id)
+
+  let newGroup = await tagHelper.groupById(req.params.group_id)
+  res.json(newGroup)
+})
+
 router.put('/group/:group_id/name', user, async (req, res) => {
   if(!req.body.group_name) throw new Error('bad request')
 
@@ -81,7 +114,6 @@ router.put('/group/:group_id/show_in_tagging', user, async (req, res) => {
 })
 
 router.put('/group/:group_id/show_in_filtering', user, async (req, res) => {
-  console.log(req.body)
   if(req.body.show_in_filtering === undefined) throw new Error('bad request')
 
   await tag_db.updateTagGroupShowInFiltering({ id: req.params.group_id, show_in_filtering: req.body.show_in_filtering })
@@ -105,6 +137,19 @@ router.put('/order', user, async (req, res) => {
 
   const promises = req.body.tags.map((t, i) => {
     return tag_db.editTagOrder(t, i)
+  })
+
+  await Promise.all(promises)
+
+  res.json('ok!')
+})
+
+router.put('/group/order', user, async (req, res) => {
+  if(!req.body.groups || !req.body.team_id) throw new Error('bad request')
+  is_in_team()
+
+  const promises = req.body.groups.map((g, i) => {
+    return tag_db.editGroupOrder(g.id, i)
   })
 
   await Promise.all(promises)
