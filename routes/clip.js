@@ -8,6 +8,7 @@ const express = require('express')
       router.use(cookieParser())
       logger = require('../utils/logger')
       clip_db = require('../utils/db/clip')
+      map_db = require('../utils/db/maps')
       folder_db = require('../utils/db/folder')
       clip_helper = require('../utils/clip/clipHelper')
       require('express-async-errors');
@@ -93,11 +94,15 @@ router.put('/:time_id/tag', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res) => {
-  const { title, starttime, endtime, video_id, description, tags } = req.body
+  const { title, starttime, endtime, video_id, description, tags, points } = req.body
   // TOOD: check that clip is saved to same team
   if(!title || !starttime || !endtime || !video_id ) throw new Error('bad request')
+
+  console.log(points)
   
   let added = await clip_db.addClip(req.body)
+
+  if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id]))
   
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags)
   

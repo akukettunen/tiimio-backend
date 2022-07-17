@@ -148,10 +148,12 @@ router.get('/:id', user, async (req, res) => {
   })
 
   let mapped_clips = clips.map(t => {
-    let parsed = JSON.parse(t.tags)
+    let parsed_tags = JSON.parse(t.tags)
+    let parsed_points = JSON.parse(t.points)
     return {
       ...t,
-      tags: parsed[0]?.id ? parsed : []
+      tags: parsed_tags[0]?.id ? parsed_tags : [],
+      points: parsed_points[0]?.id ? parsed_points : []
     }
   })
 

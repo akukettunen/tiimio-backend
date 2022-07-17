@@ -19,11 +19,11 @@ const teamClips = (team_id, index = 0, limit = 5) => {
   `, [team_id, index, limit])
 }
 
-const addClip = ({ title, starttime, endtime, video_id, description }) => {
+const addClip = ({ title, starttime, endtime, video_id, game_id, description, leaguewide }) => {
   return query(`
-    INSERT INTO clip ( title, starttime, endtime, video_id, description, created )
-    VALUES ( ?, ?, ?, ?, ?, CURDATE() );
-  `, [ title, starttime, endtime, video_id, description ])
+    INSERT INTO clip ( title, starttime, endtime, video_id, game_id, description, created, leaguewide )
+    VALUES ( ?, ?, ?, ?, ?, ?, CURDATE(), ? );
+  `, [ title, starttime, endtime, video_id, game_id, description, leaguewide ])
 }
 
 const clipById = id => {
@@ -46,6 +46,14 @@ const clipTagsByClipId = id => {
     SELECT * FROM object_tag
     LEFT JOIN tag ON tag.id = object_tag.tag_id
     WHERE object_tag.clip_id = ?;
+  `, [id])
+}
+
+const clipPointsByClipId = id => {
+  return query(`
+    SELECT * FROM map_point
+    LEFT JOIN map_base ON map_point.map_base_id = map_base.id
+    WHERE map_point.clip_id = ?;
   `, [id])
 }
 
@@ -121,10 +129,23 @@ const videoClips = id => {
           'id', tag.id,
           'group_id', tag.group_id
         )
-      ) tags
+      ) tags,
+      JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'x', map_point.x,
+          'y', map_point.y,
+          'id', map_point.id,
+          'map_base_id', map_point.map_base_id,
+          'color', map_point.color,
+          'style', map_point.style,
+          'url', map_base.url
+        )
+      ) points
     FROM clip
     LEFT JOIN object_tag ON clip.id = object_tag.clip_id
     LEFT JOIN tag ON object_tag.tag_id = tag.id
+    LEFT JOIN map_point ON map_point.clip_id = clip.id
+    LEFT JOIN map_base ON map_point.map_base_id = map_base.id
     WHERE clip.video_id = ?
     GROUP BY clip.id;
   `, [id])
@@ -152,4 +173,4 @@ const postRule = rule => {
   `, [ rule.if_rule, rule.then_rule, rule.when_rule, rule.else_rule ])
 }
 
-module.exports = { postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+module.exports = { clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }

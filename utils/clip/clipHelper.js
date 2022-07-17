@@ -5,17 +5,20 @@ const clipById = async id => {
 
   const tags = await clip_db.clipTagsByClipId(id)
 
-  return { ...clip, tags, num_of_tags: tags.length }
+  const points = await clip_db.clipPointsByClipId(id)
+
+  return { ...clip, tags, num_of_tags: tags.length, points }
 }
 
 const videoClips = (video, groups) => {
   return new Promise((resolve, reject) => {
     clip_db.videoClips(video.id)
-      .then(clips => {
+    .then(clips => {
         clips = clips.map(c => {
           return {
             ...c,
-            tags: c.tags ? JSON.parse(c.tags) : []
+            tags: c.tags ? JSON.parse(c.tags) : [],
+            points: c.points ? JSON.parse(c.points).filter(p => !!p.id) : []
           }
         }).filter(clip => clipIsIn(clip, groups))
         resolve({

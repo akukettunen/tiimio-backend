@@ -39,7 +39,7 @@ router.post('/', user, async (req, res) => {
   const map = await maps_db.mapById(insertData.insertId)
 
   const mapped_points = points.map(p => {
-    return [ p.id, insertData.insertId, p.x, p.y, p.color, p.style ]
+    return [ p.id, insertData.insertId, p.x, p.y, p.color, p.style, undefined, undefined ]
   })
   await maps_db.addMapPoint(mapped_points)
 
@@ -70,7 +70,7 @@ router.put('/:map_id', user, async (req, res) => {
   const { title, description, points } = req.body;
   if(points && points.length) {
     const mapped_points = points.map(p => {
-      return [ Number(p.id), Number(req.params.map_id), p.x, p.y, p.color, p.style ]
+      return [ Number(p.id), Number(req.params.map_id), p.x, p.y, p.color, p.style, undefined, undefined ]
     })
     await maps_db.deletePoints(Number(req.params.map_id))
     await maps_db.addMapPoint(mapped_points)
