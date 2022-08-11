@@ -31,6 +31,7 @@ router.get('/sports', tiimi_admin, async (req, res) => {
   res.json(sports)
 })
 
+
 router.post('/sport', tiimi_admin, async (req, res) => {
   
 })

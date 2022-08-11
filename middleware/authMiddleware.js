@@ -34,6 +34,12 @@ const tiimi_admin = (req, res, next) => {
   next()
 }
 
+const inline_tiimi_admin = (req, res, next) => {
+  const admin = req.tiimio_user?.tiimio_admin
+
+  if(!admin) throw new Error('authentication error')
+}
+
 const is_in_team = (team_id) => {
   var team_id = team_id
   return (req, _res, next) => {
@@ -50,4 +56,4 @@ const is_in_team = (team_id) => {
   }
 }
 
-module.exports = { tiimi_admin, user, is_in_team }
+module.exports = { inline_tiimi_admin, tiimi_admin, user, is_in_team }

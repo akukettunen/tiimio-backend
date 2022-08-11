@@ -258,7 +258,7 @@ const timeTimenameByTimeId = id => {
   `, [id])
 }
 
-const videoTimes = id => {
+const videoTimes = (id, team_id) => {
   return query(`
     SELECT 
       time.*, 
@@ -273,9 +273,9 @@ const videoTimes = id => {
     FROM time
     LEFT JOIN object_tag ON time.id = object_tag.time_id
     LEFT JOIN tag ON object_tag.tag_id = tag.id
-    WHERE time.video_id = ?
+    WHERE time.video_id = ? OR ( time.game_id = ? AND time.team_id = ? )
     GROUP BY time.id;
-  `, [id])
+  `, [id, id, team_id])
 }
 
 const addTimename = timename => {

@@ -73,7 +73,8 @@ const addGameToLeague = game => {
 const getLeagueGameById = id => {
   return query(`
     SELECT 
-      *, 
+      *,
+      league_game.id as id,
       home_team.logo_url home_team_logo_url, 
       away_team.logo_url away_team_logo_url,
       home_team.team_name home_team_name,

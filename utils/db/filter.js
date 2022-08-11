@@ -1,16 +1,16 @@
 const { query } = require('./index.js')
 
-const addFilter = ({ team_id, title, description, include_videos, include_clips, include_times }) => {
+const addFilter = ({ team_id, title, description, include_videos, include_clips, include_times, search_games, league_id }) => {
   return query(`
-    INSERT INTO filter (team_id, title, description, videos, clips, times, created)
-    VALUES (?, ?, ?, ?, ?, ?, NOW());
-  `, [ team_id, title, description, include_videos, include_clips, include_times ])
+    INSERT INTO filter (team_id, title, description, videos, clips, times, search_games, league_id, created)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW());
+  `, [ team_id, title, description, include_videos, include_clips, include_times, search_games, league_id ])
 } 
 
 const filterVideoIds = id => {
   return query(`
-    SELECT video_id FROM filter_param
-    WHERE filter_id = ? AND video_id IS NOT NUll;
+    SELECT video_id, game_id FROM filter_param
+    WHERE filter_id = ? AND (video_id IS NOT NUll OR game_id IS NOT NULL);
   `, [id])
 }
 

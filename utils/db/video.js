@@ -48,6 +48,19 @@ const teamVideosLimits = (id, index, limit) => {
   `, [ id, index, limit ])
 }
 
+const leagueGamesLimits = (league_id, index, limit) => {
+  return query(`
+    SELECT
+      *, league_game.id as id, home_team.short_name as home_short_name, away_team.short_name as away_short_name
+    FROM league_game
+    LEFT JOIN league_team as home_team ON league_game.home_team_id = home_team.id
+    LEFT JOIN league_team as away_team ON league_game.away_team_id = away_team.id
+    WHERE league_game.league_id = ?
+    ORDER BY starttime_unix DESC
+    ${ limit ? 'LIMIT ?, ?' : '' };
+  `, [ league_id, index, limit ])
+}
+
 const teamVideosByIds = (id, ids, index, limit) => {
   return query(`
     SELECT
@@ -66,6 +79,17 @@ const teamVideosByIdsLimits = (id, ids, index, limit) => {
     FROM video
     WHERE team_id = ? AND deleted = false AND id IN (?)
     ORDER BY uploaded DESC
+    ${ limit ? 'LIMIT ?, ?' : ''};
+  `, [ id,  ids, index, limit])
+}
+
+const leagueGamesByIdsLimits = (id, ids, index, limit) => {
+  return query(`
+    SELECT
+      *
+    FROM league_game
+    WHERE league_id = ? AND id IN (?)
+    ORDER BY starttime_unix DESC
     ${ limit ? 'LIMIT ?, ?' : ''};
   `, [ id,  ids, index, limit])
 }
@@ -124,4 +148,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { teamVideosByIdsLimits, teamVideosLimits, teamVideosIdsOnly, teamVideosByIds, planByTeamId, videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }
+module.exports = { leagueGamesByIdsLimits, leagueGamesLimits, teamVideosByIdsLimits, teamVideosLimits, teamVideosIdsOnly, teamVideosByIds, planByTeamId, videoByJobId, uploadedTotalNotDeleted, uploadedThisMonth, updateVideoTitle, deleteById, postVideo, teamVideos, videoDone, videoById }

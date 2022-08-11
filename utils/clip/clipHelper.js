@@ -1,19 +1,25 @@
 const clip_db = require('../db/clip')
 
-const clipById = async id => {
-  const [ clip ] = await clip_db.videoByClipId(id)
+const clipById = async (id, game_id) => {
+  let clip
+  if(!game_id) {
+    clip = await clip_db.videoByClipId(id)
+  } else {
+    clip = await clip_db.gameByClipId(id)
+  }
+  let [ final_clip ] = clip
 
   const tags = await clip_db.clipTagsByClipId(id)
 
   const points = await clip_db.clipPointsByClipId(id)
 
-  return { ...clip, tags, num_of_tags: tags.length, points }
+  return { ...final_clip, tags, num_of_tags: tags.length, points }
 }
 
 const videoClips = (video, groups) => {
   return new Promise((resolve, reject) => {
     clip_db.videoClips(video.id)
-    .then(clips => {
+      .then(clips => {
         clips = clips.map(c => {
           return {
             ...c,

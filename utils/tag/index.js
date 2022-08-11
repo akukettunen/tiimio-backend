@@ -16,6 +16,22 @@ const getTeamTagGroups = async id => {
   return groups
 }
 
+const getLeagueTagGroups = async id => {
+  let groups = await tag_db.leagueGroups(id)
+  let mirrors = await tag_db.leagueMirrors(id)
+  let tags = await tag_db.leagueTags(id)
+
+  groups.forEach((group, i) => {
+    groups[i] = {...group, mirrors: mirrors.filter(m => m.tag_group_id == group.id)}
+  })
+
+  groups.forEach((group, i) => {
+    groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
+  })
+
+  return groups
+}
+
 const groupById = async group_id => {
   let [group] = await tag_db.groupById(group_id)
   let mirrors = await tag_db.groupMirrors(group_id)
@@ -24,4 +40,4 @@ const groupById = async group_id => {
   return {...group, mirrors, tags}
 }
 
-module.exports = { getTeamTagGroups, groupById }
+module.exports = { getLeagueTagGroups, getTeamTagGroups, groupById }

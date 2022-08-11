@@ -19,7 +19,7 @@ const express = require('express')
 router.post('/', user, async (req, res) => {
   is_in_team()
 
-  const { title, description, videos, tags, include_videos, include_clips, include_times } = req.body;
+  const { title, description, videos, tags, include_videos, search_games, include_clips, include_times } = req.body;
 
   if(!title) throw new Error('bad request')
   if(!include_videos && !include_clips && !include_times) throw new Error('bad request')
@@ -41,9 +41,16 @@ router.get('/:id/clip', user, async (req, res) => {
 
   let filterTagsIds = await filter_db.filterTagIds(filter.id)
   filterTagsIds = filterTagsIds.map(t => t.tag_id)
-
-  let groups = await tag_db.teamGroupsIds(filter.team_id)
-  let tags = await tag_db.teamTagsIdsFilter(filter.team_id, filterTagsIds)
+  
+  let groups;
+  let tags;
+  if(!filter.search_games) {
+    groups = await tag_db.teamGroupsIds(filter.team_id)
+    tags = await tag_db.teamTagsIdsFilter(filter.team_id, filterTagsIds)
+  } else {
+    groups = await tag_db.leagueGroupsIds(filter.league_id)
+    tags = await tag_db.leagueTagsIdsFilter(filter.league_id, filterTagsIds)
+  }
 
   groups.forEach((group, i) => {
     groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
@@ -52,18 +59,19 @@ router.get('/:id/clip', user, async (req, res) => {
   is_in_team(filter.team_id)
 
   let filterVideoIds = await filter_db.filterVideoIds(filter.id)
-  filterVideoIds = filterVideoIds.map(v => v.video_id)
-
+  filterVideoIds = filterVideoIds.map(v => v.video_id || v.game_id)
+ 
   let videos;
   if(!filterVideoIds || !filterVideoIds.length) {
     // all videos so let's get them
-    videos = await video_db.teamVideosLimits(filter.team_id, Number(index), Number(limit))
+    if(!filter.search_games) videos = await video_db.teamVideosLimits(filter.team_id, Number(index), Number(limit))
+    else videos = await video_db.leagueGamesLimits(filter.league_id, Number(index), Number(limit))
   } else {
-    videos = await video_db.teamVideosByIdsLimits(filter.team_id, filterVideoIds, Number(index), Number(limit))
+    if(!filter.search_games) videos = await video_db.teamVideosByIdsLimits(filter.team_id, filterVideoIds, Number(index), Number(limit))
+    else videos = await video_db.teamVideosByIdsLimits(filter.league_id, filterVideoIds, Number(index), Number(limit))
   }
 
   // videos = videos.map(video => video.id)
-  console.log(videos)
   let clipsPromises = videos.map(video => {
     return clipHelper.videoClips(video, groups)
   })

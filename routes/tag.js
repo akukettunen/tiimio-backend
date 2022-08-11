@@ -11,11 +11,10 @@ const express = require('express');
       stripe = require('../utils/stripe/index')
       tagHelper = require('../utils/tag')
       require('express-async-errors');
-      const { user, is_in_team } = require('../middleware/authMiddleware');
+      const { user, is_in_team, tiimi_admin, inline_tiimi_admin } = require('../middleware/authMiddleware');
 
 router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
-
   let groups;
   try {
     groups = await tagHelper.getTeamTagGroups(req.params.team_id)
@@ -26,13 +25,31 @@ router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   res.json(groups)
 })
 
-router.post('/group', user, is_in_team(), async (req, res) => {
-  const { team_id, group_name, mirrors } = req.body
+router.get('/league/:league_id', user, async (req, res) => {
+  if(!req.params.league_id) throw new Error('bad request')
 
-  if(!team_id || !group_name ) throw new Error('bad request')
+  let groups;
+  try {
+    groups = await tagHelper.getLeagueTagGroups(req.params.league_id)
+  } catch(err) {
+    throw new Error(err)
+  }
+
+  res.json(groups)
+})
+
+router.post('/group', user, async (req, res, next) => {
+  let { team_id, group_name, mirrors, league_id } = req.body
+  if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
+  if(league_id) team_id = null
+
+  if(league_id) {
+    inline_tiimi_admin(req, res, next)
+  }
 
   let add_info = await tag_db.createTagGroup({
     team_id,
+    league_id,
     group_name
   })
 
@@ -65,11 +82,13 @@ router.post('/group', user, is_in_team(), async (req, res) => {
 
 router.put('/group/:group_id/mirror', async (req, res) => {
   let group = await tagHelper.groupById(req.params.group_id)
+
   if(!group) throw new Error('Group not found')
+  if(group.league_id) inline_tiimi_admin(req)
+
   const new_mirror_ids = req.body.new_mirror_ids;
 
   if(!new_mirror_ids) throw new Error('bad request')
-
 
   await tag_db.deleteGroupMirrors(req.params.group_id)
   await tag_db.deleteGroupTags(req.params.group_id)
@@ -92,6 +111,18 @@ router.put('/group/:group_id/mirror', async (req, res) => {
 
   // add those tags to db
   if(tags.length) await tag_db.batchAddMirrorTag(tags, req.params.group_id)
+
+  let newGroup = await tagHelper.groupById(req.params.group_id)
+  res.json(newGroup)
+})
+
+router.put('/group/:group_id/join', user, async (req, res) => {
+  let group = await tagHelper.groupById(req.params.group_id)
+
+  if(!group) throw new Error('Group not found')
+  if(group.league_id) inline_tiimi_admin(req)
+
+  await tag_db.setJoinId(req.params.group_id, req.body.join_id)
 
   let newGroup = await tagHelper.groupById(req.params.group_id)
   res.json(newGroup)
@@ -122,8 +153,6 @@ router.put('/group/:group_id/show_in_filtering', user, async (req, res) => {
 })
 
 router.put('/:tag_id/name', user, async (req, res) => {
-  // TODO update mirroring too
-
   if(!req.body.tag_name) throw new Error('bad request')
 
   await tag_db.updateTagName({ id: req.params.tag_id, name: req.body.tag_name })
@@ -163,7 +192,9 @@ router.post('/', user, async (req, res) => {
   if( !tag_name || !group_id) throw new Error('bad request')
   
   let [ group ] = await tag_db.tagGroupById(group_id)
+
   if(!group) throw new Error('group not found')
+  if(group.league_id) inline_tiimi_admin(req)
 
   let mirrors = await tag_db.mirroringGroups(group_id)
   mirrors = mirrors.map(m => m.tag_group_id)
@@ -197,6 +228,7 @@ router.delete('/group/:tag_group_id', user, async (req, res) => {
   // TODO delete mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
+  if(group.league_id) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
 
@@ -205,12 +237,13 @@ router.delete('/group/:tag_group_id', user, async (req, res) => {
   res.send('ok!')
 })
 
-router.delete('/tag/:tag_id', async (req, res) => {
-  // TODO delete from mirroring
+router.delete('/tag/:tag_id', user, async (req, res) => {
   let [ tag ] = await tag_db.tagById(req.params.tag_id)
   if(!tag) throw new Error('tag not found')
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
   if(!group) throw new Error('group not found')
+
+  if(group.league_id) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
 

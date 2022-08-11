@@ -8,10 +8,25 @@ const teamGroups = team_id => {
   `, [team_id])
 }
 
+const leagueGroups = league_id => {
+  return query(`
+    SELECT * FROM tag_group
+    WHERE league_id = ?
+    ORDER BY position;
+  `, [league_id])
+}
+
 const teamGroupsIds = team_id => {
   return query(`
     SELECT id FROM tag_group
     WHERE team_id = ?;
+  `, [team_id])
+}
+
+const leagueGroupsIds = team_id => {
+  return query(`
+    SELECT id FROM tag_group
+    WHERE league_id = ?;
   `, [team_id])
 }
 
@@ -112,6 +127,23 @@ const teamTags = team_id => {
   `, [team_id])
 }
 
+const leagueTags = league_id => {
+  return query(`
+    SELECT original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
+    LEFT JOIN tag_group ON tag_group.id = tag.group_id
+    WHERE tag_group.league_id = ?
+    ORDER BY position;
+  `, [league_id])
+}
+
+const setJoinId = (group_id, join_id) => {
+  return query(`
+    UPDATE tag_group
+    SET show_in_join_w_group_tag = ?
+    WHERE id = ?;
+  `, [join_id, group_id])
+}
+
 const teamTagsIdsFilter = (team_id, ids) => {
   return query(`
     SELECT tag.id AS id, group_id FROM tag
@@ -119,6 +151,15 @@ const teamTagsIdsFilter = (team_id, ids) => {
     WHERE tag_group.team_id = ? AND tag.id IN (?)
     ORDER BY tag.position;
   `, [team_id, ids])
+}
+
+const leagueTagsIdsFilter = (league_id, ids) => {
+  return query(`
+    SELECT tag.id AS id, group_id FROM tag
+    LEFT JOIN tag_group ON tag_group.id = tag.group_id
+    WHERE tag_group.league_id = ? AND tag.id IN (?)
+    ORDER BY tag.position;
+  `, [league_id, ids])
 }
 
 const teamMirrors = team_id => {
@@ -130,11 +171,20 @@ const teamMirrors = team_id => {
   `, [team_id])
 }
 
-const createTagGroup = ({ team_id, group_name }) => {
+const leagueMirrors = league_id => {
   return query(`
-    INSERT INTO tag_group( team_id, group_name )
-    VALUES (?, ?);
-  `, [team_id, group_name])
+    SELECT * FROM tag_group_mirrors
+    LEFT JOIN tag_group ON tag_group.id = tag_group_mirrors.tag_group_id
+    LEFT JOIN tag_group AS mirroring ON mirroring.id = tag_group_mirrors.mirrors
+    WHERE tag_group.league_id = ?;
+  `, [league_id])
+}
+
+const createTagGroup = ({ team_id, league_id, group_name }) => {
+  return query(`
+    INSERT INTO tag_group( team_id, league_id, group_name )
+    VALUES (?, ?, ?);
+  `, [team_id, league_id, group_name])
 }
 
 const addMirrors = (group_id, mirrors) => {
@@ -225,4 +275,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

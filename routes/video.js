@@ -136,7 +136,7 @@ router.get('/:id', user, async (req, res) => {
   let [ video ] = await video_db.videoById(req.params.id)
   
   if(!video) throw new Error('video not found')
-  
+
   let clips = await clip_db.videoClips(video.id)
   let times = await timeHelper.videoTimes(video.id)
   let mapped_times = times.map(t => {

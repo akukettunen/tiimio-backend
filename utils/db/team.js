@@ -9,7 +9,7 @@ const createTeam = ({ sportId, name, joinCode, leagueId, planId }) => {
 const userTeams = email => {
   return query(`
     SELECT email, team.id AS id, league.id as league_id, join_code, 
-      league_admin, league_id, league_name, team.sport_id, sport_name, team_admin, 
+      league_admin, league_id, league_name, disable_times, team.sport_id, sport_name, team_admin, 
       team_name, stripe_id, plan.short_name, team_orderer, plan.full_name, 
       plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved, 
       plan.is_the_freemium, plan.is_the_best, users

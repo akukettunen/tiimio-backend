@@ -29,6 +29,13 @@ const addMapPoint = data => {
   `, [data])
 }
 
+const deleteClipPoints = clip_id => {
+  return query(`
+    DELETE FROM map_point
+    WHERE clip_id = ?;
+  `, [clip_id])
+}
+
 const teamMaps = team_id => {
   return query(`
     SELECT *, map.id as id FROM map
@@ -75,4 +82,4 @@ const deleteMap = map_id => {
   `, [map_id])
 }
 
-module.exports = { deleteMap, setDescription, setTitle, deletePoints, mapPoints, teamMaps, sportMapBases, addMap, mapById, addMapPoint }
+module.exports = { deleteClipPoints, deleteMap, setDescription, setTitle, deletePoints, mapPoints, teamMaps, sportMapBases, addMap, mapById, addMapPoint }

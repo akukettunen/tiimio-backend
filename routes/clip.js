@@ -12,7 +12,7 @@ const express = require('express')
       folder_db = require('../utils/db/folder')
       clip_helper = require('../utils/clip/clipHelper')
       require('express-async-errors');
-      const { user, is_in_team } = require('../middleware/authMiddleware');
+      const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware');
 
 router.get('/team/:team_id', async (req, res) => {
   const { index, limit } = req.query;
@@ -32,7 +32,8 @@ router.get('/team/:team_id', async (req, res) => {
 })
 
 router.get('/:id', user, async (req, res) => {
-  const clip = await clip_helper.clipById(req.params.id)
+  const [raw_clip] = await clip_db.clipById(req.params.id)
+  const clip = await clip_helper.clipById(req.params.id, raw_clip?.game_id)
 
   is_in_team(clip.video_id)
 
@@ -93,23 +94,36 @@ router.put('/:time_id/tag', user, async (req, res) => {
   res.json(updatedTime)
 })
 
-router.post('/', user, async (req, res) => {
-  const { title, starttime, endtime, video_id, description, tags, points } = req.body
-  // TOOD: check that clip is saved to same team
-  if(!title || !starttime || !endtime || !video_id ) throw new Error('bad request')
+router.post('/', user, async (req, res, next) => {
+  const { title, starttime, endtime, video_id, description, tags, points, leaguewide, team_id, game_id } = req.body
 
-  console.log(points)
-  
+  if(team_id) is_in_team(team_id)
+  if(!title || !starttime || !endtime || !(video_id || (leaguewide || team_id) ) ) throw new Error('bad request')
+
+  if(leaguewide && !req.tiimio_user.tiimio_admin) throw new Error('authentication error')
+
   let added = await clip_db.addClip(req.body)
 
   if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id]))
-  
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags)
   
-  let clip = await clip_helper.clipById(added.insertId)
+  let clip = await clip_helper.clipById(added.insertId, game_id)
   if(!clip) throw new Error('added clip not found')
 
   res.json({...clip, num_of_tags: tags.length })
+})
+
+router.put('/:id/point', user, async (req, res) => {
+  const { points } = req.body;
+  console.log(points)
+  if(!points || !points.length) throw new Error('bad request')
+
+  await map_db.deleteClipPoints(req.params.id)
+  await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, req.params.id, p.map_base.id]))
+
+  let clip = await clip_helper.clipById(req.params.clip_id)
+
+  res.json({ clip })
 })
 
 // router.put('/:id', user, async (req, res) => {
@@ -156,7 +170,11 @@ router.delete('/:id', user, async (req, res) => {
 
   const [ video ] = await video_db.videoById(clip.video_id)
 
-  is_in_team(video.team_id)
+  if(!clip.team_id && !clip.game_id) {
+    is_in_team(video.team_id)
+  } else {
+    if(!req.tiimio_user?.tiimio_admin) throw new Error('authentication error')
+  }
 
   await clip_db.deleteById(req.params.id)
 
