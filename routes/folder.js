@@ -1,3 +1,4 @@
+
 require('dotenv').config()
 const express = require('express');
 const { user, is_in_team } = require('../middleware/authMiddleware');
