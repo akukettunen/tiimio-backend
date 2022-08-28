@@ -88,6 +88,13 @@ const getLeagueGameById = id => {
   `, [id])
 }
 
+const deleteGame = id => {
+  return query(`
+    DELETE FROM league_game
+    WHERE id = ?;
+  `, [id])
+}
+
 const leagueTeamById = id => {
   return query(`
     SELECT * FROM league_team
@@ -112,5 +119,6 @@ module.exports = {
   addGameToLeague,
   getLeagueGameById,
   leagueGames,
-  putLeagueGame
+  putLeagueGame,
+  deleteGame
 }

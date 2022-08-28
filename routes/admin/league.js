@@ -84,6 +84,12 @@ router.put('/game/:id', user, async (req, res) => {
   res.json(game)
 })
 
+router.delete('/game/:id', tiimi_admin, async (req, res) => {
+  await league_db.deleteGame(req.params.id)
+
+  res.json('ok!')
+})
+
 router.post('/team', tiimi_admin, async (req, res) => {
   const { league_id, team_name, logo_url } = req.body
   if(!team_name || !league_id) throw new Error('bad request')

@@ -36,7 +36,6 @@ router.get('/nosave/clip', user, async (req, res) => {
   let filterData = JSON.parse(req.query.filter)
   let { index, limit } = req.query
   let filter = filterData
-  console.log(filterData)
 
   let filterTagsIds = filterData.tags
 
@@ -65,7 +64,7 @@ router.get('/nosave/clip', user, async (req, res) => {
     else videos = await video_db.leagueGamesLimits(filter.league_id, Number(index), Number(limit))
   } else {
     if(!filter.search_games) videos = await video_db.teamVideosByIdsLimits(filter.team_id, filterVideoIds, Number(index), Number(limit))
-    else videos = await video_db.teamVideosByIdsLimits(filter.league_id, filterVideoIds, Number(index), Number(limit))
+    else videos = await video_db.teamGamesByIdsLimits(filter.league_id, filterVideoIds, Number(index), Number(limit))
   }
 
   // videos = videos.map(video => video.id)

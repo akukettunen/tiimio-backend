@@ -208,6 +208,14 @@ const ruleById = id => {
   `, [id])
 }
 
+const putClipTitle =( {id, title}) => {
+  return query(`
+    UPDATE clip
+    SET title = ?
+    WHERE id = ?;
+  `, [ title, id ])
+}
+
 const putRule = rule => {
   return query(`
     UPDATE clipper_rule
@@ -223,4 +231,4 @@ const postRule = rule => {
   `, [ rule.if_rule, rule.then_rule, rule.when_rule, rule.else_rule ])
 }
 
-module.exports = { gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+module.exports = { putClipTitle, gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }

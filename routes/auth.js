@@ -47,6 +47,21 @@ router.post('/login', async (req, res) => {
   res.send({ token })
 })
 
+router.post('/divaridemo/login', async (req, res) => {
+  let [ user ] = await user_db.getUserByEmail('divaridemo')
+
+  user = await userHelper.createUserData(16, user)
+
+  // creates a token with said data
+  const token = jwt.sign(
+    user,
+    process.env.SECRET_KEY,
+    { expiresIn: '1d' }
+  )
+
+  res.send({ token })
+})
+
 router.post('/demo/login', async (req, res) => {
   let [ user ] = await user_db.getUserByEmail('demo')
 

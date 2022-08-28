@@ -40,6 +40,19 @@ router.get('/:id', user, async (req, res) => {
   res.json(clip)
 })
 
+router.put('/:clip_id/title', user, async (req, res) => {
+  const [ clip ] = await clip_db.clipAndVideoByClipId(req.params.clip_id)
+  console.log('yea')
+
+  if(!req.body.title) throw new Error('bad request')
+  is_in_team(clip.team_id)
+
+  await clip_db.putClipTitle({ id: req.params.clip_id, title: req.body.title })
+  const updatedClip = await clip_helper.clipById(req.params.clip_id)
+
+  res.json(updatedClip)
+})
+
 router.put('/:clip_id/tag', user, async (req, res) => {
   const [ clip ] = await clip_db.clipAndVideoByClipId(req.params.clip_id)
 
@@ -63,7 +76,6 @@ router.put('/:clip_id/tag', user, async (req, res) => {
   }
 
   const updatedClip = await clip_helper.clipById(req.params.clip_id)
-  console.log(updatedClip)
   res.json(updatedClip)
 })
 
