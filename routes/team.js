@@ -94,10 +94,13 @@ router.post('/join', user, async (req, res) => {
   const [{ number_of_users }] = await team_db.numOfUsersInTeam(team.id)
 
   if(number_of_users >= team.users) throw new Error('Teams user limit reached :/')
-  console.log(number_of_users, team)
+  
+  const isInitialAdmin = team.initial_admin == req.tiimio_user.email
+
   await team_db.addUserToTeam({
     email: req.tiimio_user.email,
-    team_id: team.id
+    team_id: team.id,
+    admin: isInitialAdmin
   })
 
   // this is a workaround
