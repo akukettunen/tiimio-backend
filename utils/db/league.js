@@ -13,7 +13,16 @@ const leagueTeams = id => {
   `, [id])
 }
 
-const leagueGames = id => {
+const leagueJoinedTeams = id => {
+  return query(`
+    SELECT * FROM team
+    WHERE league_id = ?;
+  `, [id])
+}
+
+const leagueGames = (id, season) => {
+  season = season == 'all' ? season : parseInt(season)
+
   return query(`
     SELECT 
       *, 
@@ -23,13 +32,28 @@ const leagueGames = id => {
       home_team.team_name home_team_name,
       away_team.team_name away_team_name,
       away_team.short_name away_team_short_name,
-      home_team.short_name home_team_short_name
+      home_team.short_name home_team_short_name,
+      YEAR(FROM_UNIXTIME(league_game.starttime_unix / 1000)) - 1 as ye,
+      MONTH(FROM_UNIXTIME(league_game.starttime_unix / 1000)) as mo,
+      league.season_start_month as stmonth
     FROM league_game
+    LEFT JOIN league ON league.id = league_game.league_id
     LEFT JOIN league_team as home_team ON home_team.id = league_game.home_team_id
     LEFT JOIN league_team as away_team ON away_team.id = league_game.away_team_id
-    WHERE league_game.league_id = ?
+    WHERE league_game.league_id = ? AND
+      (
+        ( 
+          YEAR(FROM_UNIXTIME(league_game.starttime_unix / 1000)) = ? AND MONTH(FROM_UNIXTIME(league_game.starttime_unix / 1000)) >= league.season_start_month 
+        )
+        OR
+        (
+          YEAR(FROM_UNIXTIME(league_game.starttime_unix / 1000)) - 1 = ? AND MONTH(FROM_UNIXTIME(league_game.starttime_unix / 1000)) < league.season_start_month 
+        )
+        OR
+        ? = 'all'
+      ) 
     ORDER BY starttime_unix DESC;
-  `, [id])
+  `, [id, season, season, season])
 }
 
 const putLeagueGame = game => {
@@ -120,5 +144,6 @@ module.exports = {
   getLeagueGameById,
   leagueGames,
   putLeagueGame,
-  deleteGame
+  deleteGame,
+  leagueJoinedTeams
 }

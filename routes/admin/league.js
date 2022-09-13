@@ -43,8 +43,9 @@ router.get('/:id/team', user, async (req, res) => {
 
 router.get('/:id/game', user, async (req, res) => {
   const { id } = req.params
+  const { season } = req.query
 
-  const games = await league_db.leagueGames(id)
+  const games = await league_db.leagueGames(id, season)
 
   res.json(games)
 })
@@ -88,6 +89,12 @@ router.delete('/game/:id', tiimi_admin, async (req, res) => {
   await league_db.deleteGame(req.params.id)
 
   res.json('ok!')
+})
+
+router.get('/:id/joinedteam', tiimi_admin, async (req, res) => {
+  let teams = await league_db.leagueJoinedTeams(req.params.id)
+
+  res.json(teams)
 })
 
 router.post('/team', tiimi_admin, async (req, res) => {
