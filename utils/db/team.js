@@ -105,13 +105,13 @@ const teamById = id => {
   `, [id])
 }
 
-const addUserToTeam = ({ email, team_id, orderer, stripe_id }) => {
+const addUserToTeam = ({ email, team_id, orderer, admin, stripe_id }) => {
   orderer = orderer || false
   query(`
     INSERT INTO user_team (
       email, team_id, team_admin, team_orderer, league_admin, user_joined_team, stripe_id
     ) VALUES ( ?, ?, ?, ?, false, CURDATE(), ? );
-  `, [email, team_id, orderer, orderer, stripe_id])
+  `, [email, team_id, admin, orderer, stripe_id])
 }
 
 const changeJoinCode = (team_id, new_code) => {
