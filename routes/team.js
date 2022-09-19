@@ -29,7 +29,7 @@ router.post('/', user, async (req, res) => {
 
   const [{ planId }] = await query(`
     SELECT id AS planId 
-    FROM plan 
+    FROM plan
     WHERE is_the_freemium = true;
   `)
 
@@ -54,6 +54,7 @@ router.post('/', user, async (req, res) => {
   await team_db.addUserToTeam({
     email: req.tiimio_user.email,
     team_id: insertId,
+    admin: true,
     orderer: true,
     stripe_id: stripeCustomer.id
   })
