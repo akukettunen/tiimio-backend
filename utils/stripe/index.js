@@ -56,7 +56,8 @@ const checkoutSessionUrlByStripeId = async (id, lookup_key) => {
     cancel_url: process.env.FRONTEND_BASE_URL + '/#/plans',
     'customer_update[address]': 'auto',
     allow_promotion_codes: 'true',
-    automatic_tax: {enabled: true}
+    trial_period_days: 15,
+    automatic_tax: { enabled: true }
   });
 }
 
