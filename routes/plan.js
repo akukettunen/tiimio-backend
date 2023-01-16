@@ -14,9 +14,9 @@ const { query } = require('../utils/db/index')
 router.get('/', async (req, res) => {
   let plans = await query(`
     SELECT * FROM plan
-    WHERE archived = false;
+    WHERE archived = 0;
   `)
-
+  console.log(plans)
   res.json(plans)
 })
 
