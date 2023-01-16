@@ -1,4 +1,21 @@
 const { query } = require('./index.js')
+      AWS = require("aws-sdk");
+
+AWS.config.update({
+  region: process.env.SES_REGION,
+  accessKeyId: process.env.DYNAMODB_ACCESS_KEY,
+  secretAccessKey: process.env.DYNAMODB_SECRET_ACCESSKEY
+});
+
+DB = new AWS.DynamoDB.DocumentClient({ region: 'eu-central-1', convertEmptyValues: true });
+
+const getClipGraphics = id => {
+  return DB.get({ TableName: 'clip_graphics_data', Key: {clip_id: id} }).promise()
+}
+
+const postClipGraphics = (Item) => {
+  return DB.put({ TableName: 'clip_graphics_data', Item }).promise()
+}
 
 const teamClips = (team_id, index = 0, limit = 5) => {
   return query(`
@@ -231,4 +248,4 @@ const postRule = rule => {
   `, [ rule.if_rule, rule.then_rule, rule.when_rule, rule.else_rule ])
 }
 
-module.exports = { putClipTitle, gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+module.exports = { getClipGraphics, postClipGraphics, putClipTitle, gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }

@@ -13,7 +13,11 @@ const clipById = async (id, game_id) => {
 
   const points = await clip_db.clipPointsByClipId(id)
 
-  return { ...final_clip, tags, num_of_tags: tags.length, points }
+  const { Item } = await clip_db.getClipGraphics(id)
+
+  console.log(Item)
+
+  return { ...final_clip, tags, num_of_tags: tags.length, points, graphics: Item?.Item }
 }
 
 const videoClips = (video, groups) => {
