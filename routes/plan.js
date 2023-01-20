@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
     SELECT * FROM plan
     WHERE archived = 0;
   `)
-  console.log(plans)
+
   res.json(plans)
 })
 

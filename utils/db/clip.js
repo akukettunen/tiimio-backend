@@ -10,7 +10,7 @@ AWS.config.update({
 DB = new AWS.DynamoDB.DocumentClient({ region: 'eu-central-1', convertEmptyValues: true });
 
 const getClipGraphics = id => {
-  return DB.get({ TableName: 'clip_graphics_data', Key: {clip_id: id} }).promise()
+  return DB.get({ TableName: 'clip_graphics_data', Key: {"clip_id": id?.toString()} }).promise()
 }
 
 const postClipGraphics = (Item) => {

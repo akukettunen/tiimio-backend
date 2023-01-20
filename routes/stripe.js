@@ -34,13 +34,15 @@ router.post('/customer-session-url', user, async (req, res) => {
   
   // returns uncancelled subscriptions
   const subscriptions_object = await stripeHelper.customerSubscriptionsById(userTeam.stripe_id)
+  const cancelled_subscriptions_object = await stripeHelper.customerCancelledSubscriptionById(userTeam.stripe_id)
   const num_of_subscriptions = subscriptions_object.data.length
-
+  const num_of_cancelled_subscriptions = cancelled_subscriptions_object.data.length
+  const has_had_subscription_before = num_of_subscriptions + num_of_cancelled_subscriptions > 0
   let session
   if(num_of_subscriptions > 0 || !req.body.lookup_key) {
     session = await stripeHelper.portalSessionUrlByStripeId(userTeam.stripe_id)
   } else {
-    session = await stripeHelper.checkoutSessionUrlByStripeId(userTeam.stripe_id, req.body.lookup_key)
+    session = await stripeHelper.checkoutSessionUrlByStripeId(userTeam.stripe_id, req.body.lookup_key, has_had_subscription_before)
   }
 
   res.json({

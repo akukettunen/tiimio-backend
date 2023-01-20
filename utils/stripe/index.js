@@ -33,6 +33,15 @@ const customerSubscriptionsById = async id => {
   return subscriptions
 }
 
+const customerCancelledSubscriptionById = async id => {
+  const subscriptions = await stripe.subscriptions.list({
+    customer: id,
+    status: 'cancelled'
+  });
+  
+  return subscriptions
+}
+
 const portalSessionUrlByStripeId = async id => {
   return await stripe.billingPortal.sessions.create({
     customer: id,
@@ -40,7 +49,7 @@ const portalSessionUrlByStripeId = async id => {
   });
 }
 
-const checkoutSessionUrlByStripeId = async (id, lookup_key) => {
+const checkoutSessionUrlByStripeId = async (id, lookup_key, has_subscribed_before) => {
   return await stripe.checkout.sessions.create({
     billing_address_collection: 'auto',
     line_items: [
@@ -57,10 +66,10 @@ const checkoutSessionUrlByStripeId = async (id, lookup_key) => {
     'customer_update[address]': 'auto',
     allow_promotion_codes: 'true',
     subscription_data: {
-      trial_period_days: 14
-    },    
+      trial_period_days: has_subscribed_before ? 0 : 14
+    },
     automatic_tax: { enabled: true }
   });
 }
 
-module.exports = { checkoutSessionUrlByStripeId, portalSessionUrlByStripeId, createCustomer, sessionById, customerById, customerSubscriptionsById }
+module.exports = { customerCancelledSubscriptionById, checkoutSessionUrlByStripeId, portalSessionUrlByStripeId, createCustomer, sessionById, customerById, customerSubscriptionsById }
