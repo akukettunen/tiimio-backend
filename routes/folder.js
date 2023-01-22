@@ -1,4 +1,3 @@
-
 require('dotenv').config()
 const express = require('express');
 const { user, is_in_team } = require('../middleware/authMiddleware');
@@ -74,13 +73,18 @@ router.post('/', user, async (req, res) => {
   is_in_team()
 
   const folder = req.body.folder;
-
+  console.log(folder)
   if(!folder || !folder.name || !folder.team_id || !folder.type) {
     throw new Error('bad request')
   }
   
-  console.log(folder)
-  if(folder.type !== 'folder' && folder.type !== 'clip' && folder.type !== 'time' && folder.type !== 'filter') {
+  if(
+       folder.type !== 'folder' 
+    && folder.type !== 'clip' 
+    && folder.type !== 'time' 
+    && folder.type !== 'filter'
+    && folder.type !== 'map'
+  ) {
     throw new Error('folder type wrong')
   }
 

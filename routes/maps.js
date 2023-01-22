@@ -46,6 +46,17 @@ router.post('/', user, async (req, res) => {
   res.json(map)
 })
 
+router.get('/:map_id', user, async (req, res) => {
+  const { map_id } = req.params
+
+  const [ map ] = await maps_db.mapById(map_id)
+
+  if(!map) throw new Error('map not found')
+  is_in_team(map.team_id)
+
+  res.json(map)
+})
+
 router.get('/team/:team_id', user, async (req, res) => {
   is_in_team()
   const maps = await maps_db.teamMaps(req.params.team_id)
