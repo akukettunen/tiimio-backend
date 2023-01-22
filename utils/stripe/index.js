@@ -36,7 +36,7 @@ const customerSubscriptionsById = async id => {
 const customerCancelledSubscriptionById = async id => {
   const subscriptions = await stripe.subscriptions.list({
     customer: id,
-    status: 'cancelled'
+    status: 'canceled'
   });
   
   return subscriptions
