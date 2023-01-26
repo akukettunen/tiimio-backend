@@ -160,6 +160,14 @@ router.put('/:tag_id/name', user, async (req, res) => {
   res.json('ok!')
 })
 
+router.put('/:tag_id/map_color', user, async (req, res) => {
+  if(!req.body.map_color) throw new Error('bad request')
+  console.log(req.body.map_color)
+  await tag_db.updateTagColor({ id: req.params.tag_id, color: req.body.map_color })
+
+  res.json('ok!')
+})
+
 router.put('/order', user, async (req, res) => {
   if(!req.body.tags || !req.body.team_id) throw new Error('bad request')
   is_in_team()
@@ -187,7 +195,7 @@ router.put('/group/order', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res) => {
-  const { tag_name, group_id, position } = req.body
+  const { tag_name, group_id, position, map_color } = req.body
 
   if( !tag_name || !group_id) throw new Error('bad request')
   
@@ -204,6 +212,7 @@ router.post('/', user, async (req, res) => {
   let add_info = await tag_db.createTag({
     tag_name,
     group_id,
+    map_color: map_color || '#000',
     position: position || 0
   })
 

@@ -120,7 +120,7 @@ const groupTags = id => {
 
 const teamTags = team_id => {
   return query(`
-    SELECT original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
+    SELECT original_id, tag_name, tag.position, tag.id AS id, group_id, tag.map_color FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ?
     ORDER BY position;
@@ -194,11 +194,11 @@ const addMirrors = (group_id, mirrors) => {
   `, [group_id, mirrors])
 }
 
-const createTag = ({ tag_name, group_id, original_id, position }) => {
+const createTag = ({ tag_name, group_id, original_id, position, map_color }) => {
   return query(`
-    INSERT INTO tag( tag_name, group_id, original_id, position )
-    VALUES (?, ?, ?, ?);
-  `, [ tag_name, group_id, original_id, position ])
+    INSERT INTO tag( tag_name, group_id, original_id, position, map_color )
+    VALUES (?, ?, ?, ?, ?);
+  `, [ tag_name, group_id, original_id, position, map_color ])
 }
 
 const tagGroupById = id => {
@@ -222,6 +222,14 @@ const updateTagName = ({ name, id }) => {
     SET tag_name = ?
     WHERE id = ? OR original_id = ?;
   `, [name, id, id])
+}
+
+const updateTagColor= ({ color, id }) => {
+  return query(`
+    UPDATE tag
+    SET map_color = ?
+    WHERE id = ? OR original_id = ?;
+  `, [color, id, id])
 }
 
 const updateTagGroupShowInTagging = ({ show_in_tagging, id }) => {
@@ -275,4 +283,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

@@ -8,17 +8,11 @@ const clipById = async (id, game_id) => {
     clip = await clip_db.gameByClipId(id)
   }
   let [ final_clip ] = clip
-  console.log('clipi')
   const tags = await clip_db.clipTagsByClipId(id)
-  console.log('clipi2')
 
   const points = await clip_db.clipPointsByClipId(id)
-  console.log('clipi3')
 
   const { Item } = await clip_db.getClipGraphics(id)
-  console.log('clipi4')
-
-  console.log(Item)
 
   return { ...final_clip, tags, num_of_tags: tags.length, points, graphics: Item?.Item }
 }

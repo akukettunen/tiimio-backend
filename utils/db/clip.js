@@ -37,11 +37,11 @@ const teamClips = (team_id, index = 0, limit = 5) => {
   `, [team_id, index, limit])
 }
 
-const addClip = ({ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id }) => {
+const addClip = ({ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id, is_point }) => {
   return query(`
-    INSERT INTO clip ( title, starttime, endtime, video_id, game_id, description, created, leaguewide, team_id )
-    VALUES ( ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?);
-  `, [ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id ])
+    INSERT INTO clip ( title, starttime, endtime, video_id, game_id, description, created, leaguewide, team_id, is_point )
+    VALUES ( ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?,  ?);
+  `, [ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id, is_point ])
 }
 
 const clipById = id => {

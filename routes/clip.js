@@ -119,10 +119,10 @@ router.put('/:time_id/tag', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res, next) => {
-  const { title, starttime, endtime, video_id, description, tags, points, leaguewide, team_id, game_id } = req.body
+  const { title, starttime, endtime, video_id, description, tags, points, leaguewide, team_id, game_id, is_point } = req.body
 
   if(team_id) is_in_team(team_id)
-  if(!title || !starttime || !endtime || !(video_id || (leaguewide || team_id) ) ) throw new Error('bad request')
+  if(!title || !starttime || !(video_id || (leaguewide || team_id) || (!endtime  && !is_point) ) ) throw new Error('bad request')
 
   if(leaguewide && !req.tiimio_user.tiimio_admin) throw new Error('authentication error')
 

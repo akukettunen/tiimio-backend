@@ -110,4 +110,7 @@ router.delete('/:map_id', user, async (req, res) => {
   res.json('ok!')
 })
 
+router.post('/base', (req, res) => {
+  
+})
 module.exports = router;

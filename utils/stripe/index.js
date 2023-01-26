@@ -17,6 +17,7 @@ const sessionById = async id => {
   return session
 }
 
+// Huh?
 const customerById = async id => {
   const customer = await stripe.customers.retrieve(
     'cus_Ku7r2iRWZe1anB'
