@@ -37,11 +37,11 @@ const teamClips = (team_id, index = 0, limit = 5) => {
   `, [team_id, index, limit])
 }
 
-const addClip = ({ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id, is_point }) => {
+const addClip = ({ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id, is_point, map_color }) => {
   return query(`
-    INSERT INTO clip ( title, starttime, endtime, video_id, game_id, description, created, leaguewide, team_id, is_point )
-    VALUES ( ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?,  ?);
-  `, [ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id, is_point ])
+    INSERT INTO clip ( title, starttime, endtime, video_id, game_id, description, created, leaguewide, team_id, is_point, map_color )
+    VALUES ( ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?);
+  `, [ title, starttime, endtime, video_id, game_id, description, leaguewide, team_id, is_point, map_color ])
 }
 
 const clipById = id => {
@@ -214,7 +214,7 @@ const videoClips = id => {
     LEFT JOIN map_base ON map_point.map_base_id = map_base.id
     WHERE clip.video_id = ? OR clip.game_id = ?
     GROUP BY clip.id
-    ORDER BY starttime;
+    ORDER BY is_point, starttime;
   `, [id, id])
 }
 

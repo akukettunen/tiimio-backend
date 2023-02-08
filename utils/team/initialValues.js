@@ -202,6 +202,8 @@ const basketball = () => {
       {
         name: 'Event',
         tags: [
+          '2pt made',
+          '3pt made',
           'Attack', 
           'Defense'
         ]
@@ -228,6 +230,37 @@ const basketball = () => {
     timenames: [
       "Attack starts",
       "Attack end"
+    ]
+  }
+}
+
+const soccer = () => {
+  return {
+    tags: [
+      {
+        name: 'Event',
+        tags: [
+          'Offense',
+          'Defense',
+          'Shot own',
+          'Shot opponent'
+        ]
+      },
+      {
+        name: 'Shot type',
+        tags: [
+          'Goal',
+          'On target',
+          'Off target'
+        ]
+      },
+      {
+        name: 'Player',
+        tags: [
+          'John Doe', 
+          'Jane Doe'
+        ]
+      }
     ]
   }
 }
