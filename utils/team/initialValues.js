@@ -261,8 +261,14 @@ const soccer = () => {
           'Jane Doe'
         ]
       }
+    ],
+    timenames: [
+      "Attack starts",
+      "Attack end",
+      "Run start",
+      "Run end"
     ]
   }
 }
 
-module.exports = { pesapallo, baseball, other, basketball }
+module.exports = { pesapallo, baseball, other, basketball, soccer }
