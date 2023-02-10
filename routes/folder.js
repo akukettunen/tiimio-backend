@@ -73,7 +73,7 @@ router.post('/', user, async (req, res) => {
   is_in_team()
 
   const folder = req.body.folder;
-  console.log(folder)
+
   if(!folder || !folder.name || !folder.team_id || !folder.type) {
     throw new Error('bad request')
   }
@@ -84,6 +84,7 @@ router.post('/', user, async (req, res) => {
     && folder.type !== 'time' 
     && folder.type !== 'filter'
     && folder.type !== 'map'
+    && folder.type !== 'text_file'
   ) {
     throw new Error('folder type wrong')
   }

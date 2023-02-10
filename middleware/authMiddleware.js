@@ -41,9 +41,9 @@ const inline_tiimi_admin = (req, res, next) => {
 }
 
 const is_in_team = (team_id) => {
-  var team_id = team_id
-  return (req, _res, next) => {
-    const team_id = req.body.team_id || req.params.team_id || team_id
+  var t_id = team_id
+  return (req, _, next) => {
+    let team_id = req.body.team_id || req.params.team_id || t_id
     if(!team_id) throw new Error('no team_id present')
   
     const teams = req.tiimio_user?.teams
@@ -51,8 +51,8 @@ const is_in_team = (team_id) => {
 
     const is_in = teams.map(team => team.id).includes(parseInt(team_id))
     if(!is_in) throw new Error('wrong team')
-  
-    next()
+
+    if(next) next()
   }
 }
 

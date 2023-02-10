@@ -25,11 +25,11 @@ const byTeamIdRoot = (teamId) => {
 }
 
 const addFolder = folder => {
-  const { team_id, time_id, map_id, clip_id, filter_id, name, parent, position, type } = folder
+  const { team_id, time_id, map_id, clip_id, filter_id, text_file_id, name, parent, position, type } = folder
   return query(`
-    INSERT INTO folder (team_id, time_id, map_id, clip_id, filter_id, name, created, parent, position, type)
-    VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?);
-  `, [ team_id, time_id, map_id, clip_id, filter_id, name, parent, position, type ])
+    INSERT INTO folder (team_id, time_id, map_id, clip_id, filter_id, text_file_id, name, created, parent, position, type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?);
+  `, [ team_id, time_id, map_id, clip_id, filter_id, text_file_id, name, parent, position, type ])
 }
 
 const byId = id => {
