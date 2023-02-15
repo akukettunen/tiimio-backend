@@ -195,7 +195,7 @@ router.put('/group/order', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res) => {
-  const { tag_name, group_id, position, map_color } = req.body
+  const { tag_name, group_id, position, map_color, hotkey } = req.body
 
   if( !tag_name || !group_id) throw new Error('bad request')
   
@@ -212,6 +212,7 @@ router.post('/', user, async (req, res) => {
   let add_info = await tag_db.createTag({
     tag_name,
     group_id,
+    hotkey,
     map_color: map_color || '#000',
     position: position || 0
   })
