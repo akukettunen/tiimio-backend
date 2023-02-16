@@ -216,6 +216,14 @@ const updateTagGroupName = ({ name, id }) => {
   `, [name, id])
 }
 
+const updateTag = ({ id, tag_name, map_color, hotkey }) => {
+  return query(`
+    UPDATE tag
+    SET tag_name = ?
+    WHERE id = ? OR original_id = ?;
+  `, [name, id, id])
+}
+
 const updateTagName = ({ name, id }) => {
   return query(`
     UPDATE tag

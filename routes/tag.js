@@ -80,7 +80,7 @@ router.post('/group', user, async (req, res, next) => {
   res.json(newGroup)
 })
 
-router.put('/group/:group_id/mirror', async (req, res) => {
+router.put('/group/:group_id/mirror', user, async (req, res) => {
   let group = await tagHelper.groupById(req.params.group_id)
 
   if(!group) throw new Error('Group not found')
@@ -162,15 +162,31 @@ router.put('/:tag_id/name', user, async (req, res) => {
 
 router.put('/:tag_id/map_color', user, async (req, res) => {
   if(!req.body.map_color) throw new Error('bad request')
-  console.log(req.body.map_color)
+
   await tag_db.updateTagColor({ id: req.params.tag_id, color: req.body.map_color })
 
   res.json('ok!')
 })
 
+router.put('/:tag_id', user, async (req, res) => {
+  const { tag_name, map_color, hotkey } = req.body;
+
+  if(!tag_name) throw new Error('tag_name missing')
+
+  const [ tag ] = await tag_db.tagById(req.params.id)
+  const [ tag_group ] = await tag_db.tagGroupById(tag.group_id)
+
+  is_in_team(tag_group.team_id)(req)
+
+  await tag_db.updateTag({...req.body, id: req.params.id})
+
+  const [ updated_tag ] = await tag_db.tagById(req.params.id)
+
+  res.json(updated_tag)
+})
+
 router.put('/order', user, async (req, res) => {
   if(!req.body.tags || !req.body.team_id) throw new Error('bad request')
-  is_in_team()
 
   const promises = req.body.tags.map((t, i) => {
     return tag_db.editTagOrder(t, i)
@@ -213,7 +229,7 @@ router.post('/', user, async (req, res) => {
     tag_name,
     group_id,
     hotkey,
-    map_color: map_color || '#000',
+    map_color,
     position: position || 0
   })
 
