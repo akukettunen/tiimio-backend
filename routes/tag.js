@@ -161,9 +161,13 @@ router.put('/:tag_id/name', user, async (req, res) => {
 })
 
 router.put('/:tag_id/map_color', user, async (req, res) => {
-  if(!req.body.map_color) throw new Error('bad request')
-
   await tag_db.updateTagColor({ id: req.params.tag_id, color: req.body.map_color })
+
+  res.json('ok!')
+})
+
+router.put('/:tag_id/hotkey', user, async (req, res) => {
+  await tag_db.updateTagHotkey({ id: req.params.tag_id, hotkey: req.body.hotkey })
 
   res.json('ok!')
 })
