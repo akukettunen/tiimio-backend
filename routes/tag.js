@@ -39,7 +39,7 @@ router.get('/league/:league_id', user, async (req, res) => {
 })
 
 router.post('/group', user, async (req, res, next) => {
-  let { team_id, group_name, mirrors, league_id } = req.body
+  let { team_id, group_name, mirrors, league_id, one_tag_only } = req.body
   if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
   if(league_id) team_id = null
 
@@ -50,7 +50,8 @@ router.post('/group', user, async (req, res, next) => {
   let add_info = await tag_db.createTagGroup({
     team_id,
     league_id,
-    group_name
+    group_name,
+    one_tag_only
   })
 
   let [ tag_group ] = await tag_db.tagGroupById(add_info.insertId)
@@ -148,6 +149,14 @@ router.put('/group/:group_id/show_in_filtering', user, async (req, res) => {
   if(req.body.show_in_filtering === undefined) throw new Error('bad request')
 
   await tag_db.updateTagGroupShowInFiltering({ id: req.params.group_id, show_in_filtering: req.body.show_in_filtering })
+
+  res.json('ok!')
+})
+
+router.put('/group/:group_id/one_tag_only', user, async (req, res) => {
+  if(req.body.one_tag_only === undefined) throw new Error('bad request')
+
+  await tag_db.updateOneTagOnly({ id: req.params.group_id, one_tag_only: req.body.one_tag_only })
 
   res.json('ok!')
 })
