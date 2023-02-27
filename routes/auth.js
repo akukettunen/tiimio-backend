@@ -16,6 +16,7 @@ const express = require('express')
       emailService = require('../utils/aws/email')
       crypto = require('crypto')
       require('express-async-errors');
+      mail = require('../utils/email/mailchimp')
 
 router.post('/login', async (req, res) => {
   let { password, email } = req.body
@@ -101,9 +102,10 @@ router.post('/signin', async (req, res) => {
     email_confirmation_string: email_conf_string
   })
 
-  const link = process.env.FRONTEND_BASE_URL + '/#/confirm/' + email_conf_string
+  // const link = process.env.FRONTEND_BASE_URL + '/#/confirm/' + email_conf_string
+  // await emailService.sendWelcomeEmail(email, link)
 
-  await emailService.sendWelcomeEmail(email, link)
+  await mail.addUserToAudience(email, full_name.split(' ')[0], full_name.split(' ')[1])
 
   let [ user ] = await user_db.getUserByEmail(email)
   const teams = []

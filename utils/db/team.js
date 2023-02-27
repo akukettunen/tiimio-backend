@@ -61,7 +61,8 @@ const userTeamByStripeId = stripe_id => {
 const planByStripeId = id => {
   return query(`
     SELECT * FROM plan
-    WHERE stripe_price_id = ?;
+    WHERE stripe_price_id = ?
+    ORDER BY iteration DESC;
   `, [id])
 }
 
