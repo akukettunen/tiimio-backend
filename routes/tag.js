@@ -38,20 +38,44 @@ router.get('/league/:league_id', user, async (req, res) => {
   res.json(groups)
 })
 
-router.post('/group', user, async (req, res, next) => {
-  let { team_id, group_name, mirrors, league_id, one_tag_only } = req.body
-  if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
-  if(league_id) team_id = null
+router.get('/sport/:sport_id', tiimi_admin, async (req, res) => {
+  if(!req.params.sport_id) throw new Error('bad request')
 
-  if(league_id) {
+  let groups;
+  try {
+    groups = await tagHelper.getSportTagGroups(req.params.sport_id)
+  } catch(err) {
+    throw new Error(err)
+  }
+
+  res.json(groups)
+})
+
+router.post('/group', user, is_in_team(), async (req, res, next) => {
+  let { team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable } = req.body
+
+  if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
+  if(league_id || sport_id) team_id = null
+
+  if(league_id || sport_id || immutable) {
     inline_tiimi_admin(req, res, next)
   }
+
+  if(sport_id) {
+    await tagHelper.handleSportGroupAdd(group_name, sport_id)
+  }
+
+  const groups = await tag_db.teamGroups(team_id)
+
+  if(groups.find(g => g.group_name == group_name)) throw new Error(`Group "${group_name}" already exists`)
 
   let add_info = await tag_db.createTagGroup({
     team_id,
     league_id,
     group_name,
-    one_tag_only
+    one_tag_only,
+    sport_id,
+    immutable
   })
 
   let [ tag_group ] = await tag_db.tagGroupById(add_info.insertId)
@@ -81,11 +105,23 @@ router.post('/group', user, async (req, res, next) => {
   res.json(newGroup)
 })
 
+router.put('/order', user, async (req, res) => {
+  if(!req.body.tags || !req.body.team_id) throw new Error('bad request')
+
+  const promises = req.body.tags.map((t, i) => {
+    return tag_db.editTagOrder(t, i)
+  })
+
+  await Promise.all(promises)
+
+  res.json('ok!')
+})
+
 router.put('/group/:group_id/mirror', user, async (req, res) => {
   let group = await tagHelper.groupById(req.params.group_id)
 
   if(!group) throw new Error('Group not found')
-  if(group.league_id) inline_tiimi_admin(req)
+  if(group.league_id || group.sport_id || group.immutable) inline_tiimi_admin(req)
 
   const new_mirror_ids = req.body.new_mirror_ids;
 
@@ -121,7 +157,7 @@ router.put('/group/:group_id/join', user, async (req, res) => {
   let group = await tagHelper.groupById(req.params.group_id)
 
   if(!group) throw new Error('Group not found')
-  if(group.league_id) inline_tiimi_admin(req)
+  if(group.league_id || group.sport_id || group.immutable) inline_tiimi_admin(req)
 
   await tag_db.setJoinId(req.params.group_id, req.body.join_id)
 
@@ -131,6 +167,12 @@ router.put('/group/:group_id/join', user, async (req, res) => {
 
 router.put('/group/:group_id/name', user, async (req, res) => {
   if(!req.body.group_name) throw new Error('bad request')
+
+  const [ group ] = tag_db.groupById(req.params.group_id)
+
+  if(group.league_id || group.sport_id || group.immutable) {
+    inline_tiimi_admin(req, res, next)
+  }
 
   await tag_db.updateTagGroupName({ id: req.params.group_id, name: req.body.group_name })
 
@@ -198,21 +240,8 @@ router.put('/:tag_id', user, async (req, res) => {
   res.json(updated_tag)
 })
 
-router.put('/order', user, async (req, res) => {
-  if(!req.body.tags || !req.body.team_id) throw new Error('bad request')
-
-  const promises = req.body.tags.map((t, i) => {
-    return tag_db.editTagOrder(t, i)
-  })
-
-  await Promise.all(promises)
-
-  res.json('ok!')
-})
-
-router.put('/group/order', user, async (req, res) => {
+router.put('/group/order', user, is_in_team(), async (req, res) => {
   if(!req.body.groups || !req.body.team_id) throw new Error('bad request')
-  is_in_team()
 
   const promises = req.body.groups.map((g, i) => {
     return tag_db.editGroupOrder(g.id, i)
@@ -267,7 +296,11 @@ router.delete('/group/:tag_group_id', user, async (req, res) => {
   // TODO delete mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
-  if(group.league_id) inline_tiimi_admin(req)
+  if(group.league_id || group.immutable || group.sport_id) inline_tiimi_admin(req)
+
+  if(group.sport_id) {
+    await tagHelper.handleSportGroupRemove(group.group_name, group.id, group.sport_id)
+  }
 
   is_in_team(group.team_id)
 
@@ -282,7 +315,7 @@ router.delete('/tag/:tag_id', user, async (req, res) => {
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
   if(!group) throw new Error('group not found')
 
-  if(group.league_id) inline_tiimi_admin(req)
+  if(group.league_id || group.sport_id || group.immutable) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
 
