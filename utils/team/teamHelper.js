@@ -31,8 +31,7 @@ const addInitialTags = async (team_id, sport_id) => {
     let originalGroupId = groups.find(f => f.group_name == group.group_name)?.id
 
     let tags = initialTags.filter(t => t.group_id == originalGroupId)
-    console.log(tags)
-    if(tags && tags.length) return tag_db.batchAddTags(group.id, tags.map(t => t.tag_name))
+    if(tags && tags.length) return tag_db.batchAddTagsComplex(group.id, tags)
     return 1
   })
 

@@ -117,6 +117,15 @@ const batchAddTags = (group_id, tags) => {
   `)
 }
 
+const batchAddTagsComplex = (group_id, tags) => {
+  // needs to be sanitized is used by user reqs
+  return query(`
+    INSERT INTO tag( tag_name, group_id, map_color, hotkey )
+    VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}')`)}
+    ;
+  `)
+}
+
 const groupMirrors = id => {
   return query(`
     SELECT * FROM tag_group_mirrors
@@ -161,7 +170,7 @@ const leagueTags = league_id => {
 
 const sportTags = sport_id => {
   return query(`
-    SELECT original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
+    SELECT tag.*, original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.sport_id = ?
     ORDER BY position;
@@ -348,4 +357,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
