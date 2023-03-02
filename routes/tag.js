@@ -168,7 +168,7 @@ router.put('/group/:group_id/join', user, async (req, res) => {
 router.put('/group/:group_id/name', user, async (req, res) => {
   if(!req.body.group_name) throw new Error('bad request')
 
-  const [ group ] = tag_db.groupById(req.params.group_id)
+  const [ group ] = await tag_db.groupById(req.params.group_id)
 
   if(group.league_id || group.sport_id || group.immutable) {
     inline_tiimi_admin(req, res, next)
