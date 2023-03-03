@@ -195,7 +195,7 @@ router.delete('/:id', user, async (req, res) => {
 
   const [ video ] = await video_db.videoById(clip.video_id)
 
-  if(!clip.team_id && !clip.game_id) {
+  if(clip.team_id && !clip.game_id) {
     is_in_team(video.team_id)
   } else {
     if(!req.tiimio_user?.tiimio_admin) throw new Error('authentication error')
