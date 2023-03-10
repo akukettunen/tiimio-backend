@@ -60,7 +60,7 @@ router.post('/sport/:sport_id', tiimi_admin, async (req, res) => {
     question.position,
     question.title,
     insertId,
-    question.group_name,
+    question.tag_group_id,
   ]);
 
   if(values && values.length) await template_db.postTemplateItems({ items: values })

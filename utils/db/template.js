@@ -37,7 +37,7 @@ const postTemplateItems = ({ items }) => {
 
 const postTemplateFormItems = ({ items }) => {
   return query(`
-    INSERT INTO button_template_prequisite_question (position, title, button_template_id, tag_group_name)
+    INSERT INTO button_template_prequisite_question (position, title, button_template_id, tag_group_id)
     VALUES ?;
   `, [items])
 }
