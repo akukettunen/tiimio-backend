@@ -146,13 +146,13 @@ const groupTags = id => {
   return query(`
     SELECT * FROM tag
     WHERE group_id = ?
-    ORDER BY position;
+    ORDER BY position, team_id;
   `, [id])
 }
 
 const teamTags = team_id => {
   return query(`
-    SELECT original_id, tag_name, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey FROM tag
+    SELECT original_id, tag.team_id as team_id, tag_name, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ?
     ORDER BY position;
@@ -244,11 +244,11 @@ const addMirrors = (group_id, mirrors) => {
   `, [group_id, mirrors])
 }
 
-const createTag = ({ tag_name, group_id, original_id, position, map_color, hotkey }) => {
+const createTag = ({ tag_name, group_id, original_id, position, map_color, hotkey, team_id }) => {
   return query(`
-    INSERT INTO tag( tag_name, group_id, original_id, position, map_color, hotkey )
-    VALUES (?, ?, ?, ?, ?, ?);
-  `, [ tag_name, group_id, original_id, position, map_color, hotkey ])
+    INSERT INTO tag( tag_name, group_id, original_id, position, map_color, hotkey, team_id )
+    VALUES (?, ?, ?, ?, ?, ?, ?);
+  `, [ tag_name, group_id, original_id, position, map_color, hotkey, team_id ])
 }
 
 const tagGroupById = id => {

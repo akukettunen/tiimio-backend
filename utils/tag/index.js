@@ -3,12 +3,18 @@ const team_db = require('../db/team')
 
 const getTeamTagGroups = async id => {
   // Get team data for sport_id
-  // let [ team ] = await team_db.teamById(id)
+  let [ team ] = await team_db.teamById(id)
 
   // Get teams tags and handle them
   let groups = await tag_db.teamGroups(id)
+  let sport_groups = await tag_db.sportGroups(team.sport_id)
+  
+  groups = groups.concat(sport_groups)
+
   let mirrors = await tag_db.teamMirrors(id)
   let tags = await tag_db.teamTags(id)
+  let sportTags = await tag_db.sportTags(team.sport_id)
+  tags = tags.concat(sportTags)
 
   groups.forEach((group, i) => {
     groups[i] = {...group, mirrors: mirrors.filter(m => m.tag_group_id == group.id)}
@@ -34,7 +40,7 @@ const getSportTagGroups = async id => {
   })
 
   groups.forEach((group, i) => {
-    groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
+    groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id && !tag.team_id)
   })
 
   return groups
@@ -52,10 +58,8 @@ const handleSportGroupAdd = async (group_name, sport_id) => {
   const teamsWith = await team_db.teamsBySportIdThatHaveGroupNamed(sport_id, group_name)
 
   const addPromises = teamsWithout.map(t => {
-    console.log(t)
     let teamId = t.team_id
     // Return promise of adding the group for the team
-    console.log(group_name)
     return tag_db.batchAddGroups([group_name], teamId, true)
   })
 

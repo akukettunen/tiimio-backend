@@ -7,11 +7,32 @@ const saveTeamRule = ({ rule, rule_name, team_id, position }) => {
   `, [rule, rule_name, position, team_id])
 }
 
+const saveSportRules = ({ rules, button_template_id }) => {
+  return query(`
+    INSERT INTO rule(rule, rule_name, position, active, team_id, button_template_id) 
+    VALUES
+      ${
+        rules.map(r => 
+          `('${r.rule}', '${r.rule_name}', ${r.position}, true, null, ${button_template_id})`
+        )
+      }
+    ;
+  `
+  )
+}
+
 const teamRules = (team_id) => {
   return query(`
     SELECT * FROM rule
     WHERE team_id = ?;
   `, [ team_id ])
+}
+
+const rulesByTemplateId = (id) => {
+  return query(`
+    SELECT * FROM rule
+    WHERE button_template_id = ?;
+  `, [ id ])
 }
 
 const byId = id => {
@@ -44,4 +65,4 @@ const setActive = ({ active, id }) => {
   `, [ active, id ])
 }
 
-module.exports = { setActive, teamRules, saveTeamRule, byId, deleteById, putRule }
+module.exports = { rulesByTemplateId, saveSportRules, setActive, teamRules, saveTeamRule, byId, deleteById, putRule }

@@ -44,6 +44,7 @@ const time = require('./routes/time')
 const filter = require('./routes/filter')
 const rule = require('./routes/rule')
 const textfile = require('./routes/textfile')
+const template = require('./routes/template')
 const league = require('./routes/admin/league')
 
 // rate limiter needs this for usage in heroku
@@ -68,6 +69,7 @@ app.use('/rule', rule)
 app.use('/maps', maps)
 app.use('/league', league)
 app.use('/textfile', textfile)
+app.use('/template', template)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);
