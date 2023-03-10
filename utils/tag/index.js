@@ -146,6 +146,8 @@ const groupById = async group_id => {
   let mirrors = await tag_db.groupMirrors(group_id)
   let tags = await tag_db.groupTags(group_id)
 
+  group.show_in_join_w_group_tags = JSON.parse(group.show_in_join_w_group_tags)
+
   return {...group, mirrors, tags}
 }
 
