@@ -21,7 +21,7 @@ router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   } catch(err) {
     throw new Error(err)
   }
-
+  
   res.json(groups)
 })
 
@@ -154,21 +154,26 @@ router.put('/group/:group_id/mirror', user, async (req, res) => {
 })
 
 router.put('/group/:group_id/join', user, async (req, res) => {
+  let join_ids = req.body.join_ids
   let group = await tagHelper.groupById(req.params.group_id)
 
   if(!group) throw new Error('Group not found')
   if(group.league_id || group.sport_id || group.immutable) inline_tiimi_admin(req)
 
-  await tag_db.setJoinId(req.params.group_id, req.body.join_id)
+  await tag_db.deleteGroupJoins(req.params.group_id)
+  await tag_db.addGroupJoins(req.params.group_id, join_ids)
 
   let newGroup = await tagHelper.groupById(req.params.group_id)
+
+  console.log(newGroup)
+
   res.json(newGroup)
 })
 
 router.put('/group/:group_id/name', user, async (req, res, next) => {
   if(!req.body.group_name) throw new Error('bad request')
 
-  const [ group ] = await tag_db.groupById(req.params.group_id)
+  const [ group ] = await tagHelper.groupById(req.params.group_id)
 
   if(group.league_id || group.sport_id || group.immutable) {
     inline_tiimi_admin(req, res, next)
