@@ -103,6 +103,7 @@ router.get('/:id/encoding-state', user, async (req, res) => {
   let [ video ] = await video_db.videoById(req.params.id)
 
   if(!video) throw new Error('video not found')
+  if(!video.job_id) throw new Error('job not found!')
 
   let job_data;
   let uploaded;
