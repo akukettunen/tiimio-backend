@@ -18,18 +18,21 @@ const generateJoinCode = async (num = 6) => {
 }
 
 const addInitialTags = async (team_id, sport_id) => {
-  const initial = initialValues[sport_id]()
+  let groups = await tag_db.sportGroups(sport_id)
+  group_names = groups.map(g => g.group_name)
 
-  console.log(initial)
-
-  const groups = initial['tags'].map(g => g.name)
-  await tag_db.batchAddGroups(groups, team_id)
-
+  // add initial groups for the theam and make them immutable
+  if(group_names && group_names.length) await tag_db.batchAddGroups(group_names, team_id, true)
   let teamGroups = await tag_db.teamGroups(team_id)
-  console.log(teamGroups)
+
+  const initialTags = await tag_db.sportTags(sport_id)
+
   let tagPromises = teamGroups.map(group => {
-    let tags = initial['tags'].find(g => g.name == group.group_name)['tags']
-    return tag_db.batchAddTags(group.id, tags)
+    let originalGroupId = groups.find(f => f.group_name == group.group_name)?.id
+
+    let tags = initialTags.filter(t => t.group_id == originalGroupId)
+    if(tags && tags.length) return tag_db.batchAddTagsComplex(group.id, tags)
+    return 1
   })
 
   await Promise.all(tagPromises)

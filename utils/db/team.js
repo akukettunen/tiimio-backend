@@ -98,6 +98,22 @@ const numOfUsersInTeam = team_id => {
   `, [team_id])
 }
 
+const teamsBySportIdThatDontHaveGroupNamed = (sport_id, group_name) => {
+  return query(`
+    SELECT *, team.id as team_id, tag_group.id as id FROM team
+    LEFT JOIN tag_group ON team.id = tag_group.team_id AND tag_group.group_name = ?
+    WHERE team.sport_id = ? AND tag_group.group_name IS NULL;
+  `, [group_name, sport_id])
+}
+
+const teamsBySportIdThatHaveGroupNamed = (sport_id, group_name) => {
+  return query(`
+    SELECT * FROM team
+    LEFT JOIN tag_group ON team.id = tag_group.team_id AND tag_group.group_name = ?
+    WHERE team.sport_id = ? AND tag_group.group_name IS NOT NULL;
+  `, [group_name, sport_id])
+}
+
 const teamById = id => {
   return query(`
     SELECT *, team.id as id, plan.id as plan_id FROM team
@@ -138,4 +154,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { teamsBySportIdThatDontHaveGroupNamed, teamsBySportIdThatHaveGroupNamed, allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }

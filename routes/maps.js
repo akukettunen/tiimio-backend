@@ -1,7 +1,7 @@
 require('dotenv')
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
-const { user, is_in_team } = require('../middleware/authMiddleware');
+const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware');
       router = express.Router()
       db = require('../utils/db/index')
       bcrypt = require('bcryptjs');
@@ -25,6 +25,11 @@ router.get('/base/team/:id', user, async (req, res) => {
   const [team] = await team_db.teamById(req.params.id)
   const maps = await maps_db.sportMapBases(team.sport_id)
 
+  res.json(maps)
+})
+
+router.get('/base/sport/:sport_id', user, async (req, res) => {
+  const maps = await maps_db.sportMapBases(req.params.sport_id)
   res.json(maps)
 })
 

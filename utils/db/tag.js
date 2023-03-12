@@ -2,18 +2,60 @@ const { query } = require('./index.js')
 
 const teamGroups = team_id => {
   return query(`
-    SELECT * FROM tag_group
+    SELECT 
+      tag_group.*,
+      JSON_ARRAYAGG( 
+        tag_group_in_join_with.in_join_with 
+      ) as show_in_join_w_group_tags
+    FROM tag_group
+    LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
     WHERE team_id = ?
+    GROUP BY tag_group.id
     ORDER BY position;
   `, [team_id])
 }
 
+const groupById = id => {
+  return query(`
+    SELECT 
+      tag_group.*,
+      JSON_ARRAYAGG( 
+        tag_group_in_join_with.in_join_with 
+      ) as show_in_join_w_group_tags
+    FROM tag_group
+    LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
+    WHERE id = ?;
+  `, [id])
+}
+
 const leagueGroups = league_id => {
   return query(`
-    SELECT * FROM tag_group
+    SELECT 
+      tag_group.*,
+      JSON_ARRAYAGG( 
+        tag_group_in_join_with.in_join_with 
+      ) as show_in_join_w_group_tags
+    FROM tag_group
+    LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
     WHERE league_id = ?
+    GROUP BY tag_group.id
     ORDER BY position;
   `, [league_id])
+}
+
+const sportGroups = sport_id => {
+  return query(`
+    SELECT 
+      tag_group.*,
+      JSON_ARRAYAGG( 
+        tag_group_in_join_with.in_join_with 
+      ) as show_in_join_w_group_tags
+    FROM tag_group
+    LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
+    WHERE sport_id = ?
+    GROUP BY tag_group.id
+    ORDER BY position;
+  `, [sport_id])
 }
 
 const teamGroupsIds = team_id => {
@@ -36,13 +78,6 @@ const editGroupOrder = (id, i) => {
     SET position = ?
     WHERE id = ?;
   `, [i, id])
-}
-
-const groupById = id => {
-  return query(`
-    SELECT * FROM tag_group
-    WHERE id = ?;
-  `, [id])
 }
 
 const editTagOrder = (tag_id, position) => {
@@ -76,13 +111,28 @@ const deleteGroupMirrors = group_id => {
   `, [group_id])
 }
 
-const batchAddGroups = (groups, team_id) => {
+const batchAddGroups = (groups, team_id, immutable) => {
   // needs to be sanitized is used by user reqs
   return query(`
-    INSERT INTO tag_group( team_id, group_name )
-    VALUES ${groups.map(group => `(${team_id}, '${group}')`)}
+    INSERT INTO tag_group( team_id, group_name, immutable )
+    VALUES ${groups.map(group => `(${team_id}, '${group}', ${immutable})`)}
     ;
   `)
+}
+
+const putGroupImmutability = (group_id, immutable) => {
+  return query(`
+    UPDATE tag_group
+    SET immutable = ?
+    WHERE id = ?;
+  `, [ immutable, group_id ])
+}
+
+const tagsInGroup = (group_id) => {
+  return query(`
+    SELECT * FROM tag
+    WHERE group_id = ?;
+  `, [group_id])
 }
 
 const batchAddTags = (group_id, tags) => {
@@ -90,6 +140,15 @@ const batchAddTags = (group_id, tags) => {
   return query(`
     INSERT INTO tag( tag_name, group_id )
     VALUES ${tags.map(tag => `('${tag}', ${group_id})`)}
+    ;
+  `)
+}
+
+const batchAddTagsComplex = (group_id, tags) => {
+  // needs to be sanitized is used by user reqs
+  return query(`
+    INSERT INTO tag( tag_name, group_id, map_color, hotkey )
+    VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}')`)}
     ;
   `)
 }
@@ -136,6 +195,15 @@ const leagueTags = league_id => {
   `, [league_id])
 }
 
+const sportTags = sport_id => {
+  return query(`
+    SELECT tag.*, original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
+    LEFT JOIN tag_group ON tag_group.id = tag.group_id
+    WHERE tag_group.sport_id = ?
+    ORDER BY position;
+  `, [sport_id])
+}
+
 const setJoinId = (group_id, join_id) => {
   return query(`
     UPDATE tag_group
@@ -180,11 +248,20 @@ const leagueMirrors = league_id => {
   `, [league_id])
 }
 
-const createTagGroup = ({ team_id, league_id, group_name, one_tag_only }) => {
+const sportMirrors = sport_id => {
   return query(`
-    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only )
-    VALUES (?, ?, ?, ?);
-  `, [team_id, league_id, group_name, one_tag_only])
+    SELECT * FROM tag_group_mirrors
+    LEFT JOIN tag_group ON tag_group.id = tag_group_mirrors.tag_group_id
+    LEFT JOIN tag_group AS mirroring ON mirroring.id = tag_group_mirrors.mirrors
+    WHERE tag_group.sport_id = ?;
+  `, [sport_id])
+}
+
+const createTagGroup = ({ team_id, league_id, group_name, one_tag_only, sport_id, immutable }) => {
+  return query(`
+    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only, sport_id, immutable )
+    VALUES (?, ?, ?, ?, ?, ?);
+  `, [team_id, league_id, group_name, one_tag_only, sport_id, immutable])
 }
 
 const addMirrors = (group_id, mirrors) => {
@@ -203,7 +280,13 @@ const createTag = ({ tag_name, group_id, original_id, position, map_color, hotke
 
 const tagGroupById = id => {
   return query(`
-    SELECT * FROM tag_group
+    SELECT 
+      tag_group.*,
+      JSON_ARRAYAGG( 
+        tag_group_in_join_with.in_join_with 
+      ) as show_in_join_w_group_tags
+    FROM tag_group
+    LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
     WHERE id = ?;
   `, [id])
 }
@@ -272,6 +355,20 @@ const updateTagGroupShowInFiltering = ({ show_in_filtering, id }) => {
   `, [show_in_filtering, id, id])
 }
 
+const deleteGroupJoins = (id) => {
+  return query(`
+    DELETE FROM tag_group_in_join_with
+    WHERE tag_group_id = ?;
+  `, [id])
+}
+
+const addGroupJoins = (group_id, join_ids) => {
+  return query(`
+    INSERT INTO tag_group_in_join_with
+    VALUES ${ join_ids.map( j_id => ` ( ${group_id}, ${j_id} ) ` ) };
+  `)
+}
+
 const tagById = id => {
   return query(`
     SELECT * FROM tag
@@ -291,7 +388,7 @@ const deleteObjectTagById = id => {
     DELETE FROM object_tag
     WHERE tag_id = ?;
   `, [id])
-} 
+}
 
 const deleteGroupById = id => {
   return query(`
@@ -307,4 +404,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

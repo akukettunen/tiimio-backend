@@ -40,6 +40,18 @@ const inline_tiimi_admin = (req, res, next) => {
   if(!admin) throw new Error('authentication error')
 }
 
+const inline_is_in_team = (req, res, next) => {
+  var t_id = team_id
+  let team_id = req.body.team_id || req.params.team_id || t_id
+  if(!team_id) throw new Error('no team_id present')
+
+  const teams = req.tiimio_user?.teams
+  if(!teams) throw new Error('no user teams found')
+
+  const is_in = teams.map(team => team.id).includes(parseInt(team_id))
+  if(!is_in) throw new Error('wrong team')
+}
+
 const is_in_team = (team_id) => {
   var t_id = team_id
   return (req, _, next) => {
@@ -56,4 +68,4 @@ const is_in_team = (team_id) => {
   }
 }
 
-module.exports = { inline_tiimi_admin, tiimi_admin, user, is_in_team }
+module.exports = { inline_is_in_team, inline_tiimi_admin, tiimi_admin, user, is_in_team }
