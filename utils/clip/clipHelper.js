@@ -27,7 +27,10 @@ const videoClips = (video, groups) => {
             tags: c.tags ? JSON.parse(c.tags) : [],
             points: c.points ? JSON.parse(c.points).filter(p => !!p.id) : []
           }
-        }).filter(clip => clipIsIn(clip, groups))
+        }).filter(clip => {
+          return clipIsIn(clip, groups)
+        })
+
         resolve({
           ...video,
           clips

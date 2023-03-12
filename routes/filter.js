@@ -7,6 +7,7 @@ const express = require('express')
       jwt = require('jsonwebtoken')
       cookieParser = require('cookie-parser')
       router.use(cookieParser())
+      tagHelper = require('../utils/tag')
       logger = require('../utils/logger')
       user_db = require('../utils/db/user')
       team_db = require('../utils/db/team')
@@ -42,12 +43,13 @@ router.get('/nosave/clip', user, async (req, res) => {
   let groups;
   let tags;
   if(!filter.search_games) {
-    groups = await tag_db.teamGroupsIds(filter.team_id)
+    groups = await tagHelper.teamTagGroupIds(filter.team_id)
     tags = await tag_db.teamTagsIdsFilter(filter.team_id, filterTagsIds)
   } else {
     groups = await tag_db.leagueGroupsIds(filter.league_id)
     tags = await tag_db.leagueTagsIdsFilter(filter.league_id, filterTagsIds)
   }
+
 
   groups.forEach((group, i) => {
     groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
@@ -90,7 +92,7 @@ router.get('/:id/clip', user, async (req, res) => {
   let groups;
   let tags;
   if(!filter.search_games) {
-    groups = await tag_db.teamGroupsIds(filter.team_id)
+    groups = await tagHelper.teamTagGroupIds(filter.team_id)
     tags = await tag_db.teamTagsIdsFilter(filter.team_id, filterTagsIds)
   } else {
     groups = await tag_db.leagueGroupsIds(filter.league_id)

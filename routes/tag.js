@@ -161,11 +161,9 @@ router.put('/group/:group_id/join', user, async (req, res) => {
   if(group.league_id || group.sport_id || group.immutable) inline_tiimi_admin(req)
 
   await tag_db.deleteGroupJoins(req.params.group_id)
-  await tag_db.addGroupJoins(req.params.group_id, join_ids)
+  if(join_ids && join_ids.length) await tag_db.addGroupJoins(req.params.group_id, join_ids)
 
   let newGroup = await tagHelper.groupById(req.params.group_id)
-
-  console.log(newGroup)
 
   res.json(newGroup)
 })

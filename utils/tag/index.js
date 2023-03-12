@@ -30,6 +30,16 @@ const getTeamTagGroups = async id => {
   return groups
 }
 
+const teamTagGroupIds = async team_id => {
+  let [ team ] = await team_db.teamById(team_id)
+
+  let groups = await tag_db.teamGroups(team_id)
+  let sport_groups = await tag_db.sportGroups(team.sport_id)
+  let all = groups.concat(sport_groups)
+
+  return all.map(g => g.id)
+}
+
 const getSportTagGroups = async id => {
   let groups = await tag_db.sportGroups(id)
   let mirrors = await tag_db.sportMirrors(id)
@@ -150,9 +160,9 @@ const groupById = async group_id => {
   let mirrors = await tag_db.groupMirrors(group_id)
   let tags = await tag_db.groupTags(group_id)
 
-  group.show_in_join_w_group_tags = JSON.parse(group.show_in_join_w_group_tags)
+  group.show_in_join_w_group_tags = JSON.parse(group.show_in_join_w_group_tags).filter(t => t != null)
 
   return {...group, mirrors, tags}
 }
 
-module.exports = { handleSportGroupRemove, handleSportGroupAdd, getSportTagGroups, getLeagueTagGroups, getTeamTagGroups, groupById }
+module.exports = { teamTagGroupIds, handleSportGroupRemove, handleSportGroupAdd, getSportTagGroups, getLeagueTagGroups, getTeamTagGroups, groupById }

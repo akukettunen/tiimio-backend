@@ -57,10 +57,13 @@ router.post('/sport/:sport_id', tiimi_admin, async (req, res) => {
   ]);
 
   const form_item_values = form_items.map((question) => [
+    question.id,
     question.position,
     question.title,
     insertId,
     question.tag_group_id,
+    question.multiple,
+    question.add_to_event
   ]);
 
   if(values && values.length) await template_db.postTemplateItems({ items: values })
@@ -75,7 +78,20 @@ router.get('/:id', user, async (req, res) => {
   res.json(template)
 })
 
-router.get('/sport/:sport_id', user, async (req, res) => {
+router.get('/team/:team_id/video/:video_id', user, is_in_team(), async (req, res) => {
+  const [ team ] = await team_db.teamById(req.params.team_id)
+  const templates = await template_db.sportTemplates(team.sport_id)
+
+  const promises = templates.map(t => {
+    return templateHelper.getTemplateById(t.id, req.params.video_id)
+  })
+
+  const ret = await Promise.all(promises)
+
+  res.json(ret)
+})
+
+router.get('/sport/:sport_id', tiimi_admin, async (req, res) => {
   const templates = await template_db.sportTemplates(req.params.sport_id)
 
   const promises = templates.map(t => {
@@ -85,6 +101,24 @@ router.get('/sport/:sport_id', user, async (req, res) => {
   const ret = await Promise.all(promises)
 
   res.json(ret)
+})
+
+router.post('/answer/team/:team_id/video/:video_id', user, is_in_team(), async (req, res) => {
+  const { answers } = req.body
+
+  await template_db.deleteAnswersByVideoId(req.params.video_id)
+
+  let vals = answers.map(a => {
+    return [
+      a.button_template_prequisite_question_id,
+      a.video_id,
+      a.tag_id
+    ]
+  })
+
+  if(vals && vals.length) await template_db.postAnswers(vals)
+
+  res.json('ok!')
 })
 
 router.delete('/:id', tiimi_admin, async (req, res) => {
