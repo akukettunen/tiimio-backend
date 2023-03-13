@@ -85,6 +85,9 @@ router.post('/signin', async (req, res) => {
   }
 
   if(!full_name.length) throw new Error("name missing!")
+  const name_split = full_name.split(' ')
+  const first_name = name_split[0]
+  const last_name = name_split[name_split.length - 1]
   
   const hash = await bcrypt.hash(password, saltRounds)
   if(!password || password.length < 8) throw new Error('invalid password')
@@ -102,10 +105,12 @@ router.post('/signin', async (req, res) => {
     email_confirmation_string: email_conf_string
   })
 
-  // const link = process.env.FRONTEND_BASE_URL + '/#/confirm/' + email_conf_string
-  // await emailService.sendWelcomeEmail(email, link)
+  // Add user to mailchimp list with user tag
+  let tags = []
+  if(process.env.ENVIRONMENT == 'dev') tags = ['Development', 'User']
+  else tags = ['User']
 
-  await mail.addUserToAudience(email, full_name.split(' ')[0], full_name.split(' ')[1])
+  await mail.addUserToAudience(email, first_name, last_name, tags)
 
   let [ user ] = await user_db.getUserByEmail(email)
   const teams = []

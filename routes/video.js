@@ -119,8 +119,6 @@ router.get('/:id/encoding-state', user, async (req, res) => {
 })
 
 router.get('/team/:id', user, async (req, res) => {
-  // TODO: vain oman joukkueen videot
-
   let videos = await video_db.teamVideos(req.params.id)
   let [{ uploaded_this_month }] = await video_db.uploadedThisMonth(req.params.id)
   let [{ total_video_saved }] = await video_db.uploadedTotalNotDeleted(req.params.id)

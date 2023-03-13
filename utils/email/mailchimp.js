@@ -2,18 +2,19 @@ let md5 = require('md5')
     mailchimp =  require("@mailchimp/mailchimp_marketing");
 
 mailchimp.setConfig({
-  apiKey: "817a7cd392d952f797304d119581ee53-us10",
+  apiKey: process.env.MAILCHIMP_API_KEY,
   server: "us10",
 });
 
-addUserToAudience = async (userId, first_name, last_name) => {
+const addUserToAudience = async (userId, first_name, last_name, tags) => {
   return new Promise((resolve, reject) => {
     const subscriberHash = md5(userId.toLowerCase());
-    console.log(mailchimp)
+
     mailchimp.lists.setListMember(
-      "483d83dc99",
+      process.env.MAILCHIMP_LIST,
       subscriberHash,
       {
+        tags,
         email_address: userId, 
         status_if_new: "subscribed",
         merge_fields: { FNAME: first_name, LNAME: last_name }
@@ -28,18 +29,16 @@ addUserToAudience = async (userId, first_name, last_name) => {
   })
 }
 
-addTagToUser = async (userId, tags) => {
+const addTagToUser = async (userId, tags, active = true) => {
   return new Promise((resolve, reject) => {
     const subscriberHash = md5(userId.toLowerCase());
-    let add_tags = tags.map(tag => { return { "name": tag, "status": "active" } })
+    let add_tags = tags.map(tag => { return { "name": tag, "status": active ? "active" : "inactive" } })
   
     mailchimp.lists.updateListMemberTags(
-      "483d83dc99",
+      process.env.MAILCHIMP_LIST,
       subscriberHash,
       {
-        "body": {
-          "tags": add_tags,
-        },
+        "tags": add_tags,
       }
     )
     .then(e => {
