@@ -82,6 +82,13 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
         team_id: userTeam.team_id,
         plan_id: new_plan.id
       })
+
+      if(new_plan.is_the_best) {
+        await mail.addTagToUser(userTeam.email, ['Team owner - VIP'])
+      } else {
+        await mail.addTagToUser(userTeam.email, ['Team owner - Paid'])
+      }
+
       break;
     case 'customer.subscription.updated':
       // tämä kertoo loppuuko tilaus
