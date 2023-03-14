@@ -20,6 +20,7 @@ const db = require('../utils/db/index');
       initialValues = require('../utils/team/initialValues')
       userHelper = require('../utils/user/userHelper')
       require('express-async-errors');
+      mail = require('../utils/email/mailchimp')
 
 router.post('/', user, async (req, res) => {
   const { team_name, sport_id } = req.body
@@ -71,6 +72,9 @@ router.post('/', user, async (req, res) => {
   //   throw new Error(err)
   // }
 
+  // Add team owner tag to user
+  await mail.addTagToUser(req.tiimio_user.email, ['Team owner - Free', sport_id])
+
   const user = await userHelper.createUserData(insertId, req.tiimio_user)
 
   const token = jwt.sign(
@@ -105,6 +109,9 @@ router.post('/join', user, async (req, res) => {
   // this is a workaround
   const [ added_to_team ] = await team_db.teamById(team.id)
   teams = teams.concat(added_to_team)
+
+  // Add team joiner and sport_id tags to user
+  await mail.addTagToUser(req.tiimio_user.email, ['Joined team', added_to_team.sport_id])
 
   const user = await userHelper.createUserData(team.id, req.tiimio_user, teams)
 

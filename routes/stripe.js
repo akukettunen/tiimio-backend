@@ -16,6 +16,7 @@ const express = require('express');
       user_db = require('../utils/db/user')
       coconut = require('../utils/coconut/index')
       coconut_configs = require('../utils/coconut/configs')
+      mail = require('../utils/email/mailchimp')
       //TODO
       // const endpointSecret = 'whsec_Wlnv0c0BiANLlcX3ApAyVCSphmLCkMTT'
 
@@ -39,6 +40,7 @@ router.post('/customer-session-url', user, async (req, res) => {
   const num_of_cancelled_subscriptions = cancelled_subscriptions_object.data.length
   const has_had_subscription_before = num_of_subscriptions + num_of_cancelled_subscriptions > 0
   let session
+  
   if(num_of_subscriptions > 0 || !req.body.lookup_key) {
     session = await stripeHelper.portalSessionUrlByStripeId(userTeam.stripe_id)
   } else {
@@ -80,6 +82,13 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
         team_id: userTeam.team_id,
         plan_id: new_plan.id
       })
+
+      if(new_plan.is_the_best) {
+        await mail.addTagToUser(userTeam.email, ['Team owner - VIP'])
+      } else {
+        await mail.addTagToUser(userTeam.email, ['Team owner - Paid'])
+      }
+
       break;
     case 'customer.subscription.updated':
       // tämä kertoo loppuuko tilaus
@@ -96,12 +105,20 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
         team_id: userTeam.team_id,
         plan_id: plan.id
       })
+
+      if(plan.is_the_best) {
+        await mail.addTagToUser(userTeam.email, ['Team owner - VIP'])
+      } else {
+        await mail.addTagToUser(userTeam.email, ['Team owner - Paid'])
+      }
+
       break;
     // tilaus loppui
     case 'customer.subscription.deleted':
       await team_db.changeTeamPlan({
         team_id: userTeam.team_id
       })
+      await mail.addTagToUser(userTeam.email, ['Cancelled'])
       break;
     default:
       break;

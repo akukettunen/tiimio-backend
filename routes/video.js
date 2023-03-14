@@ -103,6 +103,7 @@ router.get('/:id/encoding-state', user, async (req, res) => {
   let [ video ] = await video_db.videoById(req.params.id)
 
   if(!video) throw new Error('video not found')
+  if(!video.job_id) throw new Error('job not found!')
 
   let job_data;
   let uploaded;
@@ -118,8 +119,6 @@ router.get('/:id/encoding-state', user, async (req, res) => {
 })
 
 router.get('/team/:id', user, async (req, res) => {
-  // TODO: vain oman joukkueen videot
-
   let videos = await video_db.teamVideos(req.params.id)
   let [{ uploaded_this_month }] = await video_db.uploadedThisMonth(req.params.id)
   let [{ total_video_saved }] = await video_db.uploadedTotalNotDeleted(req.params.id)
