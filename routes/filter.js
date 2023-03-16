@@ -80,31 +80,36 @@ router.get('/nosave/clip', user, async (req, res) => {
 })
 
 router.get('/:id/clip', user, async (req, res) => {
+  let nosave = req.params.nosave
+
+  // get filter data
   let [ filter ] = await filter_db.byId(req.params.id)
   let { limit, index } = req.query
 
+  // if not found throw an error
   if(!filter) throw new Error('filter not found :(')
   if(!filter.team_id) throw new Error('bad request')
 
-  let filterTagsIds = await filter_db.filterTagIds(filter.id)
-  filterTagsIds = filterTagsIds.map(t => t.tag_id)
-  
+  // get the tags ids that we are filtering for
+  let tags = await filter_db.filterTags(filter.id)
+
   let groups;
-  let tags;
   if(!filter.search_games) {
+    // get tag_groups of the groups in this team and team sport
     groups = await tagHelper.teamTagGroupIds(filter.team_id)
-    tags = await tag_db.teamTagsIdsFilter(filter.team_id, filterTagsIds)
   } else {
     groups = await tag_db.leagueGroupsIds(filter.league_id)
-    tags = await tag_db.leagueTagsIdsFilter(filter.league_id, filterTagsIds)
   }
 
+
+  // add the tags to the right group
   groups.forEach((group, i) => {
     groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
   })
 
   is_in_team(filter.team_id)
 
+  // get ids of the videos that we want
   let filterVideoIds = await filter_db.filterVideoIds(filter.id)
   filterVideoIds = filterVideoIds.map(v => v.video_id || v.game_id)
  

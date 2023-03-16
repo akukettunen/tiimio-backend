@@ -212,7 +212,7 @@ const setJoinId = (group_id, join_id) => {
   `, [join_id, group_id])
 }
 
-const teamTagsIdsFilter = (team_id, ids) => {
+const teamTagsIdsFilter = (team_id, ids, sport_id) => {
   return query(`
     SELECT tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id

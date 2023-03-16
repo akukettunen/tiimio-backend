@@ -14,10 +14,11 @@ const filterVideoIds = id => {
   `, [id])
 }
 
-const filterTagIds = id => {
+const filterTags = id => {
   return query(`
-    SELECT tag_id FROM filter_param
-    WHERE filter_id = ? AND tag_id IS NOT NUll;
+    SELECT *, tag_id as id FROM filter_param
+    LEFT JOIN tag ON tag.id = filter_param.tag_id
+    WHERE filter_id = ? AND filter_param.tag_id IS NOT NUll;
   `, [id])
 }
 
@@ -68,4 +69,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { deleteById, updateTitle, filterTagIds, filterVideoIds, batchAddFilterParamVideo, teamFilters, addFilter, byId, batchAddFilterParamClip }
+module.exports = { deleteById, updateTitle, filterTags, filterVideoIds, batchAddFilterParamVideo, teamFilters, addFilter, byId, batchAddFilterParamClip }

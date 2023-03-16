@@ -37,7 +37,7 @@ const teamTagGroupIds = async team_id => {
   let sport_groups = await tag_db.sportGroups(team.sport_id)
   let all = groups.concat(sport_groups)
 
-  return all.map(g => g.id)
+  return all
 }
 
 const getSportTagGroups = async id => {
