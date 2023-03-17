@@ -79,7 +79,7 @@ router.post('/demo/login', async (req, res) => {
 })
 
 router.post('/signin', async (req, res) => {
-  const { email, password, full_name, password_again, language } = req.body;
+  const { email, password, full_name, password_again, language, invite_code } = req.body;
   if(password !== password_again) {
     throw new Error("passwords don't match, try again!")
   }
@@ -187,7 +187,7 @@ router.post('/forgot-password/:email', async (req, res) =>  {
 
 router.post('/change-password/code', async (req, res) => {
   const { passwrd, passwrd_again, token } = req.body
-  console.log(req.body)
+
   if(!passwrd || !passwrd_again || !token) throw new Error('bad request')
   if(!passwrd || passwrd.length < 8) throw new Error('invalid password')
   if(passwrd !== passwrd_again) throw new Error("passwords don't match, try again!")

@@ -37,6 +37,33 @@ const teamUsers = team_id => {
   `, [team_id])
 }
 
+const teamInvites = team_id => {
+  return query(`
+    SELECT * FROM team_invite
+    WHERE team_id = ?;
+  `, [team_id])
+}
+
+const addInvites = vals => {
+  return query(`
+    INSERT INTO team_invite ( email, team_id, invite_code ) VALUES ?;
+  `, [vals])
+}
+
+const deleteInvite = (team_id, email) => {
+  return query(`
+    DELETE FROM team_invite
+    WHERE team_id = ? AND email = ?;
+  `, [team_id, email])
+}
+
+const teamUserAmount = (team_id) => {
+  return query(`
+    SELECT COUNT(*) as amount
+    FROM user_team WHERE team_id = ?;
+  `, [team_id])
+}
+
 const userTeamByEmailAndTeamId = ({ email, team_id }) => {
   return query(`
     SELECT * FROM user_team
@@ -79,6 +106,15 @@ const teamByJoinCode = code => {
     SELECT team.*, users FROM team
     LEFT JOIN plan ON plan.id = team.plan_id
     WHERE join_code = ?;
+  `, [code.toString()])
+}
+
+const teamByInviteCode = code => {
+  return query(`
+    SELECT team.*, users FROM team_invite
+    LEFT JOIN team ON team.id = team_invite.team_id
+    LEFT JOIN plan ON plan.id = team.plan_id
+    WHERE team_invite.invite_code = ?;
   `, [code.toString()])
 }
 
@@ -154,4 +190,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { teamsBySportIdThatDontHaveGroupNamed, teamsBySportIdThatHaveGroupNamed, allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { teamByInviteCode, deleteInvite, teamInvites, addInvites, teamUserAmount, teamsBySportIdThatDontHaveGroupNamed, teamsBySportIdThatHaveGroupNamed, allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
