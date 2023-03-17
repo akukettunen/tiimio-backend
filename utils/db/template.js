@@ -1,10 +1,10 @@
 const { query } = require('./index.js')
 
-const postTemplate = ({ template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id }) => {
+const postTemplate = ({ id, template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id }) => {
   return query(`
-    INSERT INTO button_template (template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id) 
-    VALUES (?, ?, ?, ?, ?, ?);
-  `, [template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id])
+    INSERT INTO button_template (id, template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id) 
+    VALUES (?, ?, ?, ?, ?, ?, ?);
+  `, [id, template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id])
 }
 
 const answersByVideoId = (video_id) => {
