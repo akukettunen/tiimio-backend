@@ -5,7 +5,8 @@ const createUserData = async (currentTeamId, user, teams) => {
 
   // get users teams from db
   if(!teams) teams = await team_db.userTeams(email)
-  let teamIds = teams.map(t => t.id)
+
+  let teamIds = teams.length ? teams.map(t => t.id) : []
   let isInRequestedTeam = teamIds.includes(Number(currentTeamId))
   if(!isInRequestedTeam) currentTeamId = teamIds[0]
 

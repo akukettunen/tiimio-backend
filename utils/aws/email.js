@@ -8,6 +8,40 @@ AWS.config.update({
 
 const ses = new AWS.SES({apiVersion: '2010-12-01'});
 
+const invite_to_team_email = (email, code) => {
+  const params = {
+    Destination: {
+     BccAddresses: [],
+     CcAddresses: [],
+     ToAddresses: [ email ]
+    },
+    Message: {
+     Body: {
+      Text: {
+       Charset: "UTF-8", 
+       Data: `
+          Hi!
+          
+          You have been invited to join a team in tiimi.io!
+
+          Join the team here: ${process.env.FRONTEND_BASE_URL}/#/signin?invite_code=${code}
+
+          Best regards,
+          Tiimi
+       `
+      }
+     }, 
+     Subject: {
+      Charset: "UTF-8", 
+      Data: "You have been invited to a team!"
+     }
+    },
+    Source: "Aku from Tiimi <help@tiimi.io>",
+   };
+
+   return ses.sendEmail(params).promise()
+} 
+
 const sendWelcomeEmail = (email, link) => {
   const params = {
     Destination: {
@@ -114,4 +148,4 @@ const sendRefreshEmail = (email, link, minutes, expiry) => {
      return ses.sendEmail(params).promise()
   }
 
-module.exports = { sendWelcomeEmail, sendRefreshEmail }
+module.exports = { invite_to_team_email, sendWelcomeEmail, sendRefreshEmail }

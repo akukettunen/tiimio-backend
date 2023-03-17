@@ -17,10 +17,12 @@ const db = require('../utils/db/index');
       coconut_configs = require('../utils/coconut/configs')
       join_code = require('../utils/video/join_code')
       team_helper = require('../utils/team/teamHelper')
+      email = require('../utils/aws/email')
       initialValues = require('../utils/team/initialValues')
       userHelper = require('../utils/user/userHelper')
       require('express-async-errors');
       mail = require('../utils/email/mailchimp')
+const { v4: uuidv4 } = require('uuid');
 
 router.post('/', user, async (req, res) => {
   const { team_name, sport_id } = req.body
@@ -88,9 +90,15 @@ router.post('/', user, async (req, res) => {
 })
 
 router.post('/join', user, async (req, res) => {
-  if(!req.body.join_code) throw new Error('no join code!')
+  const { join_code, invite_code } = req.body
+  if(!join_code && !invite_code) throw new Error('no join code!')
 
-  let [ team ] = await team_db.teamByJoinCode(req.body.join_code.toUpperCase())
+  let team;
+  if(join_code) [ team ] = await team_db.teamByJoinCode(join_code.toUpperCase())
+  else [ team ] = await team_db.teamByInviteCode(invite_code.toLowerCase())
+
+  
+  // get all user teams
   let teams = await team_db.userTeams(req.tiimio_user.email)
 
   if(!team) throw new Error('team not found :(')
@@ -113,7 +121,7 @@ router.post('/join', user, async (req, res) => {
   teams = teams.concat(added_to_team)
 
   // Add team joiner and sport_id tags to user
-  await mail.addTagToUser(req.tiimio_user.email, ['Joined team', added_to_team.sport_id])
+  await mail.addTagToUser(req.tiimio_user.email, ['Joined team', team.sport_id])
 
   const user = await userHelper.createUserData(team.id, req.tiimio_user, teams)
 
@@ -122,10 +130,67 @@ router.post('/join', user, async (req, res) => {
     process.env.SECRET_KEY
   )
 
+  if(invite_code) await team_db.deleteInvite( team.id,  req.tiimio_user.email)
+
   res.json({ 
     token, 
     team
   })
+})
+
+router.post('/:team_id/invite', user, is_in_team(), async (req, res) => {
+  const [team] = await team_db.teamById(req.params.team_id)
+  let [current_users] = await team_db.teamUserAmount(req.params.team_id)
+  current_users = current_users?.amount || 0
+  const allowed_users = team?.users || 0
+
+  const invitable_amount = allowed_users - current_users
+
+  const { emails } = req.body
+
+  // check that there are emails actually
+  if(!emails || !emails.length) throw new Error('No emails')
+  // check that theres room for them
+  if(invitable_amount <= 0 || invitable_amount < emails.length) throw new Error('Team full!')
+
+  // validate the emails
+  var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  emails.forEach(email => {
+    if(!email.match(mailformat)) throw new Error(`Invalid email included: ${email}`)
+  })
+
+  const values = emails.map(e => {
+    return [
+      e,
+      team.id,
+      uuidv4()
+    ]
+  })
+
+  await team_db.addInvites(values)
+
+  let proms = values.map(v => {
+    return email.invite_to_team_email(v[0], v[2])
+  })
+
+  await Promise.all(proms)
+
+  let invites = await team_db.teamInvites(req.params.team_id)
+
+  res.json(invites)
+  // todo invite people
+})
+
+router.get('/:team_id/invite', user, is_in_team(), async (req, res) => {
+  const invites = await team_db.teamInvites(req.params.team_id)
+
+  res.json(invites)
+})
+
+router.delete('/:team_id/invite/:email', user, is_in_team(), async (req, res) => {
+  await team_db.deleteInvite(req.params.team_id, req.params.email)
+
+  res.json('ok!')
 })
 
 router.get('/:id/users', user, async (req, res) => {
