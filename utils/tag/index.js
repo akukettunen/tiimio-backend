@@ -156,12 +156,11 @@ const getLeagueTagGroups = async id => {
 }
 
 const groupById = async group_id => {
-  let [group] = await tag_db.groupById(group_id)
+  let [ group ] = await tag_db.groupById(group_id)
   let mirrors = await tag_db.groupMirrors(group_id)
   let tags = await tag_db.groupTags(group_id)
-
-  group.show_in_join_w_group_tags = JSON.parse(group.show_in_join_w_group_tags).filter(t => t != null)
-
+  group.show_in_join_w_group_tags = JSON.parse(group.show_in_join_w_group_tags)
+  group.show_in_join_w_group_tags = group.show_in_join_w_group_tags.filter(t => t != null)
   return {...group, mirrors, tags}
 }
 

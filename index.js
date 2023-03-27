@@ -78,6 +78,10 @@ app.get('/', (req, res) => {
     res.send('<h1>Welcome to tiimi api!</h1>')
 })
 
+app.get('/ping', (req, res) => {
+    res.json('pong')
+})
+
 app.use(errorMiddleware)
 
 var port = process.env.PORT || 4040;
