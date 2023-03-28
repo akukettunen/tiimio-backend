@@ -64,6 +64,8 @@ router.post('/', user, async (req, res) => {
     stripe_id: stripeCustomer.id
   })
 
+  await email.sendAkuAnEmail()
+
   try {
     await time_db.batchAddTimename(insertId, initial['timenames'])
   } catch(err) {

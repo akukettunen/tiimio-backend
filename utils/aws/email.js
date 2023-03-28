@@ -146,6 +146,35 @@ const sendRefreshEmail = (email, link, minutes, expiry) => {
      };
   
      return ses.sendEmail(params).promise()
-  }
+}
 
-module.exports = { invite_to_team_email, sendWelcomeEmail, sendRefreshEmail }
+const sendAkuAnEmail = () => {
+  const params = {
+    Destination: {
+     BccAddresses: [],
+     CcAddresses: [],
+     ToAddresses: [ 'aku@kettunen.com' ]
+    },
+    Message: {
+     Body: {
+      Text: {
+       Charset: "UTF-8", 
+       Data: `
+          New team created!
+
+          - tiimi.io
+      `
+      }
+     }, 
+     Subject: {
+      Charset: "UTF-8", 
+      Data: "New tiimi.io team created!"
+     }
+    }, 
+    Source: "Tiimi <help@tiimi.io>",
+   };
+
+   return ses.sendEmail(params).promise()
+}
+
+module.exports = { sendAkuAnEmail, invite_to_team_email, sendWelcomeEmail, sendRefreshEmail }
