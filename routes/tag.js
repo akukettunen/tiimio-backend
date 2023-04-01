@@ -335,8 +335,8 @@ router.delete('/tag/:tag_id', user, async (req, res) => {
   if(!tag) throw new Error('tag not found')
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
   if(!group) throw new Error('group not found')
-
-  if(group.league_id || (group.sport_id && !tag.team_id) || group.immutable) inline_tiimi_admin(req)
+  console.log(group)
+  if(group.league_id || (group.sport_id && !tag.team_id)) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
 

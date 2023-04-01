@@ -13,7 +13,7 @@ const getTeamTagGroups = async id => {
 
   let mirrors = await tag_db.teamMirrors(id)
   let tags = await tag_db.teamTags(id)
-  let sportTags = await tag_db.sportTags(team.sport_id)
+  let sportTags = await tag_db.teamSportTags(team.sport_id, team.id)
   tags = tags.concat(sportTags)
 
   groups.forEach((group, i) => {
