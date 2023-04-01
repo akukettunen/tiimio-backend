@@ -378,6 +378,13 @@ const addGroupJoins = (group_id, join_ids) => {
   `)
 }
 
+const tagsById = ids => {
+  return query(`
+    SELECT * FROM tag
+    WHERE id IN (?);
+  `, [ids])
+}
+
 const tagById = id => {
   return query(`
     SELECT * FROM tag
@@ -413,4 +420,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

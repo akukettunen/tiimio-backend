@@ -33,65 +33,77 @@ router.post('/', user, async (req, res) => {
   res.json(filter)
 })
 
-router.get('/nosave/clip', user, async (req, res) => {
-  let filterData = JSON.parse(req.query.filter)
-  let { index, limit } = req.query
-  let filter = filterData
+// router.get('/nosave/clip', user, async (req, res) => {
+//   let filterData = JSON.parse(req.query.filter)
+//   let { index, limit } = req.query
+//   let filter = filterData
 
-  let filterTagsIds = filterData.tags
+//   let filterTagsIds = filterData.tags
 
-  let groups;
-  let tags;
-  if(!filter.search_games) {
-    groups = await tagHelper.teamTagGroupIds(filter.team_id)
-    tags = await tag_db.teamTagsIdsFilter(filter.team_id, filterTagsIds)
-  } else {
-    groups = await tag_db.leagueGroupsIds(filter.league_id)
-    tags = await tag_db.leagueTagsIdsFilter(filter.league_id, filterTagsIds)
-  }
+//   let groups;
+//   let tags;
+//   if(!filter.search_games) {
+//     groups = await tagHelper.teamTagGroupIds(filter.team_id)
+//     tags = await tag_db.teamTagsIdsFilter(filter.team_id, filterTagsIds)
+//   } else {
+//     groups = await tag_db.leagueGroupsIds(filter.league_id)
+//     tags = await tag_db.leagueTagsIdsFilter(filter.league_id, filterTagsIds)
+//   }
 
 
-  groups.forEach((group, i) => {
-    groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
-  })
+//   groups.forEach((group, i) => {
+//     groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
+//   })
 
-  is_in_team(filter.team_id)
+//   is_in_team(filter.team_id)
 
-  let filterVideoIds = filter.videos
+//   let filterVideoIds = filter.videos
  
-  let videos;
-  if(!filterVideoIds || !filterVideoIds.length) {
-    // all videos so let's get them
-    if(!filter.search_games) videos = await video_db.teamVideosLimits(filter.team_id, Number(index), Number(limit))
-    else videos = await video_db.leagueGamesLimits(filter.league_id, Number(index), Number(limit))
-  } else {
-    if(!filter.search_games) videos = await video_db.teamVideosByIdsLimits(filter.team_id, filterVideoIds, Number(index), Number(limit))
-    else videos = await video_db.teamGamesByIdsLimits(filter.league_id, filterVideoIds, Number(index), Number(limit))
-  }
+//   let videos;
+//   if(!filterVideoIds || !filterVideoIds.length) {
+//     // all videos so let's get them
+//     if(!filter.search_games) videos = await video_db.teamVideosLimits(filter.team_id, Number(index), Number(limit))
+//     else videos = await video_db.leagueGamesLimits(filter.league_id, Number(index), Number(limit))
+//   } else {
+//     if(!filter.search_games) videos = await video_db.teamVideosByIdsLimits(filter.team_id, filterVideoIds, Number(index), Number(limit))
+//     else videos = await video_db.teamGamesByIdsLimits(filter.league_id, filterVideoIds, Number(index), Number(limit))
+//   }
 
-  // videos = videos.map(video => video.id)
-  let clipsPromises = videos.map(video => {
-    return clipHelper.videoClips(video, groups)
-  })
+//   // videos = videos.map(video => video.id)
+//   let clipsPromises = videos.map(video => {
+//     return clipHelper.videoClips(video, groups)
+//   })
 
-  let allClips = await Promise.all(clipsPromises)
+//   let allClips = await Promise.all(clipsPromises)
 
-  res.json({ filter, clips: allClips })
-})
+//   res.json({ filter, clips: allClips })
+// })
 
 router.get('/:id/clip', user, async (req, res) => {
-  let nosave = req.params.nosave
+  let nosave = req.query.nosave
+  let filter;
 
+  if(nosave) {
+    filter = JSON.parse(req.query.filter)
+  } else {
+    [ filter ] = await filter_db.byId(req.params.id)
+  }
+
+  console.log(filter)
   // get filter data
-  let [ filter ] = await filter_db.byId(req.params.id)
   let { limit, index } = req.query
 
   // if not found throw an error
   if(!filter) throw new Error('filter not found :(')
   if(!filter.team_id) throw new Error('bad request')
 
-  // get the tags ids that we are filtering for
-  let tags = await filter_db.filterTags(filter.id)
+  let tags;
+  if(!nosave) {
+    // get the tags ids that we are filtering for
+    tags = await filter_db.filterTags(filter.id)
+  } else {
+    tags = await tag_db.tagsById(filter.tags)
+  }
 
   let groups;
   if(!filter.search_games) {

@@ -21,6 +21,7 @@ const videoClips = (video, groups) => {
   return new Promise((resolve, reject) => {
     clip_db.videoClips(video.id)
       .then(clips => {
+        // all clips of the video
         clips = clips.map(c => {
           return {
             ...c,
@@ -28,6 +29,7 @@ const videoClips = (video, groups) => {
             points: c.points ? JSON.parse(c.points).filter(p => !!p.id) : []
           }
         }).filter(clip => {
+          // filter all of the video clips
           return clipIsIn(clip, groups)
         })
 
@@ -44,12 +46,11 @@ const clipIsIn = (clip, groups) => {
   let isIn = true;
   groups.forEach(group => {
     let tagIds = group.tags.map(t => t.id)
-    let clipTagIds = clip.tags.map(t => t.id)
+    let clipTagIds = clip.tags.filter(t => t.group_id == group.id).map(t => t.id)
 
     const hasJoin = contains(tagIds, clipTagIds)
 
     if(!hasJoin) isIn = false;
-
     return
   })
 
@@ -57,7 +58,11 @@ const clipIsIn = (clip, groups) => {
 }
 
 const contains = (tagIds, clipTagIds) => {
+  // jos filtterissä ei ole tageja groupissa niin klipin tagit groupissa ei vaikuta
   if(!tagIds || !tagIds.length) return true
+  if(!clipTagIds || !clipTagIds.length) return false
+  // jos filtterissä on groupissa tag ja clipissä ei ole tagia tästä groupista palautetaan false
+  // tagIds: 
 
   return tagIds.some(element => {
     return clipTagIds.includes(element);
