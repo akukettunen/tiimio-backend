@@ -109,13 +109,21 @@ router.get('/:id/encoding-state', user, async (req, res) => {
   let uploaded;
   switch(video.service) {
     case 'coconut':
-      job_data = await coconut.jobState(video.job_id)
+      try {
+        job_data = await coconut.jobState(video.job_id)
+      } catch(err) {
+        console.log('Encoding-state-err', err)
+      }
       break;
     default:
       throw new Error('job not found')
   }
 
-  res.json({...{...job_data, id: null}, ...video, uploaded})
+  try {
+    res.json({...{...job_data, id: null}, ...video, uploaded})
+  } catch(err) {
+    console.log('Encoding state err down', err)
+  }
 })
 
 router.get('/team/:id', user, async (req, res) => {
