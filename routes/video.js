@@ -100,30 +100,34 @@ router.post('/', user, async (req, res) => {
 })
 
 router.get('/:id/encoding-state', user, async (req, res) => {
-  let [ video ] = await video_db.videoById(req.params.id)
+  // let [ video ] = await video_db.videoById(req.params.id)
 
-  if(!video) throw new Error('video not found')
-  if(!video.job_id) throw new Error('job not found!')
+  // if(!video) throw new Error('video not found')
+  // if(!video.job_id) throw new Error('job not found!')
 
-  let job_data;
-  let uploaded;
-  switch(video.service) {
-    case 'coconut':
-      try {
-        job_data = await coconut.jobState(video.job_id)
-      } catch(err) {
-        console.log('Encoding-state-err', err)
-      }
-      break;
-    default:
-      throw new Error('job not found')
-  }
+  // let job_data;
+  // let uploaded;
+  // switch(video.service) {
+  //   case 'coconut':
+  //     try {
+  //       console.log(video.job_id)
+  //       job_data = await coconut.jobState(video.job_id)
+  //       console.log('jear')
+  //     } catch(err) {
+  //       console.log('Encoding-state-err', err)
+  //     }
+  //     break;
+  //   default:
+  //     throw new Error('job not found')
+  // }
 
-  try {
-    res.json({...{...job_data, id: null}, ...video, uploaded})
-  } catch(err) {
-    console.log('Encoding state err down', err)
-  }
+  // try {
+  //   res.json({...{...job_data, id: null}, ...video, uploaded})
+  // } catch(err) {
+  //   console.log('Encoding state err down', err)
+  // }
+
+  res.json({ status: 'removed functionality' })
 })
 
 router.get('/team/:id', user, async (req, res) => {
