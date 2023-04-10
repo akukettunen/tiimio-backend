@@ -81,6 +81,7 @@ const videoByClipId = id => {
       *,
       clip.id AS id,
       clip.title as title,
+      clip.description as description,
       video.id AS video_id
     FROM clip
     JOIN video ON clip.video_id = video.id
