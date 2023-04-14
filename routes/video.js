@@ -19,6 +19,7 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
       ngrok = require('ngrok');
       hook_helper = require('../utils/video/hooks')
       require('express-async-errors');
+      ytdl = require('ytdl-core');
 
 router.post('/', user, async (req, res) => {
   console.log(req.body)
@@ -97,6 +98,31 @@ router.post('/', user, async (req, res) => {
   let [ video ] = await video_db.videoById(id)
 
   res.send({ video, job })
+})
+
+router.put('/yt', user, async (req, res) => {
+  const { url } = req.body
+  const is_url = ytdl.validateURL(url)
+
+  if(!is_url) throw new Error('Invalid url')
+
+  const info = await ytdl.getInfo(url, [])
+  const widths = info.formats.filter(f => f.container == 'mp4').map(f => {return { w: f.width, label: f.qualityLabel }})
+
+  let d_url
+  if(widths.find(f => f.label == '720p')) {
+    let i = widths.findIndex(f => f.label == '720p')
+    d_url = info.formats[i]?.url
+  } else if(widths.find(f => f.label == '1080p')) {
+    let i = widths.findIndex(f => f.label == '1080p')
+    d_url = info.formats[i]?.url
+  } else if(widths.find(f => f.label == '480p')) {
+    let i = widths.findIndex(f => f.label == '480p')
+    d_url = info.formats[i]?.url
+  }
+  console.log({ url: d_url, title: info.videoDetails.title || 'No title' })
+  if(!d_url) throw new Error("couldn't fetch donwload url")
+  res.json({ url: d_url, title: info.videoDetails.title || 'No title' })
 })
 
 router.get('/:id/encoding-state', user, async (req, res) => {
