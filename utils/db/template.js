@@ -77,4 +77,27 @@ const sportTemplates = (id) => {
   `, [id])
 }
 
-module.exports = { deleteAnswersByVideoId, postAnswers, answersByVideoId, formItemsByButtonTemplateId, itemsByButtonTemplateId, byId, postTemplateFormItems, postTemplateItems, sportTemplates, postTemplate, deleteTemplate }
+const sportTemplateItems = (id) => {
+  return query(`
+    SELECT button_template_item.* FROM button_template_item
+    LEFT JOIN button_template ON button_template.id = button_template_item.button_template_id
+    WHERE button_template.sport_id = ?;
+  `, [id])
+}
+
+const sportTemplateRules = (id) => {
+  return query(`
+    SELECT rule.* FROM rule
+    LEFT JOIN button_template ON button_template.id = rule.button_template_id
+    WHERE button_template.sport_id = ?;
+  `, [id])
+}
+
+const teamTemplates = (id) => {
+  return query(`
+    SELECT * FROM button_template 
+    WHERE team_id = ?;
+  `, [id])
+}
+
+module.exports = { sportTemplateRules, sportTemplateItems, teamTemplates, deleteAnswersByVideoId, postAnswers, answersByVideoId, formItemsByButtonTemplateId, itemsByButtonTemplateId, byId, postTemplateFormItems, postTemplateItems, sportTemplates, postTemplate, deleteTemplate }

@@ -28,6 +28,21 @@ const groupById = id => {
   `, [id])
 }
 
+const tagGroupIdByNameAndTeamId = ({ name, team_id }) => {
+  return query(`
+    SELECT id FROM tag_group
+    WHERE group_name = ? AND team_id = ?;
+  `, [ name, team_id ])
+}
+
+const tagIdByNameAndTeamId = ({ name, team_id }) => {
+  return query(`
+    SELECT tag.id as id FROM tag
+    LEFT JOIN tag_group ON tag_group.id = tag.group_id
+    WHERE tag_name = ? AND tag_group.team_id = ?;
+  `, [ name, team_id ])
+}
+
 const leagueGroups = league_id => {
   return query(`
     SELECT 
@@ -52,7 +67,7 @@ const sportGroups = sport_id => {
       ) as show_in_join_w_group_tags
     FROM tag_group
     LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
-    WHERE sport_id = ?
+    WHERE sport_id = ? AND team_id IS NULL
     GROUP BY tag_group.id
     ORDER BY position;
   `, [sport_id])
@@ -199,9 +214,18 @@ const sportTags = sport_id => {
   return query(`
     SELECT tag.*, original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
-    WHERE tag_group.sport_id = ?
+    WHERE tag_group.sport_id = ? AND tag_group.team_id IS NULL
     ORDER BY position;
   `, [sport_id])
+}
+
+const tagsInGroups = (sport_id, ids) => {
+  return query(`
+    SELECT tag.*, original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
+    LEFT JOIN tag_group ON tag_group.id = tag.group_id
+    WHERE tag_group.id IN (?) AND sport_id = ? AND tag_group.team_id IS NULL
+    ORDER BY position;
+  `, [ids, sport_id, true])
 }
 
 const teamSportTags = (sport_id, team_id) => {
@@ -420,4 +444,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

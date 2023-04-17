@@ -7,14 +7,14 @@ const getTeamTagGroups = async id => {
 
   // Get teams tags and handle them
   let groups = await tag_db.teamGroups(id)
-  let sport_groups = await tag_db.sportGroups(team.sport_id)
-  
-  groups = groups.concat(sport_groups)
+
+  // let sport_groups = await tag_db.sportGroups(team.sport_id)  
+  // groups = groups.concat(sport_groups)
 
   let mirrors = await tag_db.teamMirrors(id)
   let tags = await tag_db.teamTags(id)
-  let sportTags = await tag_db.teamSportTags(team.sport_id, team.id)
-  tags = tags.concat(sportTags)
+  // let sportTags = await tag_db.teamSportTags(team.sport_id, team.id)
+  // tags = tags.concat(sportTags)
 
   groups.forEach((group, i) => {
     groups[i] = {...group, mirrors: mirrors.filter(m => m.tag_group_id == group.id)}

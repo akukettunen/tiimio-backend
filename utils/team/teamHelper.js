@@ -22,10 +22,10 @@ const addInitialTags = async (team_id, sport_id) => {
   group_names = groups.map(g => g.group_name)
 
   // add initial groups for the theam and make them immutable
-  if(group_names && group_names.length) await tag_db.batchAddGroups(group_names, team_id, true)
+  if(group_names && group_names.length) await tag_db.batchAddGroups(group_names, team_id, false)
   let teamGroups = await tag_db.teamGroups(team_id)
 
-  const initialTags = await tag_db.sportTags(sport_id)
+  const initialTags = await tag_db.tagsInGroups(sport_id, groups.map(g => g.id))
 
   let tagPromises = teamGroups.map(group => {
     let originalGroupId = groups.find(f => f.group_name == group.group_name)?.id

@@ -14,12 +14,8 @@ const express = require('express')
       require('express-async-errors');
       const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware');
 
-router.post('/sport/:sport_id', tiimi_admin, async (req, res) => {
+router.post('/', tiimi_admin, async (req, res) => {
   const { id, template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id, rules, form_items, items, tag_ig, tag_group_id } = req.body;
-
-  if(id) {
-    await template_db.deleteTemplate(id)
-  }
 
   // Validate the request body
   if(!template_name) throw new Error('template name misssing')
@@ -28,6 +24,10 @@ router.post('/sport/:sport_id', tiimi_admin, async (req, res) => {
     throw new Error('bad request')
   }
 
+  if(id) {
+    await template_db.deleteTemplate(id)
+  }
+  
   const { insertId } = await template_db.postTemplate(req.body)
   const rule_vals = rules.map((r, index) => { return {...r, position: index}})
   if(rule_vals && rule_vals.length) await rule_db.saveSportRules({ rules: rule_vals, button_template_id: insertId })
@@ -80,7 +80,7 @@ router.get('/:id', user, async (req, res) => {
 
 router.get('/team/:team_id/video/:video_id', user, is_in_team(), async (req, res) => {
   const [ team ] = await team_db.teamById(req.params.team_id)
-  const templates = await template_db.sportTemplates(team.sport_id)
+  const templates = await template_db.teamTemplates(team.id)
 
   const promises = templates.map(t => {
     return templateHelper.getTemplateById(t.id, req.params.video_id)

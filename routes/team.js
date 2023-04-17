@@ -17,6 +17,7 @@ const db = require('../utils/db/index');
       coconut_configs = require('../utils/coconut/configs')
       join_code = require('../utils/video/join_code')
       team_helper = require('../utils/team/teamHelper')
+      template_helper = require('../utils/template/templateHelper')
       email = require('../utils/aws/email')
       initialValues = require('../utils/team/initialValues')
       userHelper = require('../utils/user/userHelper')
@@ -72,11 +73,17 @@ router.post('/', user, async (req, res) => {
     throw new Error(err)
   }
 
-  // try {
-  //   await team_helper.addInitialTags(insertId, sport_id)
-  // } catch(err) {
-  //   throw new Error(err)
-  // }
+  try {
+    await team_helper.addInitialTags(insertId, sport_id)
+  } catch(err) {
+    throw new Error(err)
+  }
+
+  try {
+    await template_helper.copySportTemplatesToTeam(sport_id, insertId)
+  } catch(e) {
+    throw new Error(e)
+  }
 
   // Add team owner tag to user
   await mail.addTagToUser(req.tiimio_user.email, ['Team owner - Free', sport_id])
