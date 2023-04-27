@@ -104,11 +104,14 @@ router.post('/', user, async (req, res) => {
 router.put('/yt', user, async (req, res) => {
   const { url } = req.body
   const is_url = ytdl.validateURL(url)
-
   if(!is_url) throw new Error('Invalid url')
 
+  console.log('herre')
   const info = await ytdl.getInfo(url, [])
+  console.log('jere')
+
   const widths = info.formats.filter(f => f.container == 'mp4').map(f => {return { w: f.width, label: f.qualityLabel }})
+  console.log(is_url)
 
   let d_url
   if(widths.find(f => f.label == '720p')) {
