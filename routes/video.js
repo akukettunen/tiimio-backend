@@ -30,6 +30,7 @@ router.post('/', user, async (req, res) => {
 
   let url;
   if(process.env.ENVIRONMENT == 'deve') {
+  // if(true) {
     try {
       url = await ngrok.connect({
         authtoken: '261uxjtMzpNTQCdpidogLCyOjx7_4K8Uyr8va1sTK4uHtpurq',
