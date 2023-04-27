@@ -1,11 +1,11 @@
 const { query } = require('./index.js')
 
-const postVideo = ({ duration, id, title, description, original_url, original_type, s3_key, original_size, team_id, uploader, job_id, service }) => {
+const postVideo = ({ duration, id, title, description, original_url, original_type, s3_key, original_size, team_id, uploader, job_id, service, sample_video, encoded }) => {
   return query(`
     INSERT INTO video
-    (id, title, description, original_url, original_type, original_size, s3_key, uploader, team_id, encoded, uploaded, job_id, service, duration)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, false, NOW(), ?, ?, ?);
-  `, [ id, title, description, original_url, original_type, original_size, s3_key, uploader, team_id, job_id, service, duration ])
+    (id, title, description, original_url, original_type, original_size, s3_key, uploader, team_id, encoded, uploaded, job_id, service, duration, sample_video)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?);
+  `, [ id, title, description, original_url, original_type, original_size, s3_key, uploader, team_id, encoded || 0, job_id, service, duration, sample_video ])
 }
 
 const planByTeamId = id => {
