@@ -12,7 +12,8 @@ const userTeams = email => {
       league_admin, league_id, league_name, disable_times, team.sport_id, sport_name, team_admin, 
       team_name, stripe_id, plan.short_name, team_orderer, plan.full_name, 
       plan.id as plan_id, plan.upload_hours_per_month, plan.total_hours_saved, 
-      plan.is_the_freemium, plan.is_the_best, users, season_start_month
+      plan.is_the_freemium, plan.is_the_best, users, season_start_month,
+      sport.times_available as sport_times_available
     FROM user_team
     LEFT JOIN team ON user_team.team_id = team.id
     LEFT JOIN plan ON team.plan_id = plan.id
