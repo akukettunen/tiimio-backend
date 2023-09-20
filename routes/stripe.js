@@ -73,7 +73,6 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
   // }
   console.log(event.type)
 
-  res.send('ok!')
   switch(event.type) {
     // tilausta jatkettu tai peruutettu
     case 'customer.subscription.created':
@@ -116,13 +115,21 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
     // tilaus loppui
     case 'customer.subscription.deleted':
       await team_db.changeTeamPlan({
-        team_id: userTeam.team_id
+        team_id: userTeam.team_id,
+        plan_id: 1
       })
       await mail.addTagToUser(userTeam.email, ['Cancelled'])
       break;
     default:
       break;
+
+    // MUUT
+    /*
+      customer.subscription.trial_will_end	
+    */
   }
+
+  res.send('ok!');
 })
 
 router.get('/team/:id', async (req, res) => {

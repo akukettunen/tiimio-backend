@@ -31,6 +31,12 @@ router.get('/team/:team_id', async (req, res) => {
   res.json({ videos: parsed_videos })
 })
 
+router.get('/:id/graphics', async (req, res) => {
+  const { Item } = await clip_db.getClipGraphics(req.params.id)
+
+  res.json( Item?.Item )
+})
+
 router.get('/:id', user, async (req, res) => {
   const [raw_clip] = await clip_db.clipById(req.params.id)
   const clip = await clip_helper.clipById(req.params.id, raw_clip?.game_id)
