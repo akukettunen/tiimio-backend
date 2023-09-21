@@ -20,7 +20,7 @@ const jobDone = async job => {
   const [ { uploaded_this_month } ] = await video_db.uploadedThisMonth(video.team_id)
   const [ team ] = await team_db.teamById(video.team_id)
   const threshold_hours = team.upload_hours_per_month
-  console.log(job.data.outputs)
+
   const [thumb_url, lazy_thumb_url] = job.data.outputs
     .filter(output => output.type == 'image')
     .sort((a, b) => {
