@@ -33,7 +33,7 @@ router.get('/team/:team_id', async (req, res) => {
 
 router.get('/:id/graphics', async (req, res) => {
   const { Item } = await clip_db.getClipGraphics(req.params.id)
-
+  console.log(Item?.Item)
   res.json( Item?.Item )
 })
 
@@ -145,7 +145,7 @@ router.post('/', user, async (req, res, next) => {
 
 router.put('/:id/point', user, async (req, res) => {
   const { points } = req.body;
-  console.log(points)
+
   if(!points || !points.length) throw new Error('bad request')
 
   await map_db.deleteClipPoints(req.params.id)
@@ -154,6 +154,23 @@ router.put('/:id/point', user, async (req, res) => {
   let clip = await clip_helper.clipById(req.params.clip_id)
 
   res.json({ clip })
+})
+
+router.put('/:id/range', user, async (req, res) => {
+  const { starttime, endtime } = req.body;
+
+  if((!starttime && starttime !== 0) || !endtime) throw new Error('No starttime or endtime')
+
+  await clip_db.putClipStarttimeEndtimeIspoint({
+    starttime,
+    endtime,
+    is_point: false,
+    clip_id: req.params.id
+  })
+  
+  const [ clip ] = await clip_db.clipById(req.params.id)
+
+  res.json(clip)
 })
 
 // router.put('/:id', user, async (req, res) => {

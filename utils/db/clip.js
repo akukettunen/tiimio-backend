@@ -234,6 +234,14 @@ const putClipTitle =( {id, title}) => {
   `, [ title, id ])
 }
 
+const putClipStarttimeEndtimeIspoint = ({ starttime, endtime, is_point, clip_id }) => {
+  return query(`
+    UPDATE clip
+    SET starttime = ?, endtime = ?, is_point = ?
+    WHERE id = ?;
+  `, [ starttime, endtime, is_point, clip_id ])
+}
+
 const putRule = rule => {
   return query(`
     UPDATE clipper_rule
@@ -249,4 +257,4 @@ const postRule = rule => {
   `, [ rule.if_rule, rule.then_rule, rule.when_rule, rule.else_rule ])
 }
 
-module.exports = { getClipGraphics, postClipGraphics, putClipTitle, gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+module.exports = { putClipStarttimeEndtimeIspoint, getClipGraphics, postClipGraphics, putClipTitle, gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
