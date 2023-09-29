@@ -20,7 +20,7 @@ const sessionById = async id => {
 // Huh?
 const customerById = async id => {
   const customer = await stripe.customers.retrieve(
-    'cus_Ku7r2iRWZe1anB'
+    id
   );
 
   return customer
@@ -57,9 +57,8 @@ const checkoutSessionUrlByStripeId = async (id, lookup_key, has_subscribed_befor
       {
         price: lookup_key,
         quantity: 1
-      },
+      }
     ],
-    // todo ??
     customer: id,
     mode: 'subscription',
     success_url: process.env.FRONTEND_BASE_URL + '/#/refresh?session_id={CHECKOUT_SESSION_ID}',

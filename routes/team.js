@@ -35,11 +35,13 @@ router.post('/', user, async (req, res) => {
 
   const initial = initialValues[sport_id]()
 
-  const [{ planId }] = await query(`
-    SELECT id AS planId 
-    FROM plan
-    WHERE is_the_freemium = true;
-  `)
+  // const [{ planId }] = await query(`
+  //   SELECT id AS planId 
+  //   FROM plan
+  //   WHERE is_the_freemium = true;
+  // `)
+
+  const planId = 0;
 
   const { insertId } = await team_db.createTeam({
     sportId: sport_id,

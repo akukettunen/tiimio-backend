@@ -17,9 +17,9 @@ const jobDone = async job => {
 //   }
 // }
   const [ video ] = await video_db.videoByJobId(job.job_id)
-  const [ { uploaded_this_month } ] = await video_db.uploadedThisMonth(video.team_id)
+  const [ { total_video_saved } ] = await video_db.uploadedTotalNotDeleted(video.team_id)
   const [ team ] = await team_db.teamById(video.team_id)
-  const threshold_hours = team.upload_hours_per_month
+  const threshold_hours = team.total_hours_saved
 
   const [thumb_url, lazy_thumb_url] = job.data.outputs
     .filter(output => output.type == 'image')
@@ -41,7 +41,7 @@ const jobDone = async job => {
   let { duration_ts, duration } = videos[0].metadata.streams[0]
   duration = parseFloat(duration)
 
-  const validated = uploaded_this_month < (threshold_hours * 60 * 60)
+  const validated = total_video_saved < (threshold_hours * 60 * 60)
 
   const params = {
     duration,
@@ -53,7 +53,7 @@ const jobDone = async job => {
     mp4_s3_url
   }
 
-  if(!validated) throw new Error('Upload hours exceeded for this month!')
+  if(!validated) throw new Error('Upload hours exceeded!')
 
   try {
     await video_db.videoDone(params)
