@@ -18,8 +18,13 @@ const generateJoinCode = async (num = 6) => {
 }
 
 const addInitialTags = async (team_id, sport_id) => {
+  console.log('te')
   let groups = await tag_db.sportGroups(sport_id)
   group_names = groups.map(g => g.group_name)
+
+  if(!groups || !groups.length) return 
+
+  console.log('te')
 
   // add initial groups for the theam and make them immutable
   if(group_names && group_names.length) await tag_db.batchAddGroups(group_names, team_id, false)

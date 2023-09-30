@@ -44,7 +44,7 @@ router.post('/customer-session-url', user, async (req, res) => {
   if(num_of_subscriptions > 0 || !req.body.lookup_key) {
     session = await stripeHelper.portalSessionUrlByStripeId(userTeam.stripe_id)
   } else {
-    session = await stripeHelper.checkoutSessionUrlByStripeId(userTeam.stripe_id, req.body.lookup_key, has_had_subscription_before)
+    session = await stripeHelper.checkoutSessionUrlByStripeId(userTeam.stripe_id, req.body.lookup_key, has_had_subscription_before, num_of_subscriptions)
   }
 
   res.json({
@@ -77,6 +77,7 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
     // tilausta jatkettu tai peruutettu
     case 'customer.subscription.created':
       let [ new_plan ] = await team_db.planByStripeId(event.data.object.items.data[0].price.id)
+      console.log('Created: ', new_plan)
       await team_db.changeTeamPlan({
         team_id: userTeam.team_id,
         plan_id: new_plan.id
@@ -100,6 +101,8 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
       // console.log(event.data.object.items.data[0].price)
 
       let [ plan ] = await team_db.planByStripeId(event.data.object.items.data[0].price.id)
+
+      console.log('Updated ', plan)
       await team_db.changeTeamPlan({
         team_id: userTeam.team_id,
         plan_id: plan.id
@@ -114,6 +117,7 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
       break;
     // tilaus loppui
     case 'customer.subscription.deleted':
+      console.log('Deleted')
       await team_db.changeTeamPlan({
         team_id: userTeam.team_id,
         plan_id: 1

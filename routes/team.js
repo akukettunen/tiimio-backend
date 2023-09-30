@@ -41,7 +41,7 @@ router.post('/', user, async (req, res) => {
   //   WHERE is_the_freemium = true;
   // `)
 
-  const planId = 0;
+  const planId = 1;
 
   const { insertId } = await team_db.createTeam({
     sportId: sport_id,

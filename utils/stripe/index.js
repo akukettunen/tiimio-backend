@@ -50,7 +50,7 @@ const portalSessionUrlByStripeId = async id => {
   });
 }
 
-const checkoutSessionUrlByStripeId = async (id, lookup_key, has_subscribed_before) => {
+const checkoutSessionUrlByStripeId = async (id, lookup_key, has_subscribed_before, current_subscriptions_amount = 0) => {
   return await stripe.checkout.sessions.create({
     billing_address_collection: 'auto',
     line_items: [
@@ -61,12 +61,12 @@ const checkoutSessionUrlByStripeId = async (id, lookup_key, has_subscribed_befor
     ],
     customer: id,
     mode: 'subscription',
-    success_url: process.env.FRONTEND_BASE_URL + '/#/refresh?session_id={CHECKOUT_SESSION_ID}',
+    success_url: process.env.FRONTEND_BASE_URL + `/#/refresh?fanfare=${current_subscriptions_amount <= 0}&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: process.env.FRONTEND_BASE_URL + '/#/plans',
     'customer_update[address]': 'auto',
     allow_promotion_codes: 'true',
     subscription_data: {
-      trial_period_days: has_subscribed_before ? 0 : 14
+      trial_period_days: 14
     },
     automatic_tax: { enabled: true }
   });
