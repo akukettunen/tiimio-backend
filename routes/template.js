@@ -15,14 +15,14 @@ const express = require('express')
       const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware');
 
 router.post('/', tiimi_admin, async (req, res) => {
-  const { id, template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id, rules, form_items, items, tag_ig, tag_group_id } = req.body;
+  let { id, template_name, save_on_map_click, save_on_tag_click, immutable, team_id, sport_id, rules, form_items, items, tag_ig, tag_group_id } = req.body;
 
   // Validate the request body
   if(!template_name) throw new Error('template name misssing')
 
   if(save_on_map_click == null) save_on_map_click = false
   if(save_on_tag_click == null) save_on_tag_click = false
-  
+
   if (save_on_map_click == null || save_on_tag_click == null || immutable == null) {
     throw new Error('bad request')
   }
@@ -31,7 +31,7 @@ router.post('/', tiimi_admin, async (req, res) => {
     await template_db.deleteTemplate(id)
   }
   
-  const { insertId } = await template_db.postTemplate(req.body)
+  const { insertId } = await template_db.postTemplate({ ...req.body, save_on_map_click, save_on_tag_click })
   const rule_vals = rules.map((r, index) => { return {...r, position: index}})
   if(rule_vals && rule_vals.length) await rule_db.saveSportRules({ rules: rule_vals, button_template_id: insertId })
 
