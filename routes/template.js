@@ -20,6 +20,9 @@ router.post('/', tiimi_admin, async (req, res) => {
   // Validate the request body
   if(!template_name) throw new Error('template name misssing')
 
+  if(save_on_map_click == null) save_on_map_click = false
+  if(save_on_tag_click == null) save_on_tag_click = false
+  
   if (save_on_map_click == null || save_on_tag_click == null || immutable == null) {
     throw new Error('bad request')
   }
