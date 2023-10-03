@@ -1,7 +1,34 @@
 const team_db = require('../db/team')
 const tag_db = require('../db/tag')
+const mail = require('../email/mailchimp')
 const { batchAddTag } = require('../db/time')
 initialValues = require('./initialValues')
+
+
+const cancelTeamPlan = async (user_id, team_id) => {
+  await team_db.changeTeamPlan({
+    team_id,
+    plan_id: 1
+  })
+  await mail.addTagToUser(user_id, ['Cancelled'])
+
+  return
+}
+
+const handleChangeTeamPlan = async (user_id, team_id, plan) => {
+  await team_db.changeTeamPlan({
+    team_id,
+    plan_id: plan.id
+  })
+
+  if(new_plan.is_the_best) {
+    await mail.addTagToUser(user_id, ['Team owner - VIP'])
+  } else {
+    await mail.addTagToUser(user_id, ['Team owner - Paid'])
+  }
+
+  return
+}
 
 const generateJoinCode = async (num = 6) => {
   const chars = 'ABCDEFGHIJKLMNOPRSTUVX1234567890'
@@ -43,4 +70,4 @@ const addInitialTags = async (team_id, sport_id) => {
   await Promise.all(tagPromises)
 }
 
-module.exports = { generateJoinCode, addInitialTags }
+module.exports = { generateJoinCode, addInitialTags, cancelTeamPlan, handleChangeTeamPlan }

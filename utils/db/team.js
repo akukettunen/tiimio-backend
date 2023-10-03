@@ -94,6 +94,14 @@ const planByStripeId = id => {
   `, [id])
 }
 
+const planByIosId = id => {
+  return query(`
+    SELECT * FROM plan
+    WHERE apple_store_identifier = ?
+    ORDER BY iteration DESC;
+  `, [id])
+}
+
 const changeTeamPlan = ({team_id, plan_id}) => {
   return query(`
     UPDATE team
@@ -191,4 +199,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { teamByInviteCode, deleteInvite, teamInvites, addInvites, teamUserAmount, teamsBySportIdThatDontHaveGroupNamed, teamsBySportIdThatHaveGroupNamed, allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { planByIosId, teamByInviteCode, deleteInvite, teamInvites, addInvites, teamUserAmount, teamsBySportIdThatDontHaveGroupNamed, teamsBySportIdThatHaveGroupNamed, allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }

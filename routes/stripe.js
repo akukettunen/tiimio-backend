@@ -12,6 +12,7 @@ const express = require('express');
       logger = require('../utils/logger')
       stripeHelper = require('../utils/stripe')
       video_db = require('../utils/db/video')
+      teamHelper = require('../utils/team/teamHelper')
       team_db = require('../utils/db/team')
       user_db = require('../utils/db/user')
       coconut = require('../utils/coconut/index')
@@ -57,72 +58,20 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
   // console.log(event.data.object.items.data[0].price)
   let customer_stripe_id = event.data.object.customer
   let [ userTeam ] = await team_db.userTeamByStripeId(customer_stripe_id)
-  // if (endpointSecret) {
-  //   // Get the signature sent by Stripe
-  //   const signature = req.headers['stripe-signature'];
-  //   try {
-  //     event = stripe.webhooks.constructEvent(
-  //       req.body,
-  //       signature,
-  //       endpointSecret
-  //     );
-  //   } catch (err) {
-  //     console.log(`⚠️  Webhook signature verification failed.`, err.message);
-  //     return res.sendStatus(400);
-  //   }
-  // }
-  console.log(event.type)
 
   switch(event.type) {
     // tilausta jatkettu tai peruutettu
     case 'customer.subscription.created':
       let [ new_plan ] = await team_db.planByStripeId(event.data.object.items.data[0].price.id)
-      console.log('Created: ', new_plan)
-      await team_db.changeTeamPlan({
-        team_id: userTeam.team_id,
-        plan_id: new_plan.id
-      })
-
-      if(new_plan.is_the_best) {
-        await mail.addTagToUser(userTeam.email, ['Team owner - VIP'])
-      } else {
-        await mail.addTagToUser(userTeam.email, ['Team owner - Paid'])
-      }
-
+      await teamHelper.handleChangeTeamPlan(userTeam.email, userTeam.team_id, new_plan)
       break;
     case 'customer.subscription.updated':
-      // tämä kertoo loppuuko tilaus
-      // console.log(event.data.object.cancel_at_period_end)
-
-      // tämä ketoo milloin tilaus loppuu
-      // console.log(event.data.object.cancel_at)
-
-      // tämä on uusi tilaus
-      // console.log(event.data.object.items.data[0].price)
-
       let [ plan ] = await team_db.planByStripeId(event.data.object.items.data[0].price.id)
-
-      console.log('Updated ', plan)
-      await team_db.changeTeamPlan({
-        team_id: userTeam.team_id,
-        plan_id: plan.id
-      })
-
-      if(plan.is_the_best) {
-        await mail.addTagToUser(userTeam.email, ['Team owner - VIP'])
-      } else {
-        await mail.addTagToUser(userTeam.email, ['Team owner - Paid'])
-      }
-
+      await teamHelper.handleChangeTeamPlan(userTeam.email, userTeam.team_id, plan)
       break;
     // tilaus loppui
     case 'customer.subscription.deleted':
-      console.log('Deleted')
-      await team_db.changeTeamPlan({
-        team_id: userTeam.team_id,
-        plan_id: 1
-      })
-      await mail.addTagToUser(userTeam.email, ['Cancelled'])
+      await teamHelper.cancelTeamPlan(userTeam.email, userTeam.team_id)
       break;
     default:
       break;
