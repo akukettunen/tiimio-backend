@@ -33,28 +33,30 @@ router.post('/webhooks', async (req, res) => {
   const subtype = parsed_payload.subtype
   const product_ios_id = JSON.parse(transaction_info.payload).productId
 
+  console.log(type, subtype, product_ios_id)
   const team_id = 119
+  const user_id = 'apple-test@tiimi.io'
 
   switch(type) {
     case 'DID_CHANGE_RENEWAL_PREF':
       // Vaihtoi tilausta, pitäisi kaivaa että mihin!
-      if(subtype == "upgrade") {
-        let [ new_plan ] = await team_db.planByStripeId(product_ios_id)
+      // if(subtype == "upgrade") {
+        let [ new_plan ] = await team_db.planByIosId(product_ios_id)
 
         await team_db.changeTeamPlan({
           team_id,
           plan_id: new_plan.id
         })
-      }
+      // }
       break;
     case 'DID_FAIL_TO_RENEW':
       // Jos !subtype - voi perua
       if(subtype) return
-      await teamHelper.cancelTeamPlan(userTeam.email, userTeam.team_id)
+      await teamHelper.cancelTeamPlan(user_id, team_id)
       break;
     case 'DID_RENEW':
       // Pitää vaihtaa
-      let [ new_plan2 ] = await team_db.planByStripeId(product_ios_id)
+      let [ new_plan2 ] = await team_db.planByIosId(product_ios_id)
       await team_db.changeTeamPlan({
         team_id,
         plan_id: new_plan2.id
@@ -62,15 +64,15 @@ router.post('/webhooks', async (req, res) => {
       break;
     case 'EXPIRED':
       // Voipi perua
-      await teamHelper.cancelTeamPlan(userTeam.email, userTeam.team_id)
+      await teamHelper.cancelTeamPlan(user_id, team_id)
       break;
     case 'GRACE_PERIOD_EXPIRED':
       // Voipi perua
-      await teamHelper.cancelTeamPlan(userTeam.email, userTeam.team_id)
+      await teamHelper.cancelTeamPlan(user_id, team_id)
       break;
     case 'SUBSCRIBED':
       // Tilasi
-      let [ new_plan3 ] = await team_db.planByStripeId(product_ios_id)
+      let [ new_plan3 ] = await team_db.planByIosId(product_ios_id)
       await team_db.changeTeamPlan({
         team_id,
         plan_id: new_plan3.id
@@ -81,7 +83,6 @@ router.post('/webhooks', async (req, res) => {
   }
 
   const renewal_info = jws.decode(parsed_payload.data.signedRenewalInfo)
-  console.log(renewal_info.payload)
 
   res.send("ok!")
 })
