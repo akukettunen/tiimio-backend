@@ -48,6 +48,25 @@ router.post('/login', async (req, res) => {
   res.send({ token })
 })
 
+router.post('/request-delete', user, async (req, res) => {
+  const { email } = req.body;
+
+  if(email !== req.tiimio_user.email) throw new Error('wrong email')
+
+  await emailService.requestDeletion(email)
+
+  res.send('ok!')
+})
+
+router.post('/request-team-delete', user, async (req, res) => {
+  const { team_id } = req.body;
+  const email = req.tiimio_user.email
+
+  await emailService.requestTeamDeletion({ team_id, email })
+
+  res.send('ok!')
+})
+
 router.post('/divaridemo/login', async (req, res) => {
   let [ user ] = await user_db.getUserByEmail('divaridemo')
 
