@@ -7,6 +7,7 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
       bcrypt = require('bcryptjs');
       jwt = require('jsonwebtoken')
       cookieParser = require('cookie-parser')
+      videoHelper = require('../utils/video/videoHelper')
       router.use(cookieParser())
       logger = require('../utils/logger')
       video_db = require('../utils/db/video')
@@ -171,31 +172,14 @@ router.get('/team/:id', user, async (req, res) => {
 router.get('/:id', user, async (req, res) => {
   // TODO: vain oman joukkueen videot
 
-  let [ video ] = await video_db.videoById(req.params.id)
-  
-  if(!video) throw new Error('video not found')
+  let video;
+  try {
+    video = await videoHelper.getVideo(req.params.id)
+  } catch(e) {
+    throw new Error(e)
+  }
 
-  let clips = await clip_db.videoClips(video.id)
-  let times = await timeHelper.videoTimes(video.id)
-  let mapped_times = times.map(t => {
-    let parsed = JSON.parse(t.tags)
-    return {
-      ...t,
-      tags: parsed[0]?.id ? parsed : []
-    }
-  })
-
-  let mapped_clips = clips.map(t => {
-    let parsed_tags = JSON.parse(t.tags)
-    let parsed_points = JSON.parse(t.points)
-    return {
-      ...t,
-      tags: parsed_tags[0]?.id ? parsed_tags : [],
-      points: parsed_points[0]?.id ? parsed_points : []
-    }
-  })
-
-  res.json( { ...video, clips: mapped_clips, times: mapped_times } )
+  res.json( video )
 })
 
 router.get('/team/:team_id/uploaded', user, async (req, res) => {

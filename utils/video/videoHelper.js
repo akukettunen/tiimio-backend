@@ -1,6 +1,10 @@
 const { listByKey  } = '../aws/index'
 const { v4: uuidv4 } = require('uuid');
 const video_db = require('../db/video')
+      timeHelper = require('../time/timeHelper')
+      clip_db = require('../db/clip')
+
+
 const deleteVideoFromS3 = async key => {
   const keys = await listByKey(key)
 
@@ -40,4 +44,32 @@ const addSampleVideo = async (team_id) => {
   console.log('yea')
 }
 
-module.exports = { addSampleVideo }
+const getVideo = async id => {
+  let [ video ] = await video_db.videoById(id)
+  
+  if(!video) throw new Error('video not found')
+
+  let clips = await clip_db.videoClips(id)
+  let times = await timeHelper.videoTimes(id)
+  let mapped_times = times.map(t => {
+    let parsed = JSON.parse(t.tags)
+    return {
+      ...t,
+      tags: parsed[0]?.id ? parsed : []
+    }
+  })
+
+  let mapped_clips = clips.map(t => {
+    let parsed_tags = JSON.parse(t.tags)
+    let parsed_points = JSON.parse(t.points)
+    return {
+      ...t,
+      tags: parsed_tags[0]?.id ? parsed_tags : [],
+      points: parsed_points[0]?.id ? parsed_points : []
+    }
+  })
+
+  return { ...video, clips: mapped_clips, times: mapped_times }
+}
+
+module.exports = { addSampleVideo, getVideo }
