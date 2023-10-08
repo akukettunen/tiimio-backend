@@ -10,7 +10,7 @@ const postShare = ({ code, resource_type, valid_days, video_id, map_id, filter_i
 
 const getShare = code => {
   return query(`
-    SELECT * FROM share WHERE code = ?;
+    SELECT * FROM share WHERE code = ? AND NOW() < valid_until;
   `, [ code ])
 }
 

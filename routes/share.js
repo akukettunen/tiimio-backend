@@ -10,6 +10,7 @@ const express = require('express');
       logger = require('../utils/logger')
       video_db = require('../utils/db/video')
       videoHelper = require('../utils/video/videoHelper')
+      clipHelper = require('../utils/clip/clipHelper')
       tag_db = require('../utils/db/tag')
       sdb = require('../utils/db/share')
       rule_db = require('../utils/db/rule')
@@ -27,28 +28,36 @@ router.post('/', user, is_in_team(), async (req, res) => {
   const req_team_id = req.body.team_id;
 
   const code = uuidv4();
-  console.log(req.body)
+  
+  let data = {}
   switch(resource_type) {
     case 'video':
       // check that team owns video
       const [{ team_id }] = await video_db.videoById(resource_id);
       if(req_team_id != team_id) throw new Error('wrong team id')
-      await sdb.postShare({ // sdb = share_database
-        code,
-        resource_type,
-        valid_days,
-        video_id: resource_id
-      });
+      data['video_id'] = resource_id
       break;
     case 'map':
     case 'time':
     case 'clip':
+      // check that team owns clip
+      const clip = await clipHelper.clipById(resource_id)
+      if(req_team_id != clip.team_id) throw new Error('wrong team id')
+      data['clip_id'] = resource_id
+      break;
     case 'presentation':
     case 'filter':
     case 'folder':
     default:
       throw new Error('invalid resource type')
   }
+
+  await sdb.postShare({ // sdb = share_database
+    code,
+    resource_type,
+    valid_days,
+    ...data
+  });
 
   res.json(process.env.FRONTEND_BASE_URL + '/#/share/' + code)
 })
@@ -57,12 +66,18 @@ router.get('/:code', async (req, res) => {
   const { code } = req.params;
   if(!code) throw new Error('no code')
 
-  const [share] = await sdb.getShare(code)
+  const [ share ] = await sdb.getShare(code)
+
+  if(!share) throw new Error('Share link not valid')
 
   switch(share.resource_type) {
     case 'video':
       const video = await videoHelper.getVideo(share.video_id)
-      res.send(video)
+      res.send({...video, share})
+      break;
+    case 'clip':
+      const clip = await clipHelper.clipById(share.clip_id)
+      res.send({...clip, share})
       break;
   }
 
