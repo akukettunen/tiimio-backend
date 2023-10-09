@@ -83,11 +83,11 @@ router.post('/', user, async (req, res) => {
     throw new Error(err)
   }
 
-  try {
-    await video_helper.addSampleVideo(insertId)
-  } catch(e) {
-    throw new Error(e)
-  }
+  // try {
+  //   await video_helper.addSampleVideo(insertId)
+  // } catch(e) {
+  //   throw new Error(e)
+  // }
 
   try {
     await template_helper.copySportTemplatesToTeam(sport_id, insertId)
