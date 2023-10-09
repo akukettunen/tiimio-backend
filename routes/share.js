@@ -9,6 +9,7 @@ const express = require('express');
       router.use(cookieParser())
       logger = require('../utils/logger')
       video_db = require('../utils/db/video')
+      folder_db = require('../utils/db/folder')
       videoHelper = require('../utils/video/videoHelper')
       clipHelper = require('../utils/clip/clipHelper')
       tag_db = require('../utils/db/tag')
@@ -47,7 +48,12 @@ router.post('/', user, is_in_team(), async (req, res) => {
       break;
     case 'presentation':
     case 'filter':
+    case 'text_file':
     case 'folder':
+      const [ folder ] = await folder_db.byId(resource_id)
+      if(req_team_id != folder.team_id) throw new Error('wrong team id')
+      data['folder_id'] = folder.id
+      break;
     default:
       throw new Error('invalid resource type')
   }
@@ -69,7 +75,7 @@ router.get('/:code', async (req, res) => {
   const [ share ] = await sdb.getShare(code)
 
   if(!share) throw new Error('Share link not valid')
-
+  console.log(share.video_id)
   switch(share.resource_type) {
     case 'video':
       const video = await videoHelper.getVideo(share.video_id)
@@ -79,9 +85,11 @@ router.get('/:code', async (req, res) => {
       const clip = await clipHelper.clipById(share.clip_id)
       res.send({...clip, share})
       break;
+    case 'folder':
+      const [ folder ] = await folder_db.byId(share.folder_id)
+      res.send({ ...folder, share })
+      break;
   }
-
-
 })
 
 module.exports = router;
