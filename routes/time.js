@@ -54,7 +54,6 @@ router.put('/timename/order', user, async (req, res) => {
 
 router.get('/team/:team_id', async (req, res) => {
   let { page, itemsPerPage, sortBy, sortDesc, columns, tags } = req.query;
-  //TODO: works with front end not with postman, gives NaN form these Nuber()
   // TODO columns will have to be sanitized
 
   sortBy = sortBy === 'undefined' ? undefined : sortBy

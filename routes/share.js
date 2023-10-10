@@ -12,6 +12,7 @@ const express = require('express');
       folder_db = require('../utils/db/folder')
       videoHelper = require('../utils/video/videoHelper')
       clipHelper = require('../utils/clip/clipHelper')
+      time_helper = require('../utils/time/timeHelper')
       tag_db = require('../utils/db/tag')
       sdb = require('../utils/db/share')
       rule_db = require('../utils/db/rule')
@@ -40,6 +41,10 @@ router.post('/', user, is_in_team(), async (req, res) => {
       break;
     case 'map':
     case 'time':
+      const time = await time_helper.timeById(resource_id)
+      if(req_team_id != time.team_id) throw new Error('wrong team id')
+      data['time_id'] = resource_id
+      break;
     case 'clip':
       // check that team owns clip
       const clip = await clipHelper.clipById(resource_id)
@@ -88,6 +93,10 @@ router.get('/:code', async (req, res) => {
     case 'folder':
       const [ folder ] = await folder_db.byId(share.folder_id)
       res.send({ ...folder, share })
+      break;
+    case 'time':
+      const time = await time_helper.timeById(share.time_id)
+      res.send({ ...time, share })
       break;
   }
 })
