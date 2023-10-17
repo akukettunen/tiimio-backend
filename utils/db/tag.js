@@ -290,11 +290,11 @@ const sportMirrors = sport_id => {
   `, [sport_id])
 }
 
-const createTagGroup = ({ team_id, league_id, group_name, one_tag_only, sport_id, immutable }) => {
+const createTagGroup = ({ team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring }) => {
   return query(`
-    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only, sport_id, immutable )
-    VALUES (?, ?, ?, ?, ?, ?);
-  `, [team_id, league_id, group_name, one_tag_only, sport_id, immutable])
+    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `, [team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring ])
 }
 
 const addMirrors = (group_id, mirrors) => {

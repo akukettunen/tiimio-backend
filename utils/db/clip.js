@@ -102,10 +102,10 @@ const gameByClipId = id => {
   `, [id])
 }
 
-const batchAddTag = (clip_id, tag_ids) => {
+const batchAddTag = (clip_id, tag_ids, main_tag_id) => {
   return query(`
-    INSERT INTO object_tag( clip_id, tag_id )
-    VALUES ${tag_ids.map(id => `(${Number(clip_id)}, ${Number(id)})`)};
+    INSERT INTO object_tag( clip_id, tag_id, main_tag )
+    VALUES ${tag_ids.map(id => `(${Number(clip_id)}, ${Number(id)}, ${id == main_tag_id})`)};
   `)
 }
 
@@ -193,6 +193,7 @@ const videoClips = id => {
         JSON_OBJECT(
           'name', tag.tag_name,
           'id', tag.id,
+          'main_tag', object_tag.main_tag,
           'group_id', tag.group_id
         )
       ) tags,

@@ -52,8 +52,9 @@ router.get('/sport/:sport_id', tiimi_admin, async (req, res) => {
 })
 
 router.post('/group', user, is_in_team(), async (req, res, next) => {
-  let { team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable } = req.body
+  let { team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring } = req.body
 
+  console.log(league_id, sport_id)
   if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
   if(league_id || sport_id) team_id = null
 
@@ -69,14 +70,20 @@ router.post('/group', user, is_in_team(), async (req, res, next) => {
 
   if(groups.find(g => g.group_name == group_name)) throw new Error(`Group "${group_name}" already exists`)
 
-  let add_info = await tag_db.createTagGroup({
+  const data = {
     team_id,
     league_id,
     group_name,
     one_tag_only,
     sport_id,
-    immutable
-  })
+    immutable,
+    action_type,
+    buffer_start,
+    buffer_end,
+    enduring
+  }
+  console.log(data)
+  let add_info = await tag_db.createTagGroup(data)
 
   let [ tag_group ] = await tag_db.tagGroupById(add_info.insertId)
   if(!tag_group) throw new Error('tag group not found :(')
