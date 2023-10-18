@@ -94,6 +94,16 @@ router.put('/:clip_id/tag', user, async (req, res) => {
   }
 
   const updatedClip = await clip_helper.clipById(req.params.clip_id)
+
+  updatedClip.tags = updatedClip.tags.map(t => {
+    return {
+      id: t.tag_id,
+      name: t.tag_name,
+      group_id: t.group_id,
+      main_tag: t.main_tag
+    }
+  })
+
   res.json(updatedClip)
 })
 
