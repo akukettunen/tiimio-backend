@@ -95,15 +95,6 @@ router.put('/:clip_id/tag', user, async (req, res) => {
 
   const updatedClip = await clip_helper.clipById(req.params.clip_id)
 
-  updatedClip.tags = updatedClip.tags.map(t => {
-    return {
-      id: t.tag_id,
-      name: t.tag_name,
-      group_id: t.group_id,
-      main_tag: t.main_tag
-    }
-  })
-
   res.json(updatedClip)
 })
 
@@ -150,14 +141,6 @@ router.post('/', user, async (req, res, next) => {
   let clip = await clip_helper.clipById(added.insertId, game_id)
   if(!clip) throw new Error('added clip not found')
 
-  clip.tags = clip.tags.map(t => {
-    return {
-      id: t.tag_id,
-      name: t.tag_name,
-      group_id: t.group_id,
-      main_tag: t.main_tag
-    }
-  })
   res.json({...clip, num_of_tags: tags.length })
 })
 
