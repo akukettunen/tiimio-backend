@@ -93,7 +93,8 @@ router.put('/:clip_id/tag', user, async (req, res) => {
     await clip_db.batchRemoveTag(req.params.clip_id, removeIds)
   }
 
-  const updatedClip = await clip_helper.clipById(req.params.clip_id)
+  let updatedClip = await clip_helper.clipById(req.params.clip_id)
+
   res.json(updatedClip)
 })
 
