@@ -330,7 +330,7 @@ router.delete('/group/:tag_group_id', user, async (req, res) => {
   res.send('ok!')
 })
 
-router.delete('/tag/:tag_id', user, async (req, res) => {
+router.put('/tag/:tag_id', user, async (req, res) => {
   let [ tag ] = await tag_db.tagById(req.params.tag_id)
   if(!tag) throw new Error('tag not found')
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
@@ -340,7 +340,7 @@ router.delete('/tag/:tag_id', user, async (req, res) => {
 
   is_in_team(group.team_id)
 
-  await tag_db.deleteById(req.params.tag_id)
+  await tag_db.archiveById(req.params.tag_id)
 
   res.send('ok!')
 })
