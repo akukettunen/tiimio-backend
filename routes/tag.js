@@ -340,7 +340,7 @@ router.put('/tag/:tag_id', user, async (req, res) => {
 
   is_in_team(group.team_id)
 
-  await tag_db.archiveById(req.params.tag_id)
+  await tag_db.archiveById({id: req.params.tag_id, archived: req.body.archived})
 
   res.send('ok!')
 })
