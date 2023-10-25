@@ -430,11 +430,12 @@ const deleteObjectTagById = id => {
   `, [id])
 }
 
-const deleteGroupById = id => {
+const archiveGroupById = ({id, archived}) => {
   return query(`
-    DELETE FROM tag_group
-    WHERE id = ?;
-  `, [id])
+    UPDATE tag
+    SET archived = ?
+    WHERE group_id = ?;
+  `, [archived, id])
 }
 
 const archiveById = ({id, archived}) => {
@@ -445,4 +446,4 @@ const archiveById = ({id, archived}) => {
   `, [archived, id, id])
 }
 
-module.exports = { tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, archiveById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, archiveGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, archiveById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

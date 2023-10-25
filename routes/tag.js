@@ -317,15 +317,15 @@ router.post('/', user, async (req, res) => {
   res.json(tags)
 })
 
-router.delete('/group/:tag_group_id', user, async (req, res) => {
-  // TODO delete mirroring too
+router.put('/group/:tag_group_id', user, async (req, res) => {
+  // TODO archive mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
   if(group.league_id || group.immutable || group.sport_id) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
 
-  await tag_db.deleteGroupById(req.params.tag_group_id)
+  await tag_db.archiveGroupById({ id: req.params.tag_group_id, archived: req.body.archived })
 
   res.send('ok!')
 })
