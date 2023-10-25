@@ -162,8 +162,8 @@ const batchAddTags = (group_id, tags) => {
 const batchAddTagsComplex = (group_id, tags) => {
   // needs to be sanitized is used by user reqs
   return query(`
-    INSERT INTO tag( tag_name, group_id, map_color, hotkey )
-    VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}')`)}
+    INSERT INTO tag( tag_name, group_id, map_color, hotkey, archived )
+    VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}, ${tag.archived}')`)}
     ;
   `)
 }
