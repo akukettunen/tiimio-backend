@@ -161,8 +161,9 @@ const teamsBySportIdThatHaveGroupNamed = (sport_id, group_name) => {
 
 const teamById = id => {
   return query(`
-    SELECT *, team.id as id, plan.id as plan_id FROM team
+    SELECT *, team.id as id, plan.id as plan_id, sport.times_available as sport_times_available FROM team
     LEFT JOIN plan ON plan.id = team.plan_id
+    LEFT JOIN sport ON team.sport_id = sport.id
     WHERE team.id = ?;
   `, [id])
 }
