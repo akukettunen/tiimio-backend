@@ -268,10 +268,11 @@ router.put('/:tag_id', user, async (req, res, next) => {
 })
 
 router.put('/group/order', user, is_in_team(), async (req, res) => {
-  if(!req.body.groups || !req.body.team_id) throw new Error('bad request')
+  if(!req.body.groups) throw new Error('bad request')
+  if(!req.body.team_id && !req.tiimio_user.tiimio_admin) throw new Error('bad request')
 
   const promises = req.body.groups.map((g, i) => {
-    if(!g.sport_id) return tag_db.editGroupOrder(g.id, i)
+    if(!g.sport_id || req.tiimio_user.tiimio_admin) return tag_db.editGroupOrder(g.id, i)
   })
 
   await Promise.all(promises)

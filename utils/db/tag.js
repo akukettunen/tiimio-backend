@@ -135,6 +135,13 @@ const batchAddGroups = (groups, team_id, immutable) => {
   `)
 }
 
+const batchAddGroupsAll = (groups) => {
+  return query(`
+    INSERT INTO tag_group ( team_id, group_name, show_in_filtering, show_in_tagging, position, one_tag_only, buffer_start, buffer_end, action_type, enduring )
+    VALUES ?;
+  `, groups)
+}
+
 const putGroupImmutability = (group_id, immutable) => {
   return query(`
     UPDATE tag_group
@@ -159,14 +166,21 @@ const batchAddTags = (group_id, tags) => {
   `)
 }
 
-const batchAddTagsComplex = (group_id, tags) => {
-  // needs to be sanitized is used by user reqs
+const batchAddTagsComplex = (tags) => {
   return query(`
-    INSERT INTO tag( tag_name, group_id, map_color, hotkey, archived )
-    VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}, ${tag.archived}')`)}
-    ;
-  `)
+    INSERT INTO tag( group_id, position, tag_name, map_color, hotkey, keep_chosen )
+    VALUES ?;
+  `, tags)
 }
+ 
+// const batchAddTagsComplex = (group_id, tags) => {
+//   // needs to be sanitized is used by user reqs
+//   return query(`
+//     INSERT INTO tag( tag_name, group_id, map_color, hotkey, archived )
+//     VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}, ${tag.archived}')`)}
+//     ;
+//   `)
+// }
 
 const groupMirrors = id => {
   return query(`
@@ -221,7 +235,7 @@ const sportTags = sport_id => {
 
 const tagsInGroups = (sport_id, ids) => {
   return query(`
-    SELECT tag.*, original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
+    SELECT tag.*, original_id, tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.id IN (?) AND sport_id = ? AND tag_group.team_id IS NULL
     ORDER BY position;
@@ -444,4 +458,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { updateTag, tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { updateTag, tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, batchAddGroupsAll, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
