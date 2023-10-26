@@ -99,8 +99,8 @@ const editTagOrder = (tag_id, position) => {
   return query(`
     UPDATE tag
     SET position = ?
-    WHERE id = ?;
-  `, [position, tag_id])
+    WHERE id = ? OR original_id = ?;
+  `, [position, tag_id, tag_id])
 }
 
 const batchAddMirrorTag = (tags, group_id) => {
@@ -135,6 +135,13 @@ const batchAddGroups = (groups, team_id, immutable) => {
   `)
 }
 
+const batchAddGroupsAll = (groups) => {
+  return query(`
+    INSERT INTO tag_group ( team_id, group_name, show_in_filtering, show_in_tagging, position, one_tag_only, buffer_start, buffer_end, action_type, enduring )
+    VALUES ?;
+  `, groups)
+}
+
 const putGroupImmutability = (group_id, immutable) => {
   return query(`
     UPDATE tag_group
@@ -159,14 +166,21 @@ const batchAddTags = (group_id, tags) => {
   `)
 }
 
-const batchAddTagsComplex = (group_id, tags) => {
-  // needs to be sanitized is used by user reqs
+const batchAddTagsComplex = (tags) => {
   return query(`
-    INSERT INTO tag( tag_name, group_id, map_color, hotkey )
-    VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}')`)}
-    ;
-  `)
+    INSERT INTO tag( group_id, position, tag_name, map_color, hotkey, keep_chosen )
+    VALUES ?;
+  `, tags)
 }
+ 
+// const batchAddTagsComplex = (group_id, tags) => {
+//   // needs to be sanitized is used by user reqs
+//   return query(`
+//     INSERT INTO tag( tag_name, group_id, map_color, hotkey, archived )
+//     VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}, ${tag.archived}')`)}
+//     ;
+//   `)
+// }
 
 const groupMirrors = id => {
   return query(`
@@ -194,7 +208,7 @@ const groupTags = id => {
 
 const teamTags = team_id => {
   return query(`
-    SELECT original_id, tag.team_id as team_id, tag_name, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey FROM tag
+    SELECT original_id, tag.team_id as team_id, tag_name, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey, tag.keep_chosen FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ?
     ORDER BY position;
@@ -221,7 +235,7 @@ const sportTags = sport_id => {
 
 const tagsInGroups = (sport_id, ids) => {
   return query(`
-    SELECT tag.*, original_id, tag_name, tag.position, tag.id AS id, group_id FROM tag
+    SELECT tag.*, original_id, tag.id AS id, group_id FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.id IN (?) AND sport_id = ? AND tag_group.team_id IS NULL
     ORDER BY position;
@@ -290,11 +304,11 @@ const sportMirrors = sport_id => {
   `, [sport_id])
 }
 
-const createTagGroup = ({ team_id, league_id, group_name, one_tag_only, sport_id, immutable }) => {
+const createTagGroup = ({ team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring }) => {
   return query(`
-    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only, sport_id, immutable )
-    VALUES (?, ?, ?, ?, ?, ?);
-  `, [team_id, league_id, group_name, one_tag_only, sport_id, immutable])
+    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `, [team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring ])
 }
 
 const addMirrors = (group_id, mirrors) => {
@@ -304,11 +318,11 @@ const addMirrors = (group_id, mirrors) => {
   `, [group_id, mirrors])
 }
 
-const createTag = ({ tag_name, group_id, original_id, position, map_color, hotkey, team_id }) => {
+const createTag = ({ tag_name, group_id, original_id, position, map_color, hotkey, team_id, keep_chosen }) => {
   return query(`
-    INSERT INTO tag( tag_name, group_id, original_id, position, map_color, hotkey, team_id )
-    VALUES (?, ?, ?, ?, ?, ?, ?);
-  `, [ tag_name, group_id, original_id, position, map_color, hotkey, team_id ])
+    INSERT INTO tag( tag_name, group_id, original_id, position, map_color, hotkey, team_id, keep_chosen )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+  `, [ tag_name, group_id, original_id, position, map_color, hotkey, team_id, keep_chosen ])
 }
 
 const tagGroupById = id => {
@@ -340,12 +354,12 @@ const updateOneTagOnly = ({ id, one_tag_only}) => {
   `, [one_tag_only, id])
 }
 
-const updateTag = ({ id, tag_name, map_color, hotkey }) => {
+const updateTag = ({ id, tag_name, map_color, hotkey, keep_chosen }) => {
   return query(`
     UPDATE tag
-    SET tag_name = ?
+    SET tag_name = ?, map_color = ?, hotkey = ?, keep_chosen = ?
     WHERE id = ? OR original_id = ?;
-  `, [name, id, id])
+  `, [tag_name, map_color, hotkey, keep_chosen, id, id])
 }
 
 const updateTagName = ({ name, id }) => {
@@ -444,4 +458,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { updateTag, tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, batchAddGroupsAll, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }

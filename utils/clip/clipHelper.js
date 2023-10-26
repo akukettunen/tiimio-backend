@@ -8,7 +8,15 @@ const clipById = async (id, game_id) => {
     clip = await clip_db.gameByClipId(id)
   }
   let [ final_clip ] = clip
-  const tags = await clip_db.clipTagsByClipId(id)
+  let tags = await clip_db.clipTagsByClipId(id)
+  tags = tags.map(t => {
+    return {
+      id: t.tag_id,
+      name: t.tag_name,
+      group_id: t.group_id,
+      main_tag: t.main_tag
+    }
+  })
 
   const points = await clip_db.clipPointsByClipId(id)
 

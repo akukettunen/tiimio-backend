@@ -94,6 +94,7 @@ router.put('/:clip_id/tag', user, async (req, res) => {
   }
 
   const updatedClip = await clip_helper.clipById(req.params.clip_id)
+
   res.json(updatedClip)
 })
 
@@ -125,7 +126,7 @@ router.put('/:time_id/tag', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res, next) => {
-  const { title, starttime, endtime, video_id, map_color, description, tags, points, leaguewide, team_id, game_id, is_point } = req.body
+  const { title, starttime, endtime, video_id, map_color, description, tags, points, leaguewide, team_id, game_id, is_point, main_tag_id } = req.body
 
   if(team_id) is_in_team(team_id)
   if(!title || (!starttime && starttime !== 0) || !(video_id || (leaguewide || team_id) || (!endtime  && !is_point) ) ) throw new Error('bad request')
@@ -135,7 +136,7 @@ router.post('/', user, async (req, res, next) => {
   let added = await clip_db.addClip(req.body)
 
   if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id]))
-  if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags)
+  if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags, main_tag_id)
   
   let clip = await clip_helper.clipById(added.insertId, game_id)
   if(!clip) throw new Error('added clip not found')

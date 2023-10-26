@@ -177,4 +177,54 @@ const sendAkuAnEmail = () => {
    return ses.sendEmail(params).promise()
 }
 
-module.exports = { sendAkuAnEmail, invite_to_team_email, sendWelcomeEmail, sendRefreshEmail }
+const requestDeletion = email => {
+  const params = {
+    Destination: {
+     BccAddresses: [],
+     CcAddresses: [],
+     ToAddresses: [ 'aku@kettunen.com', 'info@tiimi.io' ]
+    },
+    Message: {
+     Body: {
+      Text: {
+       Charset: "UTF-8", 
+       Data: `Please delete this user: ${email}`
+      }
+     }, 
+     Subject: {
+      Charset: "UTF-8", 
+      Data: `Please delete this user: ${email}`
+     }
+    }, 
+    Source: "Tiimi <help@tiimi.io>",
+   };
+
+   return ses.sendEmail(params).promise()
+}
+
+const requestTeamDeletion = ({team_id, email}) => {
+  const params = {
+    Destination: {
+     BccAddresses: [],
+     CcAddresses: [],
+     ToAddresses: [ 'aku@kettunen.com', 'info@tiimi.io' ]
+    },
+    Message: {
+     Body: {
+      Text: {
+       Charset: "UTF-8", 
+       Data: `Please delete this team: ${team_id}. Requester: ${email}.`
+      }
+     }, 
+     Subject: {
+      Charset: "UTF-8", 
+      Data: `Please delete this team: ${team_id}. Requester: ${email}.`
+     }
+    }, 
+    Source: "Tiimi <help@tiimi.io>",
+   };
+
+   return ses.sendEmail(params).promise()
+}
+
+module.exports = { requestTeamDeletion, requestDeletion, sendAkuAnEmail, invite_to_team_email, sendWelcomeEmail, sendRefreshEmail }

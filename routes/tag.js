@@ -52,8 +52,9 @@ router.get('/sport/:sport_id', tiimi_admin, async (req, res) => {
 })
 
 router.post('/group', user, is_in_team(), async (req, res, next) => {
-  let { team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable } = req.body
+  let { team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring } = req.body
 
+  console.log(league_id, sport_id)
   if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
   if(league_id || sport_id) team_id = null
 
@@ -69,14 +70,20 @@ router.post('/group', user, is_in_team(), async (req, res, next) => {
 
   if(groups.find(g => g.group_name == group_name)) throw new Error(`Group "${group_name}" already exists`)
 
-  let add_info = await tag_db.createTagGroup({
+  const data = {
     team_id,
     league_id,
     group_name,
     one_tag_only,
     sport_id,
-    immutable
-  })
+    immutable,
+    action_type,
+    buffer_start,
+    buffer_end,
+    enduring
+  }
+
+  let add_info = await tag_db.createTagGroup(data)
 
   let [ tag_group ] = await tag_db.tagGroupById(add_info.insertId)
   if(!tag_group) throw new Error('tag group not found :(')
@@ -242,7 +249,7 @@ router.put('/:tag_id/hotkey', user, async (req, res, next) => {
 })
 
 router.put('/:tag_id', user, async (req, res, next) => {
-  const { tag_name, map_color, hotkey } = req.body;
+  const { tag_name, map_color, hotkey, keep_chosen } = req.body;
 
   if(!tag_name) throw new Error('tag_name missing')
 
@@ -253,18 +260,19 @@ router.put('/:tag_id', user, async (req, res, next) => {
 
   is_in_team(tag_group.team_id)(req)
 
-  await tag_db.updateTag({...req.body, id: req.params.id})
+  await tag_db.updateTag({...req.body, id: req.params.tag_id})
 
-  const [ updated_tag ] = await tag_db.tagById(req.params.id)
-
+  const [ updated_tag ] = await tag_db.tagById(req.params.tag_id)
+  console.log("tag: ", updated_tag)
   res.json(updated_tag)
 })
 
 router.put('/group/order', user, is_in_team(), async (req, res) => {
-  if(!req.body.groups || !req.body.team_id) throw new Error('bad request')
+  if(!req.body.groups) throw new Error('bad request')
+  if(!req.body.team_id && !req.tiimio_user.tiimio_admin) throw new Error('bad request')
 
   const promises = req.body.groups.map((g, i) => {
-    if(!g.sport_id) return tag_db.editGroupOrder(g.id, i)
+    if(!g.sport_id || req.tiimio_user.tiimio_admin) return tag_db.editGroupOrder(g.id, i)
   })
 
   await Promise.all(promises)
@@ -273,8 +281,7 @@ router.put('/group/order', user, is_in_team(), async (req, res) => {
 })
 
 router.post('/', user, async (req, res) => {
-  const { tag_name, group_id, position, map_color, hotkey, add_to_sport } = req.body
-
+  const { tag_name, group_id, position, map_color, hotkey, add_to_sport, keep_chosen } = req.body
   if( !tag_name || !group_id) throw new Error('bad request')
   
   let [ group ] = await tag_db.tagGroupById(group_id)
@@ -294,7 +301,8 @@ router.post('/', user, async (req, res) => {
     team_id: !add_to_sport ? req.tiimio_user.currentTeamId : null,
     hotkey,
     map_color,
-    position: position || 0
+    position: position || 0,
+    keep_chosen
   })
 
   mirrors = mirrors.map(m => {
@@ -304,14 +312,15 @@ router.post('/', user, async (req, res) => {
       map_color,
       team_id: !add_to_sport ? req.tiimio_user.currentTeamId : null,
       group_id: m,
-      original_id: add_info.insertId
+      original_id: add_info.insertId,
+      keep_chosen,
+      position: position || 0
     })
   })
 
   await Promise.all(mirrors)
 
   let tags = await tag_db.tagAndMirrorsById(add_info.insertId)
-
   if(!tags) throw new Error('tag not found :(')
 
   res.json(tags)

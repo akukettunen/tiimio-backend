@@ -24,6 +24,7 @@ const db = require('../utils/db/index');
       video_helper = require('../utils/video/videoHelper')
       require('express-async-errors');
       mail = require('../utils/email/mailchimp')
+      
 const { v4: uuidv4 } = require('uuid');
 const { default: videoHelper } = require('../utils/video/videoHelper');
 
@@ -83,11 +84,11 @@ router.post('/', user, async (req, res) => {
     throw new Error(err)
   }
 
-  try {
-    await video_helper.addSampleVideo(insertId)
-  } catch(e) {
-    throw new Error(e)
-  }
+  // try {
+  //   await video_helper.addSampleVideo(insertId)
+  // } catch(e) {
+  //   throw new Error(e)
+  // }
 
   try {
     await template_helper.copySportTemplatesToTeam(sport_id, insertId)

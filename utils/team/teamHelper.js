@@ -45,26 +45,60 @@ const generateJoinCode = async (num = 6) => {
 }
 
 const addInitialTags = async (team_id, sport_id) => {
-  console.log('te')
+  // gets all columns
   let groups = await tag_db.sportGroups(sport_id)
+  let og_groups = groups
   group_names = groups.map(g => g.group_name)
 
+  const group_id_array = groups.map(g => g.id)
   if(!groups || !groups.length) return 
 
-  console.log('te')
-
-  // add initial groups for the theam and make them immutable
-  if(group_names && group_names.length) await tag_db.batchAddGroups(group_names, team_id, false)
+  // Should add the whole ting you know
+  groups = groups.map(g => {
+    return [
+      team_id,
+      g.group_name,
+      g.show_in_filtering,
+      g.show_in_tagging,
+      g.position,
+      g.one_tag_only,
+      g.buffer_start,
+      g.buffer_end,
+      g.action_type,
+      g.enduring
+    ]
+  })
+  if(groups && groups.length) await tag_db.batchAddGroupsAll([groups])
   let teamGroups = await tag_db.teamGroups(team_id)
 
-  const initialTags = await tag_db.tagsInGroups(sport_id, groups.map(g => g.id))
+  // gets all columns
+  const initialTags = await tag_db.tagsInGroups(sport_id, group_id_array)
+
+  console.log("Initial tags: ", initialTags)
 
   let tagPromises = teamGroups.map(group => {
-    let originalGroupId = groups.find(f => f.group_name == group.group_name)?.id
+    let originalGroupId = og_groups.find(f => f.group_name == group.group_name)?.id
 
+    // adds tag_name group_id map_color hotkey and archived
     let tags = initialTags.filter(t => t.group_id == originalGroupId)
-    if(tags && tags.length) return tag_db.batchAddTagsComplex(group.id, tags)
-    return 1
+
+    console.log(tags)
+
+    tags = tags.map(tag => {
+      return [
+        group.id,
+        tag.position,
+        tag.tag_name,
+        tag.map_color,
+        tag.hotkey,
+        tag.keep_chosen
+      ]
+    })
+
+    console.log(tags)
+
+    if(tags && tags.length) return tag_db.batchAddTagsComplex([tags])
+    else return 1
   })
 
   await Promise.all(tagPromises)

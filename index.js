@@ -21,7 +21,7 @@ const corsOptions = {
 app.use(session({ secret: 'some secrety secret' }))
 
 app.use(cors(corsOptions))
-app.use(bodyParser.json())
+app.use(bodyParser.json({limit: '50mb'}))
 app.use(cookieParser())
 app.use(user_middleware)
 
