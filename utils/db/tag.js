@@ -437,8 +437,13 @@ const archiveGroupById = ({id, archived}) => {
     WHERE group_id = ?;
   `, [archived, id])
 }
+    // OR group_id IN (
+    //   SELECT tag_group_id
+    //   FROM tag_group_mirrors
+    //   WHERE mirrors = id
+    // );
 
-const archiveById = ({id, archived}) => {
+const archiveTagById = ({id, archived}) => {
   return query(`
     UPDATE tag
     SET archived = ?
@@ -446,4 +451,4 @@ const archiveById = ({id, archived}) => {
   `, [archived, id, id])
 }
 
-module.exports = { tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, archiveGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, archiveById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = { tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, archiveGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, archiveTagById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
