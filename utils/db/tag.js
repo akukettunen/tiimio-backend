@@ -434,8 +434,13 @@ const archiveGroupById = ({id, archived}) => {
   return query(`
     UPDATE tag
     SET archived = ?
-    WHERE group_id = ?;
-  `, [archived, id])
+    WHERE group_id = ?
+    OR group_id IN (
+      SELECT tag_group_id
+      FROM tag_group_mirrors
+      WHERE mirrors = ?
+    );
+  `, [archived, id, id])
 }
     // OR group_id IN (
     //   SELECT tag_group_id
