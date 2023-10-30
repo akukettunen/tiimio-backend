@@ -326,8 +326,8 @@ router.put('/group/:tag_group_id', user, async (req, res) => {
   is_in_team(group.team_id)
 
   await tag_db.archiveGroupById({ id: req.params.tag_group_id, archived: req.body.archived })
-
-  res.send('ok!')
+  let mirrors = await tag_db.groupMirrorsById({id: req.params.tag_group_id});
+  res.json(mirrors);
 })
 
 router.put('/tag/:tag_id', user, async (req, res) => {

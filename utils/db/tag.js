@@ -442,11 +442,6 @@ const archiveGroupById = ({id, archived}) => {
     );
   `, [archived, id, id])
 }
-    // OR group_id IN (
-    //   SELECT tag_group_id
-    //   FROM tag_group_mirrors
-    //   WHERE mirrors = id
-    // );
 
 const archiveTagById = ({id, archived}) => {
   return query(`
@@ -456,4 +451,11 @@ const archiveTagById = ({id, archived}) => {
   `, [archived, id, id])
 }
 
-module.exports = { tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, archiveGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, archiveTagById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+const groupMirrorsById = ({id}) => {
+  return query(`
+  SELECT * FROM tag_group_mirrors
+  WHERE mirrors = ?;
+  `, [id])
+}
+
+module.exports = { groupMirrorsById, tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, archiveGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, archiveTagById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
