@@ -439,8 +439,15 @@ const archiveGroupById = ({id, archived}) => {
       SELECT tag_group_id
       FROM tag_group_mirrors
       WHERE mirrors = ?
+    ) AND original_id IN (
+      SELECT id
+      FROM (
+          SELECT id
+          FROM tag
+          WHERE group_id = ?
+      ) AS derived_table
     );
-  `, [archived, id, id])
+  `, [archived, id, id, id])
 }
 
 const archiveTagById = ({id, archived}) => {
