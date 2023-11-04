@@ -305,4 +305,12 @@ const timeById = id => {
   `, [id])
 }
 
-module.exports = { editTimenameOrder, updateTimename, batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }
+const putTimeTitle = ({id, title}) => {
+  return query(`
+    UPDATE time
+    SET title = ?
+    WHERE id = ?;
+  `, [title, id])
+}
+
+module.exports = { putTimeTitle, editTimenameOrder, updateTimename, batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }
