@@ -171,4 +171,20 @@ router.get('/:id', user, async (req, res) => {
   res.json(time)
 })
 
+router.put('/:time_id/title', user, async (req, res) => {
+  const [ time ] = await time_db.timeById(req.params.time_id)
+
+  if(!time) throw new Error('time not found')
+
+  const [ video ] = await video_db.videoById(time.video_id)
+
+  is_in_team(video.team_id)
+
+  await time_db.putTimeTitle({ id: req.params.time_id, title: req.body.title })
+  
+  const updatedTime = await time_helper.timeById(req.params.time_id)
+
+  res.json(updatedTime)
+})
+
 module.exports = router;
