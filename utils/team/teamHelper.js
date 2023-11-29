@@ -95,8 +95,6 @@ const addInitialTags = async (team_id, sport_id) => {
       ]
     })
 
-    console.log(tags)
-
     if(tags && tags.length) return tag_db.batchAddTagsComplex([tags])
     else return 1
   })

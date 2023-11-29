@@ -104,12 +104,14 @@ const editTagOrder = (tag_id, position) => {
 }
 
 const batchAddMirrorTag = (tags, group_id) => {
-  // no need to sanitize data fetched from db by backend
+  const vals = tags.map(t => {
+    return [ t.id, t.tag_name, group_id ]
+  })
+
   return query(`
     INSERT INTO tag( original_id, tag_name, group_id )
-    VALUES ${tags.map(tag => `(${tag.id}, '${tag.tag_name}', ${group_id})`)}
-    ;
-  `)
+    VALUES ?;
+  `, [ vals ])
 }
 
 const deleteGroupTags = (group_id) => {
@@ -127,12 +129,14 @@ const deleteGroupMirrors = group_id => {
 }
 
 const batchAddGroups = (groups, team_id, immutable) => {
-  // needs to be sanitized is used by user reqs
+  const vals = groups.map(g => {
+    return [ team_id, g, immtable ]
+  })
+
   return query(`
     INSERT INTO tag_group( team_id, group_name, immutable )
-    VALUES ${groups.map(group => `(${team_id}, '${group}', ${immutable})`)}
-    ;
-  `)
+    VALUES ?;
+  `, [ vals ])
 }
 
 const batchAddGroupsAll = (groups) => {
@@ -158,12 +162,14 @@ const tagsInGroup = (group_id) => {
 }
 
 const batchAddTags = (group_id, tags) => {
-  // needs to be sanitized is used by user reqs
+  const vals = tags.map(t => {
+    return [ tag, group_id ]
+  })
+
   return query(`
     INSERT INTO tag( tag_name, group_id )
-    VALUES ${tags.map(tag => `('${tag}', ${group_id})`)}
-    ;
-  `)
+    VALUES ?;
+  `, [ vals ])
 }
 
 const batchAddTagsComplex = (tags) => {
@@ -172,15 +178,6 @@ const batchAddTagsComplex = (tags) => {
     VALUES ?;
   `, tags)
 }
- 
-// const batchAddTagsComplex = (group_id, tags) => {
-//   // needs to be sanitized is used by user reqs
-//   return query(`
-//     INSERT INTO tag( tag_name, group_id, map_color, hotkey, archived )
-//     VALUES ${tags.map(tag => `('${tag.tag_name}', ${group_id}, '${tag.map_color}', '${tag.hotkey}, ${tag.archived}')`)}
-//     ;
-//   `)
-// }
 
 const groupMirrors = id => {
   return query(`
@@ -410,10 +407,14 @@ const deleteGroupJoins = (id) => {
 }
 
 const addGroupJoins = (group_id, join_ids) => {
+  const vals = join_ids.map(id => {
+    return [ group_id, id ]
+  })
+
   return query(`
     INSERT INTO tag_group_in_join_with
-    VALUES ${ join_ids.map( j_id => ` ( ${group_id}, ${j_id} ) ` ) };
-  `)
+    VALUES ?;
+  `, [ vals ])
 }
 
 const tagsById = ids => {

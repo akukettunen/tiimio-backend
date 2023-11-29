@@ -73,7 +73,6 @@ router.put('/:clip_id/graphics', user, async (req, res) => {
 
 router.put('/:clip_id/tag', user, async (req, res) => {
   const [ clip ] = await clip_db.clipAndVideoByClipId(req.params.clip_id)
-
   is_in_team(clip.team_id)
 
   const current_tags = await clip_db.clipTags(req.params.clip_id)
@@ -84,7 +83,7 @@ router.put('/:clip_id/tag', user, async (req, res) => {
   const removeIds = 
     current_tags_ids
       .filter(n => !new_tags_ids.includes(n))
-      .map(t => `'${t}'`)
+      .map(t => `${t}`)
   
   if(addIds?.length) {
     await clip_db.batchAddTag(req.params.clip_id, addIds)
@@ -111,7 +110,7 @@ router.put('/:time_id/tag', user, async (req, res) => {
   const removeIds = 
     current_tags_ids
       .filter(n => !new_tags_ids.includes(n))
-      .map(t => `'${t}'`)
+      .map(t => `${t}`)
 
   if(addIds?.length) {
     await time_db.batchAddTag(req.params.time_id, addIds)

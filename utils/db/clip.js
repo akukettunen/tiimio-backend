@@ -103,17 +103,25 @@ const gameByClipId = id => {
 }
 
 const batchAddTag = (clip_id, tag_ids, main_tag_id) => {
+  const vals = tag_ids.map(id => {
+    return [ clip_id, id, id == main_tag_id ]
+  })
+
   return query(`
     INSERT INTO object_tag( clip_id, tag_id, main_tag )
-    VALUES ${tag_ids.map(id => `(${Number(clip_id)}, ${Number(id)}, ${id == main_tag_id})`)};
-  `)
+    VALUES (?);
+  `, vals)
 }
 
 const batchRemoveTag = (clip_id, tag_ids) => {
+  tag_ids = tag_ids.map(id => {
+    return [id, clip_id]
+  })
+
   return query(`
     DELETE FROM object_tag
-    WHERE tag_id IN (${tag_ids}) AND clip_id = ?;
-  `, [clip_id])
+    WHERE (tag_id, clip_id) IN (?);
+  `, [tag_ids])
 }
 
 const addFolderObject = (clip_id, folder_id) => {

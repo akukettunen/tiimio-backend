@@ -100,6 +100,7 @@ router.post('/group', user, is_in_team(), async (req, res, next) => {
     let tagsPromises = mirrors.map(m => {
       return tag_db.groupTags(m)
     })
+    
     tags = await Promise.all(tagsPromises)
     tags = tags.flat()
 

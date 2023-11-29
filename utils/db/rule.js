@@ -8,17 +8,13 @@ const saveTeamRule = ({ rule, rule_name, team_id, position }) => {
 }
 
 const saveSportRules = ({ rules, button_template_id }) => {
+  const vals = rules.map(r => {
+    return [ r.rule, r.rule_name, r.position, true, null, button_template_id ]
+  })
   return query(`
     INSERT INTO rule(rule, rule_name, position, active, team_id, button_template_id) 
-    VALUES
-      ${
-        rules.map(r => 
-          `('${r.rule}', '${r.rule_name}', ${r.position}, true, null, ${button_template_id})`
-        )
-      }
-    ;
-  `
-  )
+    VALUES ?;
+  `, [ vals ])
 }
 
 const teamRules = (team_id) => {

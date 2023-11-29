@@ -54,12 +54,16 @@ router.put('/timename/order', user, async (req, res) => {
 
 router.get('/team/:team_id', async (req, res) => {
   let { page, itemsPerPage, sortBy, sortDesc, columns, tags } = req.query;
-  // TODO columns will have to be sanitized
 
   sortBy = sortBy === 'undefined' ? undefined : sortBy
   sortDesc = sortDesc === 'true'
 
-  columns = columns.split(',').map(t => `'${t}'`)
+  columns = columns.trim().split(',')
+  columns = !!columns[0] ? columns.map(t => `'${t}'`) : []
+
+  tags = tags.trim().split(',')
+  tags = !!tags[0] ? tags.map(t => `'${t}'`) : []
+
   const times = await time_db.teamTimes(
     Number(page),
     Number(itemsPerPage),
@@ -70,8 +74,9 @@ router.get('/team/:team_id', async (req, res) => {
     tags
   )
 
-  const avgs = await time_db.timenameAverages(req.params.team_id, columns, tags)
+  console.log('Times: ', times)
 
+  const avgs = await time_db.timenameAverages(req.params.team_id, columns, tags)
   let [ total ] = await time_db.teamTotalTimes(Number(req.params.team_id), columns, tags)
 
   res.json({times, total: total?.amount, avgs})

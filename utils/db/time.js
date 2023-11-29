@@ -68,10 +68,14 @@ const timenameById = id => {
 }
 
 const batchAddTag = (time_id, tag_ids) => {
+  const vals = tag_ids.map(id => {
+    return [ time_id, id ]
+  })
+
   return query(`
     INSERT INTO object_tag( time_id, tag_id )
-    VALUES ${tag_ids.map(id => `(${Number(time_id)}, ${Number(id)})`)};
-  `)
+    VALUES ?;
+  `, [ vals ])
 }
 
 const updateTimename = (name, hidden, id) => {
@@ -83,10 +87,14 @@ const updateTimename = (name, hidden, id) => {
 } 
 
 const batchRemoveTag = (time_id, tag_ids) => {
+  const vals = tag_ids.map(id => {
+    return [id, time_id]
+  })
+
   return query(`
     DELETE FROM object_tag
-    WHERE tag_id IN (${tag_ids}) AND time_id = ?;
-  `, [time_id])
+    WHERE (tag_id, clip_id) IN (?);
+  `, [vals])
 }
 
 const timeTags = time_id => {
@@ -123,30 +131,30 @@ const teamTimenames = team_id => {
 }
 
 const batchAddTimename = (team_id, timenameNames) => {
-  // needs to be sanitized if used by user data
+  const vals = timenameNames.map(t => {
+    return [ team_id, t, 'NOW()' ]
+  })
+
   return query(`
     INSERT INTO timename (team_id, name, created)
-    VALUES ${ timenameNames.map(name => `( ${team_id}, '${name}', NOW() ) `) };
-  `)
-}
-
-const teamTimesByVideo = team_id => {
-  return query(`
-    SELECT * FROM time
-    LEFT JOIN video ON video.id = time.video_id
-
-  `)
+    VALUES ?;
+  `, [ vals ])
 }
 
 const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = true, team_id, columns = [], tags = []) => {
   let start = page * itemsPerPage
+
+  console.log("Tags: ", tags)
 
   let get_tags = tags.length ? `RIGHT JOIN (
     SELECT * FROM object_tag
     WHERE object_tag.tag_id IN (${tags})
   ) chosen_tags ON chosen_tags.time_id = time.id` : ''
 
+  console.log("Get tags: ", get_tags)
+
   let limit = itemsPerPage >= 0 ? `LIMIT ?, ?` : ``
+  console.log(limit)
 
   return query(`
     SELECT
@@ -179,14 +187,14 @@ const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = 
     LEFT JOIN time_timename ON time.id = time_timename.time_id
     RIGHT JOIN (
       SELECT * FROM timename
-      WHERE timename.name IN (${columns})
+      WHERE timename.name IN ( ? )
     ) chosen_timenames ON chosen_timenames.id = time_timename.timename_id
     ${ get_tags }
     WHERE video.team_id = ?
     GROUP BY time_id
-    ORDER BY ${sortBy} ${sortDesc ? 'DESC' : 'ASC'}
+    ORDER BY ? ${sortDesc ? 'DESC' : 'ASC'}
     ${limit};
-  `, [team_id, start, itemsPerPage])
+  `, [columns, team_id, sortBy, start, itemsPerPage])
 }
 
 const timenameByName = name => {
@@ -213,9 +221,9 @@ const teamTotalTimes = (team_id, columns, tags) => {
       ON time_timename.timename_id = timename.id
     RIGHT JOIN time ON time.id = time_timename.time_id
     ${ get_tags }
-    WHERE timename.name IN (${columns}) AND timename.team_id = ?
+    WHERE timename.name IN (?) AND timename.team_id = ?
     GROUP BY timeid;
-  `, [team_id])
+  `, [columns, team_id])
 }
 
 const timenameAverages = (team_id, columns) => {
@@ -227,9 +235,9 @@ const timenameAverages = (team_id, columns) => {
     LEFT JOIN time ON time.id = time_timename.time_id
     LEFT JOIN video ON video.id = time.video_id
     LEFT JOIN timename ON timename.id = time_timename.timename_id
-    WHERE timename.name IN (${columns}) AND video.team_id = ?
+    WHERE timename.name IN (?) AND video.team_id = ?
     GROUP BY timename.name;
-  `, [ team_id ])
+  `, [columns, team_id ])
 }
 
 const createTime = ({video_id, title, total_in_seconds}) => {
@@ -241,12 +249,15 @@ const createTime = ({video_id, title, total_in_seconds}) => {
 }
 
 const batchCreateTimeTimename = (timenames, time_id) => {
+  const vals = timenames.map(t => {
+    return [ t.timename_id, time_id, t.video_time, t.time_from_first ]
+  })
+
   return query(`
     INSERT INTO time_timename
     (timename_id, time_id, video_time, time_from_first)
-    VALUES ${timenames.map(t =>  `(${Number(t.timename_id)}, ${Number(time_id)}, ${Number(t.video_time)}, ${Number(t.time_from_first)})`)}
-    ;
-  `, [ time_id ])
+    VALUES ?;
+  `, [ vals ])
 }
 
 const timeTimenameByTimeId = id => {
