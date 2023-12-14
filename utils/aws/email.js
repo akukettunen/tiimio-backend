@@ -20,14 +20,14 @@ const invite_to_team_email = (email, code) => {
       Text: {
        Charset: "UTF-8", 
        Data: `
-          Hi!
-          
-          You have been invited to join a team in tiimi.io!
+Hi!
 
-          Join the team here: ${process.env.FRONTEND_BASE_URL}/#/signin?invite_code=${code}
+You have been invited to join a team in tiimi.io!
 
-          Best regards,
-          Tiimi
+Join the team here: ${process.env.FRONTEND_BASE_URL}/#/signin?invite_code=${code}
+
+Best regards,
+Tiimi
        `
       }
      }, 
