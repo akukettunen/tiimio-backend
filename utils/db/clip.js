@@ -150,6 +150,14 @@ const deleteById = id => {
   `, [id])
 }
 
+const deleteByIds = (ids) => {
+  const placeholders = ids.map(() => '?').join(',');
+  return query(`
+    DELETE FROM clip
+    WHERE id IN (${placeholders});
+  `, ids);
+}
+
 const gameClips = (id, team_id) => {
   return query(`
     SELECT DISTINCT
@@ -258,4 +266,4 @@ const postRule = rule => {
   `, [ rule.if_rule, rule.then_rule, rule.when_rule, rule.else_rule ])
 }
 
-module.exports = { putClipStarttimeEndtimeIspoint, getClipGraphics, postClipGraphics, putClipTitle, gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }
+module.exports = { deleteByIds, putClipStarttimeEndtimeIspoint, getClipGraphics, postClipGraphics, putClipTitle, gameByClipId, gameClips, clipPointsByClipId, postRule, putRule, ruleById, teamClips, clipAndVideoByClipId, batchRemoveTag, clipTags, clipTagsByClipId, deleteById, folderObjectById, addFolderObject, videoByClipId, batchAddTag, videoClips, addClip, clipById }

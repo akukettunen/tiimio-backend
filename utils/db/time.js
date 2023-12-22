@@ -60,6 +60,14 @@ const deleteById = id => {
   `, [ id ])
 }
 
+const deleteByIds = (ids) => {
+  const placeholders = ids.map(() => '?').join(',');
+  return query(`
+    DELETE FROM time
+    WHERE id IN (${placeholders});
+  `, ids);
+}
+
 const timenameById = id => {
   return query(`
     SELECT * FROM timename
@@ -313,4 +321,4 @@ const putTimeTitle = ({id, title}) => {
   `, [title, id])
 }
 
-module.exports = { putTimeTitle, editTimenameOrder, updateTimename, batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }
+module.exports = { deleteByIds, putTimeTitle, editTimenameOrder, updateTimename, batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }
