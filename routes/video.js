@@ -171,7 +171,6 @@ router.get('/team/:id', user, async (req, res) => {
 
 router.get('/:id', user, async (req, res) => {
   // TODO: vain oman joukkueen videot
-
   let video;
   try {
     video = await videoHelper.getVideo(req.params.id)

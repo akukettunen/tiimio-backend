@@ -9,7 +9,7 @@ const { comp, instance } = require('./utils/uppy/index')
         // limiter = rateLimit({ windowMs: 60 * 1000, max: 500, legacyHeaders: false })
         requestMethod = require('./middleware/requestMethod.js')
         errorMiddleware = require('./middleware/error.js')
-        session = require('express-session')
+        // session = require('express-session')
         user_middleware = require('./middleware/userMiddleware')
 
 const corsOptions = {
@@ -18,7 +18,7 @@ const corsOptions = {
     optionsSuccessStatus: 200
 }
 // TODO: change secret
-app.use(session({ secret: 'some secrety secret' }))
+// app.use(session({ secret: 'some secrety secret' }))
 
 app.use(cors(corsOptions))
 app.use(bodyParser.json({limit: '50mb'}))
@@ -47,6 +47,7 @@ const textfile = require('./routes/textfile')
 const template = require('./routes/template')
 const league = require('./routes/admin/league')
 const share = require('./routes/share')
+const chat = require('./routes/chat')
 const revenuecat = require('./routes/revenuecat')
 
 // rate limiter needs this for usage in heroku
@@ -74,6 +75,7 @@ app.use('/textfile', textfile)
 app.use('/template', template)
 app.use('/revenuecat', revenuecat)
 app.use('/share', share)
+app.use('/chat', chat)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);
@@ -95,3 +97,5 @@ const server = app.listen(port, process.env.IP, function() {
 });
 
 instance.socket(server)
+
+module.exports = app
