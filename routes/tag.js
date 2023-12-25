@@ -326,20 +326,20 @@ router.post('/', user, async (req, res) => {
   res.json(tags)
 })
 
-router.delete('/group/:tag_group_id', user, async (req, res) => {
-  // TODO delete mirroring too
+router.put('/group/:tag_group_id', user, async (req, res) => {
+  // TODO archive mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
   if(group.league_id || group.immutable || group.sport_id) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
 
-  await tag_db.deleteGroupById(req.params.tag_group_id)
-
-  res.send('ok!')
+  await tag_db.archiveGroupById({ id: req.params.tag_group_id, archived: req.body.archived })
+  let mirrors = await tag_db.groupMirrorsById({id: req.params.tag_group_id});
+  res.json(mirrors);
 })
 
-router.delete('/tag/:tag_id', user, async (req, res) => {
+router.put('/tag/:tag_id', user, async (req, res) => {
   let [ tag ] = await tag_db.tagById(req.params.tag_id)
   if(!tag) throw new Error('tag not found')
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
@@ -349,7 +349,7 @@ router.delete('/tag/:tag_id', user, async (req, res) => {
 
   is_in_team(group.team_id)
 
-  await tag_db.deleteById(req.params.tag_id)
+  await tag_db.archiveTagById({id: req.params.tag_id, archived: req.body.archived})
 
   res.send('ok!')
 })
