@@ -1,11 +1,11 @@
 require('dotenv').config()
 const express = require('express');
-const { user, is_in_team } = require('../middleware/authMiddleware');
+const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddleware');
       router = express.Router()
       cookieParser = require('cookie-parser')
       router.use(cookieParser())
       require('express-async-errors');
-      const { getLatestMessages, getUserConversations, deleteConversation, getUnreadMessages, query } = require('../utils/db/chat.js');
+      const { teamIdByConversationId, getLatestMessages, getUserConversations, deleteConversation, getUnreadMessages, query } = require('../utils/db/chat.js');
 
 // GET latest messages for a conversation
 router.get('/conversation/:id/messages', user, async (req, res) => {
@@ -18,8 +18,7 @@ router.get('/conversation/:id/messages', user, async (req, res) => {
     const messages = await getLatestMessages(conversationId, limit, index, user_id);
     res.json(messages);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    throw new Error(error.message)
   }
 });
 
@@ -29,8 +28,7 @@ router.get('/conversation', user, async (req, res) => {
     const userConversations = await getUserConversations(req.tiimio_user.email);
     res.json(userConversations);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    throw new Error('authentication error')
   }
 });
 
@@ -44,10 +42,9 @@ router.delete('/conversation/:id', user, async (req, res) => {
     if (isDeleted) {
       res.json({ success: true });
     } else {
-      res.status(403).json({ error: 'Permission denied or conversation not found' });
+      throw new Error('authentication error')
     }
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -58,7 +55,6 @@ router.get('/message/unread', user, async (req, res) => {
     const unreadMessages = await getUnreadMessages(req.tiimio_user.email);
     res.json(unreadMessages);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -87,7 +83,7 @@ router.post('/conversation/:id/messages', user, async (req, res) => {
     // Perform the insertion into the database
     const sql = `
       INSERT INTO message (message_type, text, sent_datetime, sender, object_id, conversation_id)
-      VALUES (?, ?, ?, ?, ?, ?);
+      VALUES (?, ?, ?, ?, ?, ?, ?);
     `;
     const values = [message_type, text || null, sentDatetime, sender, object_id || null, conversationId];
 
@@ -110,7 +106,7 @@ router.get('/conversation/:id/messages/poll', user, async (req, res) => {
     const sql = `
       SELECT *
       FROM message
-      WHERE object_id = ? AND sent_datetime >= ?;
+      WHERE conversation_id = ? AND sent_datetime >= ?;
     `;
     const values = [conversationId, startTime];
 
@@ -143,12 +139,15 @@ router.post('/conversation/:id/messages', user, async (req, res) => {
       }
     }
 
+    const teamId = await teamIdByConversationId(conversationId)
+    inline_is_in_team(teamId)
+
     // Perform the insertion into the database
     const sql = `
       INSERT INTO message (message_type, text, sent_datetime, sender, object_id, conversation_id)
       VALUES (?, ?, ?, ?, ?, ?);
     `;
-    const values = [message_type, text || null, sentDatetime, sender, object_id || null, conversationId];
+    const values = [message_type, text || null, sentDatetime, sender, object_id, conversationId];
 
     await query(sql, values);
 
@@ -243,6 +242,31 @@ router.post('/conversation/:id/users/batch', user, async (req, res) => {
     await query(addUsersQuery, addUsersValues);
 
     res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST create a new conversation
+router.post('/conversation', user, is_in_team(), async (req, res) => {
+  try {
+    const { title, conv_image_url, team_id } = req.body; // Assuming you send title and conv_image_url in the request body
+    const createdDatetime = new Date();
+    const owner = req.tiimio_user.email;
+
+    // Add validation for required fields if needed
+
+    // Perform the insertion into the database
+    const sql = `
+      INSERT INTO conversation (title, created, owner, conv_image_url, team_id)
+      VALUES (?, ?, ?, ?, ?);
+    `;
+    const values = [title, createdDatetime, owner, conv_image_url || null, team_id];
+
+    const result = await query(sql, values);
+
+    res.json({ success: true, conversationId: result.insertId });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

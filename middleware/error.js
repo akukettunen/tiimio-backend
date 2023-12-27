@@ -4,8 +4,10 @@ const errorHandler = (error, req, res, next) => {
   console.error('Error: ', error)
   console.log(JSON.stringify(error))
 
-  if (error == 'bad request')
+  if (error.message == 'bad request')
       res.status(400).send(error.message)
+  else if (error.message == 'authentication error')
+      res.status(403).send(error.message)
   else
       res.status(500).send(error.message)
 

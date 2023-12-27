@@ -12,7 +12,7 @@ const getLatestMessages = async (conversationId, limit = 30, index = 0, userId) 
   const isParticipant = await query(participantCheckSql, participantCheckValues);
 
   if (isParticipant.length === 0) {
-    throw new Error("User is not a participant in the conversation.");
+    throw new Error("authentication error");
   }
 
   const sql = `
@@ -84,10 +84,27 @@ const getUnreadMessages = async (userEmail) => {
   }
 };
 
+const teamIdByConversationId = async id => {
+  const sql = `
+    SELECT m.team_id
+    FROM conversation m
+    WHERE id = ?;
+  `;
+  const values = [ id ];
+
+  try {
+    const [ teamId ] = await query(sql, values);
+    return teamId;
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   getLatestMessages,
   getUserConversations,
   deleteConversation,
   getUnreadMessages,
+  teamIdByConversationId,
   query
 };

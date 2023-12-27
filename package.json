@@ -7,7 +7,7 @@
     "nodemon": "node index.js  --host 0.0.0.0 --disable-host-check",
     "start": "node index.js   --host 0.0.0.0 --disable-host-check",
     "build": "echo would have build here...",
-    "test": "cross-env NODE_ENV=test jest --verbose --runInBand"
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand --forceExit"
   },
   "overrides": {
     "node-ipc@>9.2.1 <10": "9.2.1",
@@ -49,6 +49,9 @@
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
       "/node_modules/"
-    ]
+    ],
+    "testTimeout": 15000,
+    "setupFilesAfterEnv": ["<rootDir>/test/jest.setup.js"],
+    "globalTeardown": "<rootDir>/test/globalTeardown.js"
   }
 }

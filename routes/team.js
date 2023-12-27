@@ -29,7 +29,7 @@ const { v4: uuidv4 } = require('uuid');
 const { default: videoHelper } = require('../utils/video/videoHelper');
 
 router.post('/', user, async (req, res) => {
-  const { team_name, sport_id, dont_add_user, plan_id } = req.body
+  const { team_name, sport_id, dont_add_user, plan_id, dont_create_stripe } = req.body
   if(!team_name || !sport_id) throw new Error('bad request')
 
   const joinCode = await team_helper.generateJoinCode()
@@ -54,24 +54,28 @@ router.post('/', user, async (req, res) => {
   })
 
   if(!dont_add_user) {
-    const stripeCustomer = await createCustomer({ 
-      full_name: req.tiimio_user.name,
-      email: req.tiimio_user.email,
-      meta: {
-        team_id: insertId,
-        team_name: team_name
-      }
-    })
+    let stripeCustomer
+    if(!dont_create_stripe) {
+      stripeCustomer = await createCustomer({ 
+        full_name: req.tiimio_user.name,
+        email: req.tiimio_user.email,
+        meta: {
+          team_id: insertId,
+          team_name: team_name
+        }
+      })
+  
+      await email.sendAkuAnEmail()
+    }
 
     await team_db.addUserToTeam({
       email: req.tiimio_user.email,
       team_id: insertId,
       admin: true,
       orderer: true,
-      stripe_id: stripeCustomer.id
+      stripe_id: stripeCustomer?.id
     })
 
-    await email.sendAkuAnEmail()
   }
 
 
@@ -100,7 +104,7 @@ router.post('/', user, async (req, res) => {
   }
 
   // Add team owner tag to user
-  if(!dont_add_user) await mail.addTagToUser(req.tiimio_user.email, ['Team owner - Free', sport_id])
+  if(!dont_add_user && !dont_create_stripe) await mail.addTagToUser(req.tiimio_user.email, ['Team owner - Free', sport_id])
 
   const user = await userHelper.createUserData(insertId, req.tiimio_user)
 
@@ -109,7 +113,7 @@ router.post('/', user, async (req, res) => {
     process.env.SECRET_KEY
   )
 
-  res.json({ token })
+  res.json({ token, team_id: insertId })
 })
 
 router.post('/join', user, async (req, res) => {

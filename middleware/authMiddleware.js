@@ -38,6 +38,8 @@ const inline_tiimi_admin = (req, res, next) => {
   const admin = req.tiimio_user?.tiimio_admin
 
   if(!admin) throw new Error('authentication error')
+
+  next()
 }
 
 const inline_is_in_team = (req, res, next) => {
