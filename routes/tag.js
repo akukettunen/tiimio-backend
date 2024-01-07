@@ -53,8 +53,6 @@ router.get('/sport/:sport_id', tiimi_admin, async (req, res) => {
 
 router.post('/group', user, is_in_team(), async (req, res, next) => {
   let { team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring } = req.body
-
-  console.log(league_id, sport_id)
   if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
   if(league_id || sport_id) team_id = null
 
@@ -108,7 +106,6 @@ router.post('/group', user, is_in_team(), async (req, res, next) => {
   }
 
   const newGroup = await tagHelper.groupById(add_info.insertId)
-
   res.json(newGroup)
 })
 
@@ -263,7 +260,6 @@ router.put('/:tag_id', user, async (req, res, next) => {
   await tag_db.updateTag({...req.body, id: req.params.tag_id})
 
   const [ updated_tag ] = await tag_db.tagById(req.params.tag_id)
-  console.log("tag: ", updated_tag)
   res.json(updated_tag)
 })
 
@@ -344,7 +340,6 @@ router.put('/tag/:tag_id', user, async (req, res) => {
   if(!tag) throw new Error('tag not found')
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
   if(!group) throw new Error('group not found')
-  console.log(group)
   if(group.league_id || (group.sport_id && !tag.team_id)) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
