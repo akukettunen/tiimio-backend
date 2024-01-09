@@ -11,7 +11,7 @@ const express = require('express');
       stripe = require('../utils/stripe/index')
       tagHelper = require('../utils/tag')
       require('express-async-errors');
-      const { user, is_in_team, tiimi_admin, inline_tiimi_admin } = require('../middleware/authMiddleware');
+      const { user, is_in_team, tiimi_admin, inline_is_in_team, inline_tiimi_admin } = require('../middleware/authMiddleware');
 
 router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
@@ -52,7 +52,7 @@ router.get('/sport/:sport_id', tiimi_admin, async (req, res) => {
 })
 
 router.post('/group', user, is_in_team(), async (req, res, next) => {
-  let { team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring } = req.body
+  let { position, team_id, group_name, mirrors, league_id, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring, show_in_filtering } = req.body
 
   if( (!team_id && !league_id) || !group_name ) throw new Error('bad request')
   if(league_id || sport_id) team_id = null
@@ -79,10 +79,9 @@ router.post('/group', user, is_in_team(), async (req, res, next) => {
     action_type,
     buffer_start,
     buffer_end,
-    enduring
+    enduring,
+    position
   }
-
-  console.log(data)
 
   let add_info = await tag_db.createTagGroup(data)
 
@@ -348,6 +347,36 @@ router.put('/group/tags/:tag_group_id', user, async (req, res) => {
   await tag_db.archiveTagsByGroupId({ id: req.params.tag_group_id, archived: req.body.archived })
   
   res.send('ok!')
+})
+
+router.put('/group/whole/:group_id', user, async (req, res) => {
+  let [ group ] = await tag_db.tagGroupById(req.params.group_id)
+  inline_is_in_team(group.team_id, req)
+  // is_in_team(group.team_id)
+
+  const { 
+    group_name,
+    action_type,
+    enduring,
+    buffer_start,
+    buffer_end,
+    tag_group_one_only,
+    show_in_filtering
+  } = req.body
+
+  await tag_db.updateTagGroup({
+    id: req.params.group_id,
+    group_name,
+    action_type,
+    enduring,
+    buffer_start,
+    buffer_end,
+    tag_group_one_only,
+    show_in_filtering 
+  })
+
+  let updated_group = await tagHelper.groupById(req.params.group_id)
+  res.json(updated_group)
 })
 
 router.put('/tag/:tag_id', user, async (req, res) => {

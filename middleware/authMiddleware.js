@@ -40,9 +40,7 @@ const inline_tiimi_admin = (req, res, next) => {
   if(!admin) throw new Error('authentication error')
 }
 
-const inline_is_in_team = (req, res, next) => {
-  var t_id = team_id
-  let team_id = req.body.team_id || req.params.team_id || t_id
+const inline_is_in_team = (team_id, req) => {
   if(!team_id) throw new Error('no team_id present')
 
   const teams = req.tiimio_user?.teams
