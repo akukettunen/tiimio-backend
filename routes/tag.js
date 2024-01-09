@@ -109,7 +109,6 @@ router.post('/group', user, is_in_team(), async (req, res, next) => {
   }
 
   const newGroup = await tagHelper.groupById(add_info.insertId)
-  console.log(newGroup)
   res.json(newGroup)
 })
 
@@ -264,7 +263,6 @@ router.put('/:tag_id', user, async (req, res, next) => {
   await tag_db.updateTag({...req.body, id: req.params.tag_id})
 
   const [ updated_tag ] = await tag_db.tagById(req.params.tag_id)
-  console.log("tag: ", updated_tag)
   res.json(updated_tag)
 })
 
@@ -328,6 +326,18 @@ router.post('/', user, async (req, res) => {
 })
 
 router.put('/group/:tag_group_id', user, async (req, res) => {
+  let [group] = await tag_db.tagGroupById(req.params.tag_group_id)
+  if(!group) throw new Error('group not found')
+  if(group.league_id || group.immutable || group.sport_id) inline_tiimi_admin(req)
+
+  is_in_team(group.team_id)
+
+  await tag_db.archiveGroupById({ id: req.params.tag_group_id, archived: req.body.archived })
+  
+  res.send('ok!')
+})
+
+router.put('/group/tags/:tag_group_id', user, async (req, res) => {
   // TODO archive mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
@@ -335,9 +345,9 @@ router.put('/group/:tag_group_id', user, async (req, res) => {
 
   is_in_team(group.team_id)
 
-  await tag_db.archiveGroupById({ id: req.params.tag_group_id, archived: req.body.archived })
-  let mirrors = await tag_db.groupMirrorsById({id: req.params.tag_group_id});
-  res.json(mirrors);
+  await tag_db.archiveTagsByGroupId({ id: req.params.tag_group_id, archived: req.body.archived })
+  
+  res.send('ok!')
 })
 
 router.put('/tag/:tag_id', user, async (req, res) => {
@@ -345,7 +355,6 @@ router.put('/tag/:tag_id', user, async (req, res) => {
   if(!tag) throw new Error('tag not found')
   let [ group ] = await tag_db.tagGroupById(tag.group_id)
   if(!group) throw new Error('group not found')
-  console.log(group)
   if(group.league_id || (group.sport_id && !tag.team_id)) inline_tiimi_admin(req)
 
   is_in_team(group.team_id)
