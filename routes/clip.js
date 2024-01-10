@@ -209,6 +209,22 @@ router.post('/:id/folder/:folder_id', user, async (req, res) => {
   res.json(folder_object)
 })
 
+// Route to delete multiple clips
+router.delete('/clips', user, async (req, res) => {
+  const ids = req.body.ids;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'Bad request' });
+  }
+
+  try {
+    const test = await clip_db.deleteByIds(ids);
+    res.json('Clips deleted successfully!');
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.delete('/:id', user, async (req, res) => {
   if(!req.params.id) throw new Error('bad request')
 
