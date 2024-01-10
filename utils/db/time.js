@@ -152,17 +152,19 @@ const batchAddTimename = (team_id, timenameNames) => {
 const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = true, team_id, columns = [], tags = []) => {
   let start = page * itemsPerPage
 
-  console.log("Tags: ", tags)
+  if(typeof tags != 'object') throw new Error('invalid tags type')
+  tags.forEach(e => { 
+    if(!Number(e) && Number(e) !== 0) {
+      throw new Error('invalid tag id')
+    }
+  })
 
   let get_tags = tags.length ? `RIGHT JOIN (
     SELECT * FROM object_tag
     WHERE object_tag.tag_id IN (${tags})
   ) chosen_tags ON chosen_tags.time_id = time.id` : ''
 
-  console.log("Get tags: ", get_tags)
-
   let limit = itemsPerPage >= 0 ? `LIMIT ?, ?` : ``
-  console.log(limit)
 
   return query(`
     SELECT
@@ -213,6 +215,11 @@ const timenameByName = name => {
 }
 
 const teamTotalTimes = (team_id, columns, tags) => {
+  tags.forEach(e => { 
+    if(!Number(e) && Number(e) !== 0) {
+      throw new Error('invalid tag id')
+    }
+  })
 
   let get_tags = tags.length ? `RIGHT JOIN (
     SELECT * FROM object_tag

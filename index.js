@@ -9,7 +9,7 @@ const { comp, instance } = require('./utils/uppy/index')
         // limiter = rateLimit({ windowMs: 60 * 1000, max: 500, legacyHeaders: false })
         requestMethod = require('./middleware/requestMethod.js')
         errorMiddleware = require('./middleware/error.js')
-        session = require('express-session')
+        // session = require('express-session')
         user_middleware = require('./middleware/userMiddleware')
 
 const corsOptions = {
@@ -18,7 +18,7 @@ const corsOptions = {
     optionsSuccessStatus: 200
 }
 // TODO: change secret
-app.use(session({ secret: 'some secrety secret' }))
+// app.use(session({ secret: 'some secrety secret' }))
 
 app.use(cors(corsOptions))
 app.use(bodyParser.json({limit: '50mb'}))

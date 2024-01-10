@@ -27,6 +27,7 @@ const options = {
   metrics: false,
   filePath: './',
   streamingUpload: true,
+  uploadUrls: ['^https:\/\/api\.tiimi\.io(\/.*)?$'],
   secret: process.env.COMPANION_SECRET
 }
 

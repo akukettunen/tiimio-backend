@@ -77,7 +77,7 @@ router.get('/game/:id', user, async (req, res) => {
   res.json( { ...game, clips: mapped_clips, times: mapped_times } )
 })
 
-router.put('/game/:id', user, async (req, res) => {
+router.put('/game/:id', tiimi_admin, async (req, res) => {
   await league_db.putLeagueGame(req.body)
 
   let [ game ] = await league_db.getLeagueGameById(req.params.id)
