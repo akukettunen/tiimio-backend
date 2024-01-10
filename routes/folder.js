@@ -74,8 +74,17 @@ router.post('/', user, async (req, res) => {
 
   const folder = req.body.folder;
 
-  if(!folder || !folder.name || !folder.team_id || !folder.type) {
-    throw new Error('bad request')
+  if(!folder ) {
+    throw new Error('bad request folder', folder)
+  }
+  if( !folder.name ) {
+    throw new Error('bad request name', folder.name)
+  }
+  if(!folder.team_id ) {
+    throw new Error('bad request team_id', folder.team_id)
+  }
+  if(!folder.type) {
+    throw new Error('bad request type', folder.type)
   }
   
   if(
