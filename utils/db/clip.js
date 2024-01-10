@@ -150,12 +150,12 @@ const deleteById = id => {
   `, [id])
 }
 
-const deleteByIds = (ids) => {
+const deleteByIds = (ids, team_id) => {
   const placeholders = ids.map(() => '?').join(',');
   return query(`
     DELETE FROM clip
-    WHERE id IN (${placeholders});
-  `, ids);
+    WHERE id IN (${placeholders}) AND team_id = ?;
+  `, [...ids, team_id]);
 }
 
 const gameClips = (id, team_id) => {

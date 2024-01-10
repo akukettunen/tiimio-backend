@@ -12,7 +12,7 @@ const express = require('express')
       folder_db = require('../utils/db/folder')
       clip_helper = require('../utils/clip/clipHelper')
       require('express-async-errors');
-      const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware');
+      const { user, is_in_team, tiimi_admin, inline_is_in_team } = require('../middleware/authMiddleware');
 
 router.get('/team/:team_id', async (req, res) => {
   const { index, limit } = req.query;
@@ -210,20 +210,21 @@ router.post('/:id/folder/:folder_id', user, async (req, res) => {
 })
 
 // Route to delete multiple clips
-router.delete('/clips', user, async (req, res) => {
-  const ids = req.body.ids;
+// THIS IS NOT SAFE - NO CHECK FOR BELONGING TO TEAM
+// router.delete('/clips', user, async (req, res) => {
+//   const ids = req.body.ids;
 
-  if (!ids || !Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ message: 'Bad request' });
-  }
+//   if (!ids || !Array.isArray(ids) || ids.length === 0) {
+//     return res.status(400).json({ message: 'Bad request' });
+//   }
 
-  try {
-    const test = await clip_db.deleteByIds(ids);
-    res.json('Clips deleted successfully!');
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+//   try {
+//     const test = await clip_db.deleteByIds(ids, 9999);
+//     res.json('Clips deleted successfully!');
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// });
 
 router.delete('/:id', user, async (req, res) => {
   if(!req.params.id) throw new Error('bad request')
@@ -235,9 +236,11 @@ router.delete('/:id', user, async (req, res) => {
   const [ video ] = await video_db.videoById(clip.video_id)
 
   if(clip.team_id && !clip.game_id) {
-    is_in_team(video.team_id)
+    inline_is_in_team(video.team_id, req)
   } else {
-    if(!req.tiimio_user?.tiimio_admin) throw new Error('authentication error')
+    if(!req.tiimio_user?.tiimio_admin) {
+      throw new Error('authentication error')
+    }
   }
 
   await clip_db.deleteById(req.params.id)
