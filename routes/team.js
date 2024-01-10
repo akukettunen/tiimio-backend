@@ -34,7 +34,10 @@ router.post('/', user, async (req, res) => {
 
   const joinCode = await team_helper.generateJoinCode()
 
-  const initial = initialValues[sport_id]()
+  let initial
+  const initialFunc = initialValues[sport_id]
+  if(!initialFunc) initial = { timenames: ['Start', 'End'] }
+  else initial = initialFunc()
 
   // const [{ planId }] = await query(`
   //   SELECT id AS planId 
