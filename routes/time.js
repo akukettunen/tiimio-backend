@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express');
-const { user, is_in_team } = require('../middleware/authMiddleware');
+const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddleware');
       db = require('../utils/db/index')
       router = express.Router()
       bcrypt = require('bcryptjs');
@@ -154,6 +154,23 @@ router.post('/', user, async (req, res) => {
   res.json(time)
 })
 
+// Route to delete multiple times
+// router.delete('/times', user, async (req, res) => {
+//   const ids = req.body.ids;
+//   if (!ids || !Array.isArray(ids) || ids.length === 0) {
+//     return res.status(400).json({ message: 'Bad request' });
+//   }
+
+//   // Add necessary authorization checks here
+
+//   try {
+//     await time_db.deleteByIds(ids);
+//     res.json('Times deleted successfully!');
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// });
+
 router.delete('/:id', user, async (req, res) => {
   if(!req.params.id) throw new Error('bad request')
 
@@ -163,7 +180,7 @@ router.delete('/:id', user, async (req, res) => {
 
   const [ video ] = await video_db.videoById(time.video_id)
 
-  is_in_team(video.team_id)
+  inline_is_in_team(video.team_id, req)
 
   await time_db.deleteById(req.params.id)
 

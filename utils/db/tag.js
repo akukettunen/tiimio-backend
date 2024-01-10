@@ -205,7 +205,7 @@ const groupTags = id => {
 
 const teamTags = team_id => {
   return query(`
-    SELECT original_id, tag.team_id as team_id, tag_name, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey, tag.keep_chosen FROM tag
+    SELECT original_id, tag.team_id as team_id, tag_name, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey, tag.keep_chosen, tag.archived FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ?
     ORDER BY position;
@@ -301,11 +301,11 @@ const sportMirrors = sport_id => {
   `, [sport_id])
 }
 
-const createTagGroup = ({ team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring }) => {
+const createTagGroup = ({ team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring, position = 0, show_in_filtering }) => {
   return query(`
-    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-  `, [team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring ])
+    INSERT INTO tag_group( team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring, position, show_in_filtering )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `, [team_id, league_id, group_name, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring, position, show_in_filtering ])
 }
 
 const addMirrors = (group_id, mirrors) => {
@@ -341,6 +341,14 @@ const updateTagGroupName = ({ name, id }) => {
     SET group_name = ?
     WHERE id = ?;
   `, [name, id])
+}
+
+const updateTagGroup = ({ id, group_name, action_type, enduring, buffer_start, buffer_end, tag_group_one_only, show_in_filtering }) => {
+  return query(`
+    UPDATE tag_group
+    SET group_name = ?, action_type = ?, enduring = ?, buffer_start = ?, buffer_end = ?, one_tag_only = ?, show_in_filtering = ?
+    WHERE id = ?;
+  `, [ group_name, action_type, enduring, buffer_start, buffer_end, tag_group_one_only, show_in_filtering, id ])
 }
 
 const updateOneTagOnly = ({ id, one_tag_only}) => {
@@ -445,10 +453,51 @@ const deleteObjectTagById = id => {
   `, [id])
 }
 
-const deleteGroupById = id => {
+const archiveGroupById = ({id, archived}) => {
   return query(`
-    DELETE FROM tag_group
-    WHERE id = ?;
+    UPDATE tag_group
+    SET archived = ?
+    where id = ?
+    OR id IN (
+      SELECT tag_group_id
+      FROM tag_group_mirrors
+      WHERE mirrors = ?
+    );
+  `, [archived, id, id])
+}
+
+const archiveTagsByGroupId = ({id, archived}) => {
+  return query(`
+    UPDATE tag
+    SET archived = ?
+    WHERE group_id = ?
+    OR group_id IN (
+      SELECT tag_group_id
+      FROM tag_group_mirrors
+      WHERE mirrors = ?
+    ) AND original_id IN (
+      SELECT id
+      FROM (
+          SELECT id
+          FROM tag
+          WHERE group_id = ?
+      ) AS derived_table
+    );
+  `, [archived, id, id, id])
+}
+
+const archiveTagById = ({id, archived}) => {
+  return query(`
+    UPDATE tag
+    SET archived = ?
+    WHERE id = ? OR original_id = ?;
+  `, [archived, id, id])
+}
+
+const groupMirrorsById = ({id}) => {
+  return query(`
+  SELECT * FROM tag_group_mirrors
+  WHERE mirrors = ?;
   `, [id])
 }
 
@@ -459,4 +508,4 @@ const deleteById = id => {
   `, [id, id])
 }
 
-module.exports = { updateTag, tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, batchAddGroupsAll, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, deleteGroupById, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
+module.exports = {updateTagGroup, archiveGroupById, groupMirrorsById, tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, archiveTagsByGroupId, updateTagName, updateTagGroupName, deleteObjectTagById, archiveTagById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById, updateTag, tagsInGroups, tagIdByNameAndTeamId, tagGroupIdByNameAndTeamId, tagsById, teamSportTags, addGroupJoins, deleteGroupJoins, batchAddTagsComplex, tagsInGroup, putGroupImmutability, sportTags, sportMirrors, sportGroups, updateOneTagOnly, updateTagHotkey, updateTagColor, setJoinId, leagueTagsIdsFilter, leagueGroupsIds, leagueTags, leagueMirrors, leagueGroups, editGroupOrder, deleteGroupMirrors, deleteGroupTags, updateTagGroupShowInFiltering, updateTagGroupShowInTagging, editTagOrder, batchAddTags, tagAndMirrorsById, mirroringGroups, batchAddGroups, batchAddGroupsAll, teamGroupsIds, teamTagsIdsFilter, groupById, groupMirrors, batchAddMirrorTag, groupTags, teamMirrors, addMirrors, updateTagName, updateTagGroupName, deleteObjectTagById, deleteById, tagById, createTag, teamGroups, teamTags, createTagGroup, tagGroupById }
