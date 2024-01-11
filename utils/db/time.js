@@ -165,8 +165,7 @@ const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = 
   ) chosen_tags ON chosen_tags.time_id = time.id` : ''
 
   let limit = itemsPerPage >= 0 ? `LIMIT ?, ?` : ``
-
-  return query(`
+  const que = `
     SELECT
       mp4_url,
       time.id id,
@@ -180,8 +179,8 @@ const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = 
       thumb_url,
       time_timename.time_id as time_id,
       COUNT(chosen_timenames.id) as num_of_points,
-      # MAX(time_timename.time_from_first) max_tff,
-      # MIN(time_timename.time_from_first) min_tff,
+      MAX(time_timename.time_from_first) max_tff,
+      MIN(time_timename.time_from_first) min_tff,
       (
         MAX(time_timename.time_from_first) - MIN(time_timename.time_from_first)
       ) total_time,
@@ -204,7 +203,9 @@ const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = 
     GROUP BY time_id
     ORDER BY ? ${sortDesc ? 'DESC' : 'ASC'}
     ${limit};
-  `, [columns, team_id, sortBy, start, itemsPerPage])
+  `
+
+  return query(que, [columns, team_id, sortBy, start, itemsPerPage])
 }
 
 const timenameByName = name => {
