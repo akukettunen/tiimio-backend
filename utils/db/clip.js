@@ -106,11 +106,10 @@ const batchAddTag = (clip_id, tag_ids, main_tag_id) => {
   const vals = tag_ids.map(id => {
     return [ clip_id, id, id == main_tag_id ]
   })
-
   return query(`
     INSERT INTO object_tag( clip_id, tag_id, main_tag )
-    VALUES (?);
-  `, vals)
+    VALUES ?;
+  `, [vals])
 }
 
 const batchRemoveTag = (clip_id, tag_ids) => {

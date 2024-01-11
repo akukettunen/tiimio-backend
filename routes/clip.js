@@ -33,7 +33,6 @@ router.get('/team/:team_id', async (req, res) => {
 
 router.get('/:id/graphics', async (req, res) => {
   const { Item } = await clip_db.getClipGraphics(req.params.id)
-  console.log(Item?.Item)
   res.json( Item?.Item )
 })
 
@@ -126,7 +125,6 @@ router.put('/:time_id/tag', user, async (req, res) => {
 
 router.post('/', user, async (req, res, next) => {
   const { title, starttime, endtime, video_id, map_color, description, tags, points, leaguewide, team_id, game_id, is_point, main_tag_id } = req.body
-
   if(team_id) is_in_team(team_id)
   if(!title || (!starttime && starttime !== 0) || !(video_id || (leaguewide || team_id) || (!endtime  && !is_point) ) ) throw new Error('bad request')
 
