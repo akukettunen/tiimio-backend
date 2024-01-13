@@ -16,10 +16,10 @@ const express = require('express')
 
 router.get('/team/:team_id', async (req, res) => {
   const { index, limit } = req.query;
-
+  
+  inline_is_in_team(req.params.team_id, req)
+  
   const videos = await clip_db.teamClips(req.params.team_id, index, limit)
-
-  is_in_team()
 
   const parsed_videos = videos.map(video => {
     return {

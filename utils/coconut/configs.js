@@ -18,8 +18,8 @@ const normal = (file) => {
   // 'mp4:720p': {
   //   'path': `${file}/720p.mp4`
   // },
-  'mp4:853x480': {
-    'path': `${file}/480p.mp4`
+  'mp4:1280x720': {
+    'path': `${file}/720p.mp4`
   }
   // 'httpstream': {
   //   'hls': { 'path': 'hls/' }
