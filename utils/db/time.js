@@ -60,12 +60,14 @@ const deleteById = id => {
   `, [ id ])
 }
 
-const deleteByIds = (ids) => {
+const deleteByIds = (ids, team_id) => {
   const placeholders = ids.map(() => '?').join(',');
   return query(`
-    DELETE FROM time
-    WHERE id IN (${placeholders});
-  `, ids);
+    DELETE time FROM time
+    LEFT JOIN video ON video.id = time.video_id
+    WHERE time.id IN (${placeholders}) 
+    AND video.team_id = ?;
+  `, [...ids, team_id]);
 }
 
 const timenameById = id => {
