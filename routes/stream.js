@@ -19,6 +19,32 @@ router.post('/', async (req, res) => {
   res.json(channel)
 })
 
+router.delete('/', user, async (req, res) => {
+  try {
+    const arn = req.body.arn;
+    console.log(arn)
+    const team_id = req.tiimio_user.currentTeamId
+
+    is_in_team(team_id)
+
+    const response = await streamHelper.deleteChannel(arn)
+
+    res.json(response)
+  } catch (error) {
+    console.error('Error deleting channel:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
+// router.get('/:arn', async (req, res) => {
+//   // const { team_id } = req.body
+//   const arn = req.params.arn
+
+//   const channel = await streamHelper.getChannelByArn(arn)
+
+//   res.json(channel)
+// })
+
 router.post('/webhook', (req, res) => {
   const body = req.body;
 

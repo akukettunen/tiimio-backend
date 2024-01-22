@@ -22,6 +22,19 @@ const createChannel = () => {
   return ivs.createChannel(params).promise()
 }
 
+const deleteChannel = (channelArn) => {
+  console.log(channelArn)
+  const config = {
+    region: process.env.COCONUT_REGION,
+    accessKeyId: process.env.IVS_ACCESS_KEY,
+    secretAccessKey: process.env.IVS_SECRET_ACCESS_KEY,
+  }
+  AWS.config.update(config);
+  const ivs = new AWS.IVS();
+
+  return ivs.deleteChannel({ arn: channelArn }).promise();
+}
+
 const getChannelByArn = (arn) => {
   const config = {
     region: process.env.COCONUT_REGION,
@@ -34,4 +47,4 @@ const getChannelByArn = (arn) => {
   return ivs.getChannel({ arn }).promise()
 }
 
-module.exports = { createChannel, getChannelByArn }
+module.exports = { createChannel, deleteChannel, getChannelByArn }
