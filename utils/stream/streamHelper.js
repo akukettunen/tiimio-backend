@@ -23,7 +23,6 @@ const createChannel = () => {
 }
 
 const deleteChannel = (channelArn) => {
-  console.log(channelArn)
   const config = {
     region: process.env.COCONUT_REGION,
     accessKeyId: process.env.IVS_ACCESS_KEY,

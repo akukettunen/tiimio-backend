@@ -22,7 +22,6 @@ router.post('/', async (req, res) => {
 router.delete('/', user, async (req, res) => {
   try {
     const arn = req.body.arn;
-    console.log(arn)
     const team_id = req.tiimio_user.currentTeamId
 
     is_in_team(team_id)
@@ -100,6 +99,10 @@ router.post('/webhook', (req, res) => {
 
   RECORDING_ENDED_WITH_FAILURE
   */
+  if(body.detail.recording_status == 'Recording End') {
+    streamHelper.deleteChannel(body.resources[0])
+  }
+
   const live_base = "https://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/"
   const base = "https://d3a8wbzbl3mii4.cloudfront.net/"
   const prefix = body.detail.recording_s3_key_prefix
