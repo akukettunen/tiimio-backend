@@ -12,9 +12,11 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
       sport_db = require('../utils/db/sport')
 
 router.post('/', async (req, res) => {
-  const { team_id } = req.body
+  const { team_id } = req.tiimio_user.currentTeamId
 
-  const channel = await streamHelper.createChannel()
+  is_in_team(team_id)
+
+  const channel = await streamHelper.createChannel(req.body.channelName)
 
   res.json(channel)
 })
@@ -46,6 +48,8 @@ router.delete('/', user, async (req, res) => {
 
 router.post('/webhook', (req, res) => {
   const body = req.body;
+  // const { team_id } = req.tiimio_user.currentTeamId || 404;
+  // console.log(team_id)
 
   /*
   EXAMPLE EVENTS
@@ -53,11 +57,11 @@ router.post('/webhook', (req, res) => {
   STREAM STARTED
   {
     version: '0',
-    id: 'e44d4e0c-961d-d052-b548-738dca9f0159',
+    id: 'e44d4e0c-961d-d052-b548-738dca9f0159', id
     'detail-type': 'IVS Recording State Change',
     source: 'aws.ivs',
     account: '660273657420',
-    time: '2023-12-13T21:46:11Z',
+    time: '2023-12-13T21:46:11Z', uploaded parsena tämä
     region: 'eu-west-1',
     resources: [ 'arn:aws:ivs:eu-west-1:660273657420:channel/AXnaRrhYNf7Z' ],
     detail: {
@@ -99,9 +103,6 @@ router.post('/webhook', (req, res) => {
 
   RECORDING_ENDED_WITH_FAILURE
   */
-  if(body.detail.recording_status == 'Recording End') {
-    streamHelper.deleteChannel(body.resources[0])
-  }
 
   const live_base = "https://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/"
   const base = "https://d3a8wbzbl3mii4.cloudfront.net/"
@@ -113,12 +114,44 @@ router.post('/webhook', (req, res) => {
   const recording_url = base + prefix + end_prefix_recording
   const live_url = live_base + prefix + end_prefix_live
   const thumb_url = base + prefix + end_prefix_thumb
+  const uploaded = streamHelper.parseUploaded(new Date(body.time))
 
   console.log(recording_url)
   console.log(live_url)
   console.log(thumb_url)
 
   console.log(body)
+
+  if(body.detail.recording_status == 'Recording Start') {
+    const datat = {
+      id: body.id,
+      team_id: 3,
+      original_url: recording_url,
+      service: 'ivs',
+      title: body.detail.channel_name,
+      original_type: 'hls',
+      original_size: 1,
+      hls_url: '',
+      duration_ts: body.detail.recording_duration_ms,
+      duration:  body.detail.recording_duration_ms / 1000,
+      thumb_url:  thumb_url,
+      uploaded: uploaded,
+      encoded: true
+    }
+    streamHelper.addInitialVideo(datat)
+  }
+  if(body.detail.recording_status == 'Recording End') {
+    console.log('test')
+    console.log(body.resources[0])
+    streamHelper.deleteChannel(body.resources[0])
+    const data = {
+      id: body.id,
+      duration_ts: body.detail.recording_duration_ms,
+      duration:  body.detail.recording_duration_ms / 1000,
+      thumb_url: thumb_url,
+    }
+    streamHelper.addFullVideo(data)
+  }
 
   res.send('ok!')
 })
