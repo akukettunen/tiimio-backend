@@ -2,7 +2,9 @@ const { v4: uuidv4 } = require('uuid');
 const AWS = require('aws-sdk');
 require('dotenv').config()
 
-const createChannel = (channelName) => {
+      stream_db = require('../db/stream.js')
+
+const createChannel = () => {
   const config = {
     region: process.env.COCONUT_REGION,
     accessKeyId: process.env.IVS_ACCESS_KEY,
@@ -11,7 +13,7 @@ const createChannel = (channelName) => {
   AWS.config.update(config);
   const ivs = new AWS.IVS();
 
-  console.log(channelName)
+  // console.log(channelName)
 
   const params = {
     authorized: false,
@@ -19,7 +21,6 @@ const createChannel = (channelName) => {
     name: uuidv4(),
     recordingConfigurationArn: "arn:aws:ivs:eu-west-1:660273657420:recording-configuration/pNBW5rGanrbB",
     type: "STANDARD",
-    name: channelName
   }
 
   return ivs.createChannel(params).promise()
@@ -46,19 +47,20 @@ const getChannelByArn = (arn) => {
   AWS.config.update(config);
   const ivs = new AWS.IVS();
 
-  return ivs.getChannel({ arn }).promise()
+  console.log(arn)
+
+  return ivs.getStream({ channelArn: arn }).promise()
 }
 
 const addInitialVideo = (params) => {
-  console.log(params)
+  stream_db.postStream(params)
 }
 
 const addFullVideo = (params) => {
-  console.log(params)
+  stream_db.updateDuration(params)
 }
 
 const parseUploaded = (time) => {
-  console.log(time)
   return time.getUTCFullYear() + '-' +
   padZero(time.getUTCMonth() + 1) + '-' +
   padZero(time.getUTCDate()) + ' ' +

@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express');
 const { user, is_in_team } = require('../middleware/authMiddleware');
+const { getChannelByArn } = require('../utils/stream/streamHelper');
       db = require('../utils/db/index')
       router = express.Router()
       bcrypt = require('bcryptjs');
@@ -16,7 +17,9 @@ router.post('/', async (req, res) => {
 
   is_in_team(team_id)
 
-  const channel = await streamHelper.createChannel(req.body.channelName)
+  // req.body.channelName
+
+  const channel = await streamHelper.createChannel()
 
   res.json(channel)
 })
@@ -37,14 +40,38 @@ router.delete('/', user, async (req, res) => {
   }
 })
 
-// router.get('/:arn', async (req, res) => {
-//   // const { team_id } = req.body
-//   const arn = req.params.arn
+router.put('/updateDetails', user, async (req, res) => {
+  // streamHelper.getChannelByArn()
+  const team_id = req.tiimio_user.currentTeamId
 
-//   const channel = await streamHelper.getChannelByArn(arn)
+  is_in_team(team_id)
 
-//   res.json(channel)
-// })
+  const {title, id} = req.body;
+  const email = req.tiimio_user.email
+  try {
+    stream_db.addStreamDetails({email, title, id})
+
+    res.send('ok!')
+  }
+  catch (error) {
+    console.error('Error updating stream details:', error)
+    res.status(500).json({error: 'Internal server error' })
+  }
+})
+
+router.get('/channel', user, async (req, res) => {
+  // const { team_id } = req.body
+  const arn = req.query.arn;
+  console.log('ARN: ', arn)
+  // const arn = req.body.arn
+
+  // console.log('test')
+  // console.log(arn)
+
+  const channel = await streamHelper.getChannelByArn(arn)
+
+  res.json(channel)
+})
 
 router.post('/webhook', (req, res) => {
   const body = req.body;
@@ -113,20 +140,22 @@ router.post('/webhook', (req, res) => {
 
   const recording_url = base + prefix + end_prefix_recording
   const live_url = live_base + prefix + end_prefix_live
-  const thumb_url = base + prefix + end_prefix_thumb
+  const thumb_url = live_base + prefix + end_prefix_thumb
   const uploaded = streamHelper.parseUploaded(new Date(body.time))
 
-  console.log(recording_url)
-  console.log(live_url)
-  console.log(thumb_url)
+  // console.log(recording_url)
+  // console.log(live_url)
+  // console.log(thumb_url)
 
-  console.log(body)
+  // console.log(body)
 
   if(body.detail.recording_status == 'Recording Start') {
     const datat = {
-      id: body.id,
+      id: body.detail.stream_id,
       team_id: 3,
-      original_url: recording_url,
+      s3_key: '',
+      original_url: live_url,
+      mp4_url: recording_url,
       service: 'ivs',
       title: body.detail.channel_name,
       original_type: 'hls',
@@ -136,19 +165,16 @@ router.post('/webhook', (req, res) => {
       duration:  body.detail.recording_duration_ms / 1000,
       thumb_url:  thumb_url,
       uploaded: uploaded,
-      encoded: true
+      encoded: true,
     }
     streamHelper.addInitialVideo(datat)
   }
   if(body.detail.recording_status == 'Recording End') {
-    console.log('test')
-    console.log(body.resources[0])
     streamHelper.deleteChannel(body.resources[0])
     const data = {
-      id: body.id,
+      id: body.detail.stream_id,
       duration_ts: body.detail.recording_duration_ms,
       duration:  body.detail.recording_duration_ms / 1000,
-      thumb_url: thumb_url,
     }
     streamHelper.addFullVideo(data)
   }
