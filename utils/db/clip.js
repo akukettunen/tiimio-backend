@@ -202,9 +202,16 @@ const gameClips = (id, team_id) => {
 
 const videoClips = id => {
   return query(`
+  SELECT 
+  clip.*,
+  COALESCE(tag_aggregates.num_of_tags, 0) AS num_of_tags,
+  COALESCE(tag_aggregates.tags, JSON_ARRAY()) AS tags,
+  COALESCE(point_aggregates.points, JSON_ARRAY()) AS points
+  FROM clip
+  LEFT JOIN (
     SELECT 
-      clip.*,
-      COUNT(object_tag.clip_id) as num_of_tags,
+      object_tag.clip_id,
+      COUNT(object_tag.clip_id) AS num_of_tags,
       JSON_ARRAYAGG(
         JSON_OBJECT(
           'name', tag.tag_name,
@@ -212,7 +219,14 @@ const videoClips = id => {
           'main_tag', object_tag.main_tag,
           'group_id', tag.group_id
         )
-      ) tags,
+      ) AS tags
+    FROM object_tag
+    JOIN tag ON object_tag.tag_id = tag.id
+    GROUP BY object_tag.clip_id
+  ) AS tag_aggregates ON clip.id = tag_aggregates.clip_id
+  LEFT JOIN (
+    SELECT 
+      map_point.clip_id,
       JSON_ARRAYAGG(
         JSON_OBJECT(
           'x', map_point.x,
@@ -222,19 +236,17 @@ const videoClips = id => {
           'color', map_point.color,
           'style', map_point.style,
           'url', map_base.url,
-          'clip_id', clip.id,
+          'clip_id', map_point.clip_id,
           'end_x', map_point.end_x,
           'end_y', map_point.end_y
         )
-      ) points
-    FROM clip
-    LEFT JOIN object_tag ON clip.id = object_tag.clip_id
-    LEFT JOIN tag ON object_tag.tag_id = tag.id
-    LEFT JOIN map_point ON map_point.clip_id = clip.id
-    LEFT JOIN map_base ON map_point.map_base_id = map_base.id
-    WHERE clip.video_id = ? OR clip.game_id = ?
-    GROUP BY clip.id
-    ORDER BY is_point, starttime;
+      ) AS points
+    FROM map_point
+    JOIN map_base ON map_point.map_base_id = map_base.id
+    GROUP BY map_point.clip_id
+  ) AS point_aggregates ON clip.id = point_aggregates.clip_id
+  WHERE clip.video_id = ? OR clip.game_id = ?
+  ORDER BY starttime; 
   `, [id, id])
 }
 

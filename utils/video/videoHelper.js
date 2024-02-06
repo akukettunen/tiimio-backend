@@ -48,7 +48,6 @@ const getVideo = async id => {
   let [ video ] = await video_db.videoById(id)
   
   if(!video) throw new Error('video not found')
-
   let clips = await clip_db.videoClips(id)
   let times = await timeHelper.videoTimes(id)
   let mapped_times = times.map(t => {
