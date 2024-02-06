@@ -1,10 +1,10 @@
 const { query } = require('./index.js')
 
-const createTeam = ({ sportId, name, joinCode, leagueId, planId }) => {
+const createTeam = ({ sportId, name, joinCode, leagueId, planId, initialAdmin }) => {
   return query(`
-    INSERT INTO team (team_name, league_id, sport_id, created, plan_id, join_code)
-    VALUES (?, ?, ?, NOW(), ?, ?);
-  `, [name, leagueId, sportId, planId, joinCode])
+    INSERT INTO team (team_name, league_id, sport_id, created, plan_id, join_code, initial_admin)
+    VALUES (?, ?, ?, NOW(), ?, ?, ?);
+  `, [name, leagueId, sportId, planId, joinCode, initialAdmin])
 }
 const userTeams = email => {
   return query(`

@@ -161,7 +161,8 @@ const deleteByIds = (ids, team_id) => {
   const placeholders = ids.map(() => '?').join(',');
   return query(`
     DELETE FROM clip
-    WHERE id IN (${placeholders}) AND team_id = ?;
+    WHERE id IN (${placeholders})
+    AND team_id = ?;
   `, [...ids, team_id]);
 }
 

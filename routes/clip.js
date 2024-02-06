@@ -207,21 +207,21 @@ router.post('/:id/folder/:folder_id', user, async (req, res) => {
 })
 
 // Route to delete multiple clips
-// THIS IS NOT SAFE - NO CHECK FOR BELONGING TO TEAM
-// router.delete('/clips', user, async (req, res) => {
-//   const ids = req.body.ids;
+router.delete('/clips', user, async (req, res) => {
+  const ids = req.body.ids;
+  console.log(ids)
 
-//   if (!ids || !Array.isArray(ids) || ids.length === 0) {
-//     return res.status(400).json({ message: 'Bad request' });
-//   }
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'Bad request' });
+  }
 
-//   try {
-//     const test = await clip_db.deleteByIds(ids, 9999);
-//     res.json('Clips deleted successfully!');
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
+  try {
+    await clip_db.deleteByIds(ids, req.tiimio_user.currentTeamId);
+    res.json('Clips deleted successfully!');
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 router.delete('/:id', user, async (req, res) => {
   if(!req.params.id) throw new Error('bad request')

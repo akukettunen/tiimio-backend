@@ -238,7 +238,7 @@ router.post('/change-password/code', async (req, res) => {
   const user_token = jwt.sign(
     user,
     process.env.SECRET_KEY,
-    { expiresIn: '1d' }
+    { expiresIn: '7d' }
   )
 
   res.send({ token: user_token })

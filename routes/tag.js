@@ -325,7 +325,7 @@ router.post('/', user, async (req, res) => {
   res.json(tags)
 })
 
-router.put('/group/:tag_group_id', user, async (req, res) => {
+router.put('/group/archive/:tag_group_id', user, async (req, res) => {
   let [group] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
   if(group.league_id || group.immutable || group.sport_id) inline_tiimi_admin(req)
@@ -337,7 +337,7 @@ router.put('/group/:tag_group_id', user, async (req, res) => {
   res.send('ok!')
 })
 
-router.put('/group/tags/:tag_group_id', user, async (req, res) => {
+router.put('/group/tags/archive/:tag_group_id', user, async (req, res) => {
   // TODO archive mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
   if(!group) throw new Error('group not found')
