@@ -221,7 +221,9 @@ const videoClips = id => {
           'color', map_point.color,
           'style', map_point.style,
           'url', map_base.url,
-          'clip_id', clip.id
+          'clip_id', clip.id,
+          'end_x', map_point.end_x,
+          'end_y', map_point.end_y
         )
       ) points
     FROM clip

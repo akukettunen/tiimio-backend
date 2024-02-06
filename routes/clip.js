@@ -132,7 +132,7 @@ router.post('/', user, async (req, res, next) => {
 
   let added = await clip_db.addClip(req.body)
 
-  if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id]))
+  if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id, p.end_x, p.end_y]))
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags, main_tag_id)
   
   let clip = await clip_helper.clipById(added.insertId, game_id)
