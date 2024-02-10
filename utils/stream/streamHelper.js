@@ -4,7 +4,7 @@ require('dotenv').config()
 
       stream_db = require('../db/stream.js')
 
-const createChannel = () => {
+const createChannel = (streamTitle) => {
   const config = {
     region: process.env.COCONUT_REGION,
     accessKeyId: process.env.IVS_ACCESS_KEY,
@@ -13,13 +13,14 @@ const createChannel = () => {
   AWS.config.update(config);
   const ivs = new AWS.IVS();
 
-  // console.log(channelName)
-
   const params = {
     authorized: false,
     latencyMode: "LOW",
     name: uuidv4(),
     recordingConfigurationArn: "arn:aws:ivs:eu-west-1:660273657420:recording-configuration/pNBW5rGanrbB",
+    tags: {
+      title: streamTitle
+    },
     type: "STANDARD",
   }
 
@@ -38,7 +39,7 @@ const deleteChannel = (channelArn) => {
   return ivs.deleteChannel({ arn: channelArn }).promise();
 }
 
-const getChannelByArn = (arn) => {
+const getChannelByArn = async (arn) => {
   const config = {
     region: process.env.COCONUT_REGION,
     accessKeyId: process.env.IVS_ACCESS_KEY,
@@ -47,9 +48,9 @@ const getChannelByArn = (arn) => {
   AWS.config.update(config);
   const ivs = new AWS.IVS();
 
-  console.log(arn)
+  const channel = await ivs.getChannel({ arn: arn }).promise()
 
-  return ivs.getStream({ channelArn: arn }).promise()
+  return channel
 }
 
 const addInitialVideo = (params) => {

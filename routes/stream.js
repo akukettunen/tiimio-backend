@@ -14,12 +14,11 @@ const { getChannelByArn } = require('../utils/stream/streamHelper');
 
 router.post('/', async (req, res) => {
   const { team_id } = req.tiimio_user.currentTeamId
+  const streamTitle = req.body.title
 
   is_in_team(team_id)
 
-  // req.body.channelName
-
-  const channel = await streamHelper.createChannel()
+  const channel = await streamHelper.createChannel(streamTitle)
 
   res.json(channel)
 })
@@ -73,7 +72,7 @@ router.get('/channel', user, async (req, res) => {
   res.json(channel)
 })
 
-router.post('/webhook', (req, res) => {
+router.post('/webhook', async (req, res) => {
   const body = req.body;
   // const { team_id } = req.tiimio_user.currentTeamId || 404;
   // console.log(team_id)
@@ -146,18 +145,18 @@ router.post('/webhook', (req, res) => {
   // console.log(recording_url)
   // console.log(live_url)
   // console.log(thumb_url)
-
   // console.log(body)
 
   if(body.detail.recording_status == 'Recording Start') {
+    const channel = await streamHelper.getChannelByArn(body.resources[0]); // Await added here
     const datat = {
       id: body.detail.stream_id,
       team_id: 3,
       s3_key: '',
-      original_url: live_url,
+      original_url: live_url, // nämä varmaan toisinpäin ilmeisesti
       mp4_url: recording_url,
       service: 'ivs',
-      title: body.detail.channel_name,
+      title: channel.channel.tags.title,
       original_type: 'hls',
       original_size: 1,
       hls_url: '',
@@ -178,6 +177,8 @@ router.post('/webhook', (req, res) => {
     }
     streamHelper.addFullVideo(data)
   }
+
+
 
   res.send('ok!')
 })
