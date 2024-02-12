@@ -151,9 +151,6 @@ router.post('/join', user, async (req, res) => {
   const [ added_to_team ] = await team_db.teamById(team.id)
   teams = teams.concat({ team_admin: isInitialAdmin, ...added_to_team })
 
-  // Add team joiner and sport_id tags to user
-  await mail.addTagToUser(req.tiimio_user.email, ['Joined team', team.sport_id])
-
   const user = await userHelper.createUserData(team.id, req.tiimio_user, teams)
 
   const token = jwt.sign(
