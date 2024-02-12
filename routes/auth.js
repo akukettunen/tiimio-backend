@@ -129,8 +129,6 @@ router.post('/signin', async (req, res) => {
   if(process.env.ENVIRONMENT == 'dev') tags = ['Development', 'User']
   else tags = ['User']
 
-  await mail.addUserToAudience(email, first_name, last_name, tags)
-
   let [ user ] = await user_db.getUserByEmail(email)
   const teams = []
   
