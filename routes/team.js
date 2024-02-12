@@ -103,9 +103,6 @@ router.post('/', user, async (req, res) => {
     throw new Error(e)
   }
 
-  // Add team owner tag to user
-  if(!dont_add_user) await mail.addTagToUser(req.tiimio_user.email, ['Team owner - Free', sport_id])
-
   const user = await userHelper.createUserData(insertId, req.tiimio_user)
 
   const token = jwt.sign(
