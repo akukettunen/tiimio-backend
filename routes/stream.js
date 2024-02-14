@@ -61,7 +61,6 @@ router.put('/updateDetails', user, async (req, res) => {
 router.get('/channel', user, async (req, res) => {
   // const { team_id } = req.body
   const arn = req.query.arn;
-  console.log('ARN: ', arn)
   // const arn = req.body.arn
 
   // console.log('test')
@@ -153,10 +152,10 @@ router.post('/webhook', async (req, res) => {
       id: body.detail.stream_id,
       team_id: 3,
       s3_key: '',
-      original_url: live_url, // nämä varmaan toisinpäin ilmeisesti
-      mp4_url: recording_url,
+      original_url: recording_url, // nämä varmaan toisinpäin ilmeisesti
+      mp4_url: live_url,
       service: 'ivs',
-      title: channel.channel.tags.title,
+      title: channel.channel.tags.title || 'Name not set',
       original_type: 'hls',
       original_size: 1,
       hls_url: '',
