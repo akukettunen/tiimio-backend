@@ -29,7 +29,7 @@ const { v4: uuidv4 } = require('uuid');
 const { default: videoHelper } = require('../utils/video/videoHelper');
 
 router.post('/', user, async (req, res) => {
-  const { team_name, sport_id, dont_add_user, plan_id } = req.body
+  const { team_name, sport_id, dont_add_user, plan_id, initial_admin } = req.body
   if(!team_name || !sport_id) throw new Error('bad request')
 
   const joinCode = await team_helper.generateJoinCode()
@@ -53,7 +53,8 @@ router.post('/', user, async (req, res) => {
     joinCode, 
     leagueId: undefined,
     joinCode,
-    planId
+    planId,
+    initialAdmin: initial_admin
   })
 
   if(!dont_add_user) {
@@ -102,9 +103,6 @@ router.post('/', user, async (req, res) => {
     throw new Error(e)
   }
 
-  // Add team owner tag to user
-  if(!dont_add_user) await mail.addTagToUser(req.tiimio_user.email, ['Team owner - Free', sport_id])
-
   const user = await userHelper.createUserData(insertId, req.tiimio_user)
 
   const token = jwt.sign(
@@ -134,7 +132,14 @@ router.post('/join', user, async (req, res) => {
 
   if(number_of_users >= team.users) throw new Error('Teams user limit reached :/')
   
-  const isInitialAdmin = team.initial_admin == req.tiimio_user.email
+  let isInitialAdmin;
+
+  if(!team.initial_admin) isInitialAdmin = false;
+  else {
+    admins = team.initial_admin.split(',')
+    const isAdmin = admins.map(a => a.trim()).includes(req.tiimio_user.email)
+    isInitialAdmin = isAdmin
+  }
 
   await team_db.addUserToTeam({
     email: req.tiimio_user.email,
@@ -144,10 +149,7 @@ router.post('/join', user, async (req, res) => {
 
   // this is a workaround
   const [ added_to_team ] = await team_db.teamById(team.id)
-  teams = teams.concat(added_to_team)
-
-  // Add team joiner and sport_id tags to user
-  await mail.addTagToUser(req.tiimio_user.email, ['Joined team', team.sport_id])
+  teams = teams.concat({ team_admin: isInitialAdmin, ...added_to_team })
 
   const user = await userHelper.createUserData(team.id, req.tiimio_user, teams)
 

@@ -129,8 +129,6 @@ router.post('/signin', async (req, res) => {
   if(process.env.ENVIRONMENT == 'dev') tags = ['Development', 'User']
   else tags = ['User']
 
-  await mail.addUserToAudience(email, first_name, last_name, tags)
-
   let [ user ] = await user_db.getUserByEmail(email)
   const teams = []
   
@@ -238,7 +236,7 @@ router.post('/change-password/code', async (req, res) => {
   const user_token = jwt.sign(
     user,
     process.env.SECRET_KEY,
-    { expiresIn: '1d' }
+    { expiresIn: '7d' }
   )
 
   res.send({ token: user_token })

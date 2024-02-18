@@ -132,7 +132,7 @@ router.post('/', user, async (req, res, next) => {
 
   let added = await clip_db.addClip(req.body)
 
-  if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id]))
+  if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id, p.end_x, p.end_y]))
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags, main_tag_id)
   
   let clip = await clip_helper.clipById(added.insertId, game_id)
@@ -207,21 +207,21 @@ router.post('/:id/folder/:folder_id', user, async (req, res) => {
 })
 
 // Route to delete multiple clips
-// THIS IS NOT SAFE - NO CHECK FOR BELONGING TO TEAM
-// router.delete('/clips', user, async (req, res) => {
-//   const ids = req.body.ids;
+router.delete('/clips', user, async (req, res) => {
+  const ids = req.body.ids;
+  console.log(ids)
 
-//   if (!ids || !Array.isArray(ids) || ids.length === 0) {
-//     return res.status(400).json({ message: 'Bad request' });
-//   }
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'Bad request' });
+  }
 
-//   try {
-//     const test = await clip_db.deleteByIds(ids, 9999);
-//     res.json('Clips deleted successfully!');
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
+  try {
+    await clip_db.deleteByIds(ids, req.tiimio_user.currentTeamId);
+    res.json('Clips deleted successfully!');
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 router.delete('/:id', user, async (req, res) => {
   if(!req.params.id) throw new Error('bad request')
