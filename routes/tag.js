@@ -167,6 +167,8 @@ router.put('/group/:group_id/join', user, async (req, res) => {
   if(!group) throw new Error('Group not found')
   if(group.league_id || group.sport_id || group.immutable) inline_tiimi_admin(req)
 
+  inline_is_in_team(group.team_id, req)
+
   await tag_db.deleteGroupJoins(req.params.group_id)
   if(join_ids && join_ids.length) await tag_db.addGroupJoins(req.params.group_id, join_ids)
 
@@ -183,6 +185,8 @@ router.put('/group/:group_id/name', user, async (req, res, next) => {
   if(group.league_id || group.sport_id || group.immutable) {
     inline_tiimi_admin(req, res, next)
   }
+
+  inline_is_in_team(group.team_id, req)
 
   await tag_db.updateTagGroupName({ id: req.params.group_id, name: req.body.group_name })
 
@@ -218,6 +222,8 @@ router.put('/:tag_id/name', user, async (req, res, next) => {
 
   const [ tag ] = await tag_db.tagById(req.params.tag_id)
   const [ group ] = await tag_db.groupById(tag.group_id)
+
+  inline_is_in_team(group.team_id, req)
 
   if(!tag.team_id && group.sport_id) inline_tiimi_admin(req, res, next)
 
@@ -258,7 +264,7 @@ router.put('/:tag_id', user, async (req, res, next) => {
 
   if(!tag.team_id && tag_group.sport_id) inline_tiimi_admin(req, res, next)
 
-  is_in_team(tag_group.team_id)(req)
+  inline_is_in_team(tag_group.team_id, req)
 
   await tag_db.updateTag({...req.body, id: req.params.tag_id})
 
@@ -292,7 +298,7 @@ router.post('/', user, async (req, res) => {
   let mirrors = await tag_db.mirroringGroups(group_id)
   mirrors = mirrors.map(m => m.tag_group_id)
 
-  is_in_team(group.team_id)
+  inline_is_in_team(group.team_id, req)
 
   let add_info = await tag_db.createTag({
     tag_name,
@@ -330,7 +336,7 @@ router.put('/group/archive/:tag_group_id', user, async (req, res) => {
   if(!group) throw new Error('group not found')
   if(group.league_id || group.immutable || group.sport_id) inline_tiimi_admin(req)
 
-  is_in_team(group.team_id)
+  inline_is_in_team(group.team_id, req)
 
   await tag_db.archiveGroupById({ id: req.params.tag_group_id, archived: req.body.archived })
   
@@ -343,7 +349,7 @@ router.put('/group/tags/archive/:tag_group_id', user, async (req, res) => {
   if(!group) throw new Error('group not found')
   if(group.league_id || group.immutable || group.sport_id) inline_tiimi_admin(req)
 
-  is_in_team(group.team_id)
+  inline_is_in_team(group.team_id, req)
 
   await tag_db.archiveTagsByGroupId({ id: req.params.tag_group_id, archived: req.body.archived })
   
@@ -387,7 +393,7 @@ router.put('/tag/:tag_id', user, async (req, res) => {
   if(!group) throw new Error('group not found')
   if(group.league_id || (group.sport_id && !tag.team_id)) inline_tiimi_admin(req)
 
-  is_in_team(group.team_id)
+  inline_is_in_team(group.team_id, req)
 
   await tag_db.archiveTagById({id: req.params.tag_id, archived: req.body.archived})
 

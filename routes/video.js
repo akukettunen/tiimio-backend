@@ -1,7 +1,7 @@
 require('dotenv')
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
-const { user, is_in_team } = require('../middleware/authMiddleware');
+const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddleware');
       router = express.Router()
       db = require('../utils/db/index')
       bcrypt = require('bcryptjs');
@@ -22,12 +22,9 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
       require('express-async-errors');
       ytdl = require('ytdl-core');
 
-router.post('/', user, async (req, res) => {
-  console.log(req.body)
+router.post('/', user, is_in_team(), async (req, res) => {
   // id should be in form 123-345/123-645
   const id = req.body.id.split('/')[0] || uuidv4()
-
-  is_in_team()
 
   let url;
   if(process.env.ENVIRONMENT == 'deve') {
@@ -102,30 +99,30 @@ router.post('/', user, async (req, res) => {
   res.send({ video, job })
 })
 
-router.put('/yt', user, async (req, res) => {
-  const { url } = req.body
-  const is_url = ytdl.validateURL(url)
-  if(!is_url) throw new Error('Invalid url')
+// router.put('/yt', user, async (req, res) => {
+//   const { url } = req.body
+//   const is_url = ytdl.validateURL(url)
+//   if(!is_url) throw new Error('Invalid url')
 
-  const info = await ytdl.getInfo(url, [])
+//   const info = await ytdl.getInfo(url, [])
 
-  const widths = info.formats.filter(f => f.container == 'mp4').map(f => {return { w: f.width, label: f.qualityLabel }})
+//   const widths = info.formats.filter(f => f.container == 'mp4').map(f => {return { w: f.width, label: f.qualityLabel }})
 
-  let d_url
-  if(widths.find(f => f.label == '720p')) {
-    let i = widths.findIndex(f => f.label == '720p')
-    d_url = info.formats[i]?.url
-  } else if(widths.find(f => f.label == '1080p')) {
-    let i = widths.findIndex(f => f.label == '1080p')
-    d_url = info.formats[i]?.url
-  } else if(widths.find(f => f.label == '480p')) {
-    let i = widths.findIndex(f => f.label == '480p')
-    d_url = info.formats[i]?.url
-  }
-  console.log({ url: d_url, title: info.videoDetails.title || 'No title' })
-  if(!d_url) throw new Error("couldn't fetch donwload url")
-  res.json({ url: d_url, title: info.videoDetails.title || 'No title' })
-})
+//   let d_url
+//   if(widths.find(f => f.label == '720p')) {
+//     let i = widths.findIndex(f => f.label == '720p')
+//     d_url = info.formats[i]?.url
+//   } else if(widths.find(f => f.label == '1080p')) {
+//     let i = widths.findIndex(f => f.label == '1080p')
+//     d_url = info.formats[i]?.url
+//   } else if(widths.find(f => f.label == '480p')) {
+//     let i = widths.findIndex(f => f.label == '480p')
+//     d_url = info.formats[i]?.url
+//   }
+//   console.log({ url: d_url, title: info.videoDetails.title || 'No title' })
+//   if(!d_url) throw new Error("couldn't fetch donwload url")
+//   res.json({ url: d_url, title: info.videoDetails.title || 'No title' })
+// })
 
 router.get('/:id/encoding-state', user, async (req, res) => {
   // let [ video ] = await video_db.videoById(req.params.id)
@@ -160,6 +157,9 @@ router.get('/:id/encoding-state', user, async (req, res) => {
 
 router.get('/team/:id', user, async (req, res) => {
   let videos = await video_db.teamVideos(req.params.id)
+
+  inline_is_in_team(req.params.id, req)
+
   let [{ uploaded_this_month }] = await video_db.uploadedThisMonth(req.params.id)
   let [{ total_video_saved }] = await video_db.uploadedTotalNotDeleted(req.params.id)
   res.send({
@@ -170,8 +170,6 @@ router.get('/team/:id', user, async (req, res) => {
 })
 
 router.get('/:id', user, async (req, res) => {
-  // TODO: vain oman joukkueen videot
-
   let video;
   try {
     video = await videoHelper.getVideo(req.params.id)
@@ -179,12 +177,12 @@ router.get('/:id', user, async (req, res) => {
     throw new Error(e)
   }
 
+  inline_is_in_team(video.team_id, req)
+
   res.json( video )
 })
 
-router.get('/team/:team_id/uploaded', user, async (req, res) => {
-  is_in_team()
-
+router.get('/team/:team_id/uploaded', user, is_in_team(), async (req, res) => {
   const [{ uploaded_this_month }] = await video_db.uploadedThisMonth(req.params.team_id)
 
   res.json({ uploaded_this_month })
@@ -207,7 +205,7 @@ router.put('/:id', user, async (req, res) => {
   const { team_id, title } =  req.body;
   if(!team_id || !title || !req.params.id) throw new Error('bad request')
   
-  is_in_team()
+  inline_is_in_team(team_id, req)
 
   await video_db.updateVideoTitle({
     id:  req.params.id,
@@ -224,7 +222,7 @@ router.delete('/:id', user, async (req, res) => {
 
   let [ video ] = await video_db.videoById(req.params.id)
 
-  is_in_team(video.team_id)
+  inline_is_in_team(video.team_id, req)
   
   await video_db.deleteById(req.params.id)
   await aws.deleteByFolder(video.s3_key)

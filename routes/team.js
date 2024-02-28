@@ -164,15 +164,15 @@ router.post('/join', user, async (req, res) => {
 
   if(invite_code) await team_db.deleteInvite( team.id,  req.tiimio_user.email)
 
-  res.json({ 
-    token, 
+  res.json({
+    token,
     team
   })
 })
 
 router.post('/:team_id/invite', user, is_in_team(), async (req, res) => {
-  const [team] = await team_db.teamById(req.params.team_id)
-  let [current_users] = await team_db.teamUserAmount(req.params.team_id)
+  const [ team ] = await team_db.teamById(req.params.team_id)
+  let [ current_users ] = await team_db.teamUserAmount(req.params.team_id)
   current_users = current_users?.amount || 0
   const allowed_users = team?.users || 0
 
@@ -241,7 +241,7 @@ router.delete('/:team_id/invite/:email', user, is_in_team(), async (req, res) =>
 router.get('/:id/users', user, async (req, res) => {
   let user = req.tiimio_user
   let team = user.teams.find(team => team.id == req.params.id)
-  if(!team) throw new Error('invalid auth')
+  if(!team || !team.team_admin) throw new Error('invalid auth')
 
   let users = await team_db.teamUsers(team.id)
 
@@ -259,10 +259,11 @@ router.get('/:id/joincodestate', user, async (req, res) => {
 })
 
 router.put('/:id/joincode', user, async (req, res) => {
-  // TODO check admin
   let user = req.tiimio_user
-  const code = await team_helper.generateJoinCode()
   let team = user.teams.find(team => team.id == req.params.id)
+  if(!team || !team.team_admin) throw new Error('invalid auth')
+
+  const code = await team_helper.generateJoinCode()
 
   if(!team) throw new Error('invalid auth')
 
@@ -284,8 +285,9 @@ router.put('/:id/joincode', user, async (req, res) => {
 })
 
 router.put('/:id/user/:email', user, async (req, res) => {
-  // TODO check admin and params
-  // TODO cant be team_owner whos changes
+  let user = req.tiimio_user
+  let team = user.teams.find(team => team.id == req.params.id)
+  if(!team || !team.team_admin) throw new Error('invalid auth')
 
   await team_db.setAdminStatus(req.params.id, req.params.email, req.body.team_admin)
 
@@ -293,29 +295,32 @@ router.put('/:id/user/:email', user, async (req, res) => {
 })
 
 router.delete('/:id/user/:email', user, async (req, res) => {
-  // TODO check admin/theirself and params existing
-  // TODO cant be team_owner whos deleted
+  let user = req.tiimio_user
+  let team = user.teams.find(team => team.id == req.params.id)
+  if(!team || !team.team_admin) throw new Error('invalid auth')
 
-  let data = await team_db.deleteUserFromTeam(req.params.id, req.params.email)
+  const [ user_team ] = await user_db.getUserTeam(req.params.email, req.params.id)
+
+  if(!user_team || user_team.team_orderer) throw new Error('auth error')
+
+  await team_db.deleteUserFromTeam(req.params.id, req.params.email)
 
   res.send('user deleted!')
 })
 
-router.delete('/userteam/:team_id/user/:email', user, async (req, res) => {
-  is_in_team()
+// router.delete('/userteam/:team_id/user/:email', user, is_in_team(), async (req, res) => {
+//   const { team_id, email } = req.params;
 
-  const { team_id, email } = req.params;
+//   await team_db.deleteUserTeam(email, team_id)
 
-  await team_db.deleteUserTeam(email, team_id)
+//   const user = await userHelper.createUserData(team_id, req.tiimio_user)
 
-  const user = await userHelper.createUserData(team_id, req.tiimio_user)
+//   const token = jwt.sign(
+//     user,
+//     process.env.SECRET_KEY
+//   )
 
-  const token = jwt.sign(
-    user,
-    process.env.SECRET_KEY
-  )
-
-  res.json({ token })
-})
+//   res.json({ token })
+// })
 
 module.exports = router;

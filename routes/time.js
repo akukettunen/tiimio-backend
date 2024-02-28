@@ -16,19 +16,15 @@ const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddl
       user_db = require('../utils/db/user')
       folder_db = require('../utils/db/folder')
 
-router.get('/timename/team/:team_id', user, async (req, res) => {
+router.get('/timename/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
-  
-  is_in_team()
 
   let timenames = await time_db.teamTimenames(req.params.team_id)
 
   res.json(timenames)
 })
 
-router.put('/timename', user, async (req, res) => {
-  is_in_team()
-
+router.put('/timename', user, is_in_team(), async (req, res) => {
   if(!req.body.name || !req.body.id) throw new Error('bad request')
 
   await time_db.updateTimename(req.body.name, req.body.hidden || false, req.body.id)
@@ -38,10 +34,8 @@ router.put('/timename', user, async (req, res) => {
   res.json(timename)
 })
 
-router.put('/timename/order', user, async (req, res) => {
+router.put('/timename/order', user, is_in_team(), async (req, res) => {
   if(!req.body.timenames || !req.body.team_id) throw new Error('bad request')
-
-  is_in_team()
 
   const promises = req.body.timenames.map((t, i) => {
     return time_db.editTimenameOrder(t.id, i)
@@ -52,7 +46,7 @@ router.put('/timename/order', user, async (req, res) => {
   res.json('ok!')
 })
 
-router.get('/team/:team_id', async (req, res) => {
+router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   let { page, itemsPerPage, sortBy, sortDesc, columns, tags } = req.query;
 
   sortBy = sortBy === 'undefined' ? undefined : sortBy
@@ -82,7 +76,7 @@ router.get('/team/:team_id', async (req, res) => {
 router.put('/:time_id/tag', user, async (req, res) => {
   const [ time ] = await time_db.timeAndVideoByTimeId(req.params.time_id)
 
-  is_in_team(time.team_id)
+  inline_is_in_team(time.team_id, req)
 
   const current_tags = await time_db.timeTags(req.params.time_id)
   const new_tags_ids = req.body.tags
@@ -106,9 +100,7 @@ router.put('/:time_id/tag', user, async (req, res) => {
   res.json(updatedTime)
 })
 
-router.post('/timename', user, async (req, res) => {
-  is_in_team()
-
+router.post('/timename', user, is_in_team(), async (req, res) => {
   const add = req.body
 
   if(!add || !add.name || !add.team_id) throw new Error('bad request')
@@ -128,6 +120,8 @@ router.post('/', user, async (req, res) => {
   }
 
   const [ video ] = await video_db.videoById(video_id)
+
+  inline_is_in_team(video.team_id, req)
 
   let largest;
   timenames.forEach(t => {
@@ -159,6 +153,7 @@ router.delete('/times', user, async (req, res) => {
   }
 
   try {
+    // checking team in function
     await time_db.deleteByIds(ids, req.tiimio_user.currentTeamId);
     res.json('Times deleted successfully!');
   } catch (err) {
@@ -185,6 +180,8 @@ router.delete('/:id', user, async (req, res) => {
 router.get('/:id', user, async (req, res) => {
   const time = await time_helper.timeById(req.params.id)
 
+  inline_is_in_team(time.team_id, req)
+
   res.json(time)
 })
 
@@ -195,7 +192,7 @@ router.put('/:time_id/title', user, async (req, res) => {
 
   const [ video ] = await video_db.videoById(time.video_id)
 
-  is_in_team(video.team_id)
+  inline_is_in_team(video.team_id, req)
 
   await time_db.putTimeTitle({ id: req.params.time_id, title: req.body.title })
   
