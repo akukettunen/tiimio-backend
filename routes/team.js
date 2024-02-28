@@ -160,8 +160,8 @@ router.post('/join', user, async (req, res) => {
 
   if(invite_code) await team_db.deleteInvite( team.id,  req.tiimio_user.email)
 
-  res.json({ 
-    token, 
+  res.json({
+    token,
     team
   })
 })
