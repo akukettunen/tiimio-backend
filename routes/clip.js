@@ -264,6 +264,4 @@ router.delete('/:id', user, async (req, res) => {
 //   }
 // })
 
-
-
 module.exports = router;
