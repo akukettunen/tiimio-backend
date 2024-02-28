@@ -1,7 +1,7 @@
 require('dotenv')
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
-const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware');
+const { user, is_in_team, tiimi_admin, inline_is_in_team } = require('../middleware/authMiddleware');
       router = express.Router()
       db = require('../utils/db/index')
       bcrypt = require('bcryptjs');
@@ -23,6 +23,9 @@ const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware'
 
 router.get('/base/team/:id', user, async (req, res) => {
   const [team] = await team_db.teamById(req.params.id)
+
+  inline_is_in_team(team.id, req)
+
   const maps = await maps_db.sportMapBases(team.sport_id)
 
   res.json(maps)
@@ -38,7 +41,7 @@ router.post('/', user, async (req, res) => {
 
   if(!title || !map_base_id || !team_id) throw new Error('bad request')
   
-  is_in_team(req.body.team_id)
+  inline_is_in_team(req.body.team_id, req)
 
   const insertData = await maps_db.addMap(req.body)
   const map = await maps_db.mapById(insertData.insertId)
@@ -57,13 +60,12 @@ router.get('/:map_id', user, async (req, res) => {
   const [ map ] = await maps_db.mapById(map_id)
 
   if(!map) throw new Error('map not found')
-  is_in_team(map.team_id)
+  inline_is_in_team(map.team_id, req)
 
   res.json(map)
 })
 
-router.get('/team/:team_id', user, async (req, res) => {
-  is_in_team()
+router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   const maps = await maps_db.teamMaps(req.params.team_id)
 
   res.json(maps)
@@ -75,7 +77,7 @@ router.get('/:map_id/points', user, async (req, res) => {
 
   const map = await maps_db.mapById(map_id)
 
-  is_in_team(map.team_id)
+  inline_is_in_team(map.team_id, req)
 
   const points = await maps_db.mapPoints(map_id, limit ? Number(limit) : undefined)
 
@@ -84,6 +86,10 @@ router.get('/:map_id/points', user, async (req, res) => {
 
 router.put('/:map_id', user, async (req, res) => {
   const { title, description, points } = req.body;
+  const [ old_map ] = await maps_db.mapById(Number(req.params.map_id))
+
+  inline_is_in_team(old_map.team_id, req)
+
   if(points && points.length) {
     const mapped_points = points.map(p => {
       return [ Number(p.id), Number(req.params.map_id), p.x, p.y, p.color, p.style, undefined, undefined ]
@@ -108,14 +114,11 @@ router.put('/:map_id', user, async (req, res) => {
 router.delete('/:map_id', user, async (req, res) => {
   const map = await maps_db.mapById(req.params.map_id)
 
-  is_in_team(map.team_id)
+  inline_is_in_team(map.team_id, req)
 
   await maps_db.deleteMap(req.params.map_id)
   
   res.json('ok!')
 })
 
-router.post('/base', (req, res) => {
-  
-})
 module.exports = router;

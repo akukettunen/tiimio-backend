@@ -1,5 +1,6 @@
 const express = require('express');
 const { query } = require('../utils/db/index')
+const { tiimi_admin } = require('../middleware/authMiddleware');
       db = require('../utils/db/index')
       router = express.Router()
       bcrypt = require('bcryptjs')
