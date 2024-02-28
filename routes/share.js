@@ -80,7 +80,6 @@ router.get('/:code', async (req, res) => {
   const [ share ] = await sdb.getShare(code)
 
   if(!share) throw new Error('Share link not valid')
-  console.log(share.video_id)
   switch(share.resource_type) {
     case 'video':
       const video = await videoHelper.getVideo(share.video_id)

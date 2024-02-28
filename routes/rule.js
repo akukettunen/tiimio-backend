@@ -12,7 +12,7 @@ const express = require('express');
       stripe = require('../utils/stripe/index')
       tagHelper = require('../utils/tag')
       require('express-async-errors');
-      const { user, is_in_team } = require('../middleware/authMiddleware');
+      const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddleware');
 const { deleteById } = require('../utils/db/tag');
 
 // router.post('/batch', user, async (req, res) => {
@@ -35,8 +35,7 @@ const { deleteById } = require('../utils/db/tag');
 //   res.json(rules)
 // })
 
-router.post('/team/:team_id', user, async (req, res) => {
-  is_in_team()
+router.post('/team/:team_id', user, is_in_team(), async (req, res) => {
   let rule = req.body
   rule = { ...rule, team_id: req.params.team_id}
 
@@ -46,9 +45,7 @@ router.post('/team/:team_id', user, async (req, res) => {
   res.json(saved_rule)
 })
 
-router.get('/team/:team_id', user, async (req, res) => {
-  is_in_team()
-  
+router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   let rules = await rule_db.teamRules(req.params.team_id)
 
   res.json(rules)
@@ -59,7 +56,7 @@ router.delete('/:id', user, async (req, res) => {
 
   if(!rule) throw new Error('rule not found')
 
-  is_in_team(rule.team_id) 
+  inline_is_in_team(rule.team_id, req) 
 
   await rule_db.deleteById(rule.id)
 
@@ -69,11 +66,15 @@ router.delete('/:id', user, async (req, res) => {
 router.put('/:id', user, async (req, res) => {
   let { rule } = req.body
   if(!rule) throw new Error('empty rule')
-  console.log(req.body)
+
+  const [ old_rule ] = await rule_db.byId(req.params.id)
+
+  inline_is_in_team(old_rule.team_id, req)
+
   const insertData = await rule_db.putRule({...req.body, id: req.params.id})
 
-  const [saved_rule] = await rule_db.byId(req.params.id)
-  console.log(saved_rule)
+  const [ saved_rule ] = await rule_db.byId(req.params.id)
+
   res.json(saved_rule)
 })
 
