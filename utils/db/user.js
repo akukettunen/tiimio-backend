@@ -63,5 +63,12 @@ const setNewPassword = (email, hash) => {
     WHERE email = ?;
   `, [ hash, email ])
 }
+
+const getUserTeam = (email, team_id) => {
+  return query(`
+    SELECT * FROM user_team
+    WHERE email = ? AND team_id = ?;
+  `, [email, team_id])
+}
  
-module.exports = { userByConfirmationCode, userByConfirmationToken, confirmEmail, setNewPassword, resetTokenByHash, deleteAllResetTokensByEmail, addUser, getUserByEmail, addPasswordResetToken }
+module.exports = { getUserTeam, userByConfirmationCode, userByConfirmationToken, confirmEmail, setNewPassword, resetTokenByHash, deleteAllResetTokensByEmail, addUser, getUserByEmail, addPasswordResetToken }
