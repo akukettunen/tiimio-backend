@@ -39,8 +39,8 @@ router.get('/:id/graphics', async (req, res) => {
 router.get('/:id', user, async (req, res) => {
   const [raw_clip] = await clip_db.clipById(req.params.id)
   const clip = await clip_helper.clipById(req.params.id, raw_clip?.game_id)
-
-  is_in_team(clip.video_id)
+  
+  inline_is_in_team(clip.team_id, req)
 
   res.json(clip)
 })
@@ -49,7 +49,8 @@ router.put('/:clip_id/title', user, async (req, res) => {
   const [ clip ] = await clip_db.clipAndVideoByClipId(req.params.clip_id)
 
   if(!req.body.title) throw new Error('bad request')
-  is_in_team(clip.team_id)
+
+  inline_is_in_team(clip.team_id, req)
 
   await clip_db.putClipTitle({ id: req.params.clip_id, title: req.body.title })
   const updatedClip = await clip_helper.clipById(req.params.clip_id)
@@ -60,7 +61,8 @@ router.put('/:clip_id/title', user, async (req, res) => {
 router.put('/:clip_id/graphics', user, async (req, res) => {
   const [ clip ] = await clip_db.clipAndVideoByClipId(req.params.clip_id)
   if(!req.body.graphics) throw new Error('bad request')
-  is_in_team(clip.team_id)
+
+  inline_is_in_team(clip.team_id, req)
 
   let data = await clip_db.postClipGraphics({
     clip_id: req.params.clip_id,
@@ -72,7 +74,8 @@ router.put('/:clip_id/graphics', user, async (req, res) => {
 
 router.put('/:clip_id/tag', user, async (req, res) => {
   const [ clip ] = await clip_db.clipAndVideoByClipId(req.params.clip_id)
-  is_in_team(clip.team_id)
+
+  inline_is_in_team(clip.team_id, req)
 
   const current_tags = await clip_db.clipTags(req.params.clip_id)
   const new_tags_ids = req.body.tags
@@ -99,7 +102,7 @@ router.put('/:clip_id/tag', user, async (req, res) => {
 router.put('/:time_id/tag', user, async (req, res) => {
   const [ time ] = await time_db.timeAndVideoByTimeId(req.params.time_id)
 
-  is_in_team(time.team_id)
+  inline_is_in_team(time.team_id, req)
 
   const current_tags = await time_db.timeTags(req.params.time_id)
   const new_tags_ids = req.body.tags
@@ -125,7 +128,7 @@ router.put('/:time_id/tag', user, async (req, res) => {
 
 router.post('/', user, async (req, res, next) => {
   const { title, starttime, endtime, video_id, map_color, description, tags, points, leaguewide, team_id, game_id, is_point, main_tag_id } = req.body
-  if(team_id) is_in_team(team_id)
+  if(team_id) inline_is_in_team(team_id, req)
   if(!title || (!starttime && starttime !== 0) || !(video_id || (leaguewide || team_id) || (!endtime  && !is_point) ) ) throw new Error('bad request')
 
   if(leaguewide && !req.tiimio_user.tiimio_admin) throw new Error('authentication error')
@@ -142,6 +145,9 @@ router.post('/', user, async (req, res, next) => {
 })
 
 router.put('/:id/point', user, async (req, res) => {
+  let clip = await clip_helper.clipById(req.params.id)
+  inline_is_in_team(clip.team_id, req)
+
   const { points } = req.body;
 
   if(!points || !points.length) throw new Error('bad request')
@@ -149,13 +155,15 @@ router.put('/:id/point', user, async (req, res) => {
   await map_db.deleteClipPoints(req.params.id)
   await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, req.params.id, p.map_base.id]))
 
-  let clip = await clip_helper.clipById(req.params.clip_id)
+  let new_clip = await clip_helper.clipById(req.params.id)
 
-  res.json({ clip })
+  res.json({ clip: new_clip })
 })
 
 router.put('/:id/range', user, async (req, res) => {
   const { starttime, endtime } = req.body;
+  let old_clip = await clip_db.clipById(req.params.id)
+  inline_is_in_team(old_clip.team_id, req)
 
   if((!starttime && starttime !== 0) || !endtime) throw new Error('No starttime or endtime')
 
@@ -195,8 +203,8 @@ router.post('/:id/folder/:folder_id', user, async (req, res) => {
 
   if(!folder || !folder.team_id) throw new Error('something bad happened :(')
 
-  is_in_team(video.team_id)
-  is_in_team(folder.team_id)
+  inline_is_in_team(video.team_id, req)
+  inline_is_in_team(folder.team_id, req)
 
   if(video.team_id !== folder.team_id) throw new Error('bad request')
 
@@ -209,13 +217,13 @@ router.post('/:id/folder/:folder_id', user, async (req, res) => {
 // Route to delete multiple clips
 router.delete('/clips', user, async (req, res) => {
   const ids = req.body.ids;
-  console.log(ids)
 
   if (!ids || !Array.isArray(ids) || ids.length === 0) {
     return res.status(400).json({ message: 'Bad request' });
   }
 
   try {
+    // being in team checked in db function
     await clip_db.deleteByIds(ids, req.tiimio_user.currentTeamId);
     res.json('Clips deleted successfully!');
   } catch (err) {
@@ -245,19 +253,15 @@ router.delete('/:id', user, async (req, res) => {
   res.json('ok!')
 })
 
-router.post('/rule', user, async (req, res) => {
-  is_in_team()
+// router.post('/rule', user, is_in_team, async (req, res) => {
+//   const { rule_id } = req.body;
 
-  const { rule_id } = req.body;
-
-  let insertData
-  if(rule_id) {
-    await clip_db.putRule(req.body)
-  } else {
-    insertData = await clip_db.postRule(req.body)
-  }
-})
-
-
+//   let insertData
+//   if(rule_id) {
+//     await clip_db.putRule(req.body)
+//   } else {
+//     insertData = await clip_db.postRule(req.body)
+//   }
+// })
 
 module.exports = router;

@@ -14,7 +14,6 @@ const { json } = require('body-parser')
       stripe = require('../utils/stripe/index')
       userHelper = require('../utils/user/userHelper')
       emailService = require('../utils/aws/email')
-      
       crypto = require('crypto')
       require('express-async-errors');
 
@@ -30,11 +29,6 @@ router.get('/sports', tiimi_admin, async (req, res) => {
   const sports = await sport_db.allSports()
 
   res.json(sports)
-})
-
-
-router.post('/sport', tiimi_admin, async (req, res) => {
-  
 })
 
 module.exports = router;

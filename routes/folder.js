@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express');
-const { user, is_in_team } = require('../middleware/authMiddleware');
+const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddleware');
       db = require('../utils/db/index')
       router = express.Router()
       bcrypt = require('bcryptjs');
@@ -18,20 +18,17 @@ const { user, is_in_team } = require('../middleware/authMiddleware');
       stripe = require('stripe')(process.env.STRIPE_SECRET_API_KEY);
       join_code = require('../utils/video/join_code')
 
-router.get('/team/:team_id', user, async (req, res) => {
+router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
-
-  is_in_team()
 
   const folders = await folder_db.byTeamId(req.params.team_id)
 
   res.json(folders)
 })
 
-router.get('/team/:team_id/parent/:parent_id', user, async (req, res) => {
+router.get('/team/:team_id/parent/:parent_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request')
   if(!req.params.parent_id) throw new Error('bad request')
-  is_in_team()
   
   let folders;
   let parent = req.params.parent_id
@@ -49,16 +46,15 @@ router.get('/:id/clip', user, async (req, res) => {
 
   if(!folder) throw new Error('bad request')
 
-  is_in_team(folder.team_id)
+  inline_is_in_team(folder.team_id, req)
 
   const clips = await folder_db.folderClips(folder.id)
 
   res.json(clips)
 })
 
-router.put('/order', user, async (req, res) => {
+router.put('/order', user, is_in_team(), async (req, res) => {
   if(!req.body.folders || !req.body.team_id) throw new Error('bad request')
-  is_in_team()
 
   const promises = req.body.folders.map((t, i) => {
     return folder_db.editFolderOrder(t, i)
@@ -70,8 +66,6 @@ router.put('/order', user, async (req, res) => {
 })
 
 router.post('/', user, async (req, res) => {
-  is_in_team()
-
   const folder = req.body.folder;
 
   if(!folder ) {
@@ -86,6 +80,8 @@ router.post('/', user, async (req, res) => {
   if(!folder.type) {
     throw new Error('bad request type', folder.type)
   }
+
+  inline_is_in_team(folder.team_id, req)
   
   if(
        folder.type !== 'folder' 
@@ -103,12 +99,10 @@ router.post('/', user, async (req, res) => {
   res.json(addedFolder)
 })
 
-router.post('/clip-batch', user, async (req, res) => {
+router.post('/clip-batch', user, is_in_team(), async (req, res) => {
   const clips = req.body.clips; // { id: 1, title: 'Jea' }
   const parentId = req.body.parent_id;
   const team_id = req.body.team_id;
-  console.log(clips, parentId, team_id)
-  is_in_team()
 
   if(!clips || !clips.length) {
     throw new Error('bad request')
@@ -137,10 +131,10 @@ router.post('/clip-batch', user, async (req, res) => {
 
 router.put('/:id', user, async (req, res) => {
   // TODO parent cant be one of children or self
-  
-  is_in_team()
 
   const folder = req.body.folder;
+
+  inline_is_in_team(folder.team_id, req)
 
   if(!folder.id || !folder.name) throw new Error('bad request')
 
@@ -175,7 +169,7 @@ router.delete('/:id', user, async (req, res) => {
   const [ folder ] = await folder_db.byId(req.params.id)
   if(!folder?.id) throw new Error('bad request')
 
-  is_in_team(folder.team_id)
+  inline_is_in_team(folder.team_id, req)
 
   await folder_db.deleteById(req.params.id)
 
