@@ -18,7 +18,7 @@ const normal = (file) => {
   // 'mp4:720p': {
   //   'path': `${file}/720p.mp4`
   // },
-  'mp4:1280x720': {
+  'mp4:1280x720::quality=4': {
     'path': `${file}/720p.mp4`
   }
   // 'httpstream': {
@@ -47,7 +47,7 @@ const high_definition = (file) => {
    // 'mp4:720p': {
    //   'path': `${file}/720p.mp4`
    // },
-   'mp4:1920x1080': {
+   'mp4:1920x1080::quality=4': {
      'path': `${file}/1080p.mp4`
    }
    // 'httpstream': {

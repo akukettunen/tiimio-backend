@@ -1,4 +1,4 @@
-const { user, is_in_team } = require('../middleware/authMiddleware')
+const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddleware')
 const express = require('express')
       db = require('../utils/db/index')
       router = express.Router()
@@ -17,9 +17,7 @@ const express = require('express')
       clipHelper = require('../utils/clip/clipHelper')
       require('express-async-errors');
 
-router.post('/', user, async (req, res) => {
-  is_in_team()
-
+router.post('/', user, is_in_team(), async (req, res) => {
   const { title, description, videos, tags, include_videos, search_games, include_clips, include_times } = req.body;
 
   if(!title) throw new Error('bad request')
@@ -88,6 +86,7 @@ router.get('/:id/clip', user, async (req, res) => {
   } else {
     [ filter ] = await filter_db.byId(req.params.id)
   }
+
   // get filter data
   let { limit, index } = req.query
 
@@ -117,7 +116,7 @@ router.get('/:id/clip', user, async (req, res) => {
     groups[i]['tags'] = tags.filter(tag => tag.group_id == group.id)
   })
 
-  is_in_team(filter.team_id)
+  inline_is_in_team(filter.team_id, req)
 
   // get ids of the videos that we want
   let filterVideos;
@@ -156,10 +155,11 @@ router.get('/:id/clip', user, async (req, res) => {
 })
 
 router.put('/:id', user, async (req, res) => {
-  is_in_team()
-
   if(!req.body.title) throw new Error('bad request')
-  
+  const [ old_filter ] = await filter_db.byId(req.body.id)
+
+  inline_is_in_team(old_filter.team_id, req)
+
   await filter_db.updateTitle(req.body.id, req.body.title)
 
   const [ filter ] = await filter_db.byId(req.body.id)
@@ -170,16 +170,14 @@ router.put('/:id', user, async (req, res) => {
 router.delete('/:id', user, async (req, res) => {
   const [ filter ] = await filter_db.byId(req.params.id)
 
-  is_in_team(filter.team_id)
+  inline_is_in_team(filter.team_id, req)
 
   await filter_db.deleteById(filter.id)
   
   res.send('ok!')
 })
 
-router.get('/team/:team_id', user, async (req, res) => {
-  is_in_team()
-
+router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   const filters = await filter_db.teamFilters(req.params.team_id)
 
   res.json(filters)

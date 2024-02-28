@@ -10,7 +10,6 @@ const cancelTeamPlan = async (user_id, team_id) => {
     team_id,
     plan_id: 1
   })
-  await mail.addTagToUser(user_id, ['Cancelled'])
 
   return
 }
@@ -20,12 +19,6 @@ const handleChangeTeamPlan = async (user_id, team_id, plan) => {
     team_id,
     plan_id: plan.id
   })
-
-  if(new_plan.is_the_best) {
-    await mail.addTagToUser(user_id, ['Team owner - VIP'])
-  } else {
-    await mail.addTagToUser(user_id, ['Team owner - Paid'])
-  }
 
   return
 }

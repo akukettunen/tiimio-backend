@@ -24,7 +24,7 @@ const mapById = id => {
 
 const addMapPoint = data => {
   return query(`
-    INSERT INTO map_point( id, map_id, x, y, color, style, clip_id, map_base_id )
+    INSERT INTO map_point( id, map_id, x, y, color, style, clip_id, map_base_id, end_x, end_y )
     VALUES ?;
   `, [data])
 }
