@@ -118,7 +118,11 @@ router.post('/join', user, async (req, res) => {
   if(!join_code && !invite_code) throw new Error('no join code!')
 
   let team;
-  if(join_code) [ team ] = await team_db.teamByJoinCode(join_code.toUpperCase())
+  if(join_code) {
+    [ team ] = await team_db.teamByJoinCode(join_code.toUpperCase())
+    if(team.join_code_disabled == 1) throw new Error('The join code has been disabled for this team. Ask this teams moderator to activate the code to join this team!')
+
+  }
   else [ team ] = await team_db.teamByInviteCode(invite_code.toLowerCase())
 
   
@@ -209,6 +213,19 @@ router.post('/:team_id/invite', user, is_in_team(), async (req, res) => {
   // todo invite people
 })
 
+router.post('/:id/joincodestate', user, async (req, res) => {
+  
+  let user = req.tiimio_user
+  let team = user.teams.find(team => team.id == req.params.id)
+  if(!team) throw new Error('invalid auth')
+
+  let disabledValue = req.body.data.disabledValue
+  
+  let disabled = await team_db.setJoinCodeState(req.params.id, disabledValue)
+
+  res.json({disabled})
+})
+
 router.get('/:team_id/invite', user, is_in_team(), async (req, res) => {
   const invites = await team_db.teamInvites(req.params.team_id)
 
@@ -229,6 +246,16 @@ router.get('/:id/users', user, async (req, res) => {
   let users = await team_db.teamUsers(team.id)
 
   res.json(users)
+})
+
+router.get('/:id/joincodestate', user, async (req, res) => {
+  let user = req.tiimio_user
+  let team = user.teams.find(team => team.id == req.params.id)
+  if(!team) throw new Error('invalid auth')
+  
+  let disabled = await team_db.getJoinCodeState(req.params.id)
+
+  res.json({disabled})
 })
 
 router.put('/:id/joincode', user, async (req, res) => {

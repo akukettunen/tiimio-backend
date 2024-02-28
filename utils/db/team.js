@@ -118,6 +118,22 @@ const teamByJoinCode = code => {
   `, [code.toString()])
 }
 
+const setJoinCodeState = (id, disabledValue) => {
+  return query(`
+    UPDATE team
+    SET join_code_disabled = ?
+    WHERE id = ?;
+  `, [disabledValue, id]);
+}
+
+const getJoinCodeState = id => {
+  return query(`
+    SELECT join_code_disabled
+    FROM team
+    WHERE id = ?;
+  `, [id])
+}
+
 const teamByInviteCode = code => {
   return query(`
     SELECT team.*, users FROM team_invite
@@ -200,4 +216,4 @@ const setAdminStatus = (team_id, email, team_admin) => {
   `, [team_admin, team_id, email])
 }
 
-module.exports = { planByIosId, teamByInviteCode, deleteInvite, teamInvites, addInvites, teamUserAmount, teamsBySportIdThatDontHaveGroupNamed, teamsBySportIdThatHaveGroupNamed, allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
+module.exports = { setJoinCodeState, getJoinCodeState, planByIosId, teamByInviteCode, deleteInvite, teamInvites, addInvites, teamUserAmount, teamsBySportIdThatDontHaveGroupNamed, teamsBySportIdThatHaveGroupNamed, allTeams, numOfUsersInTeam, deleteUserTeam, createTeam, changeTeamPlan, planByStripeId, userTeamByStripeId, setAdminStatus, deleteUserFromTeam, teamById, changeJoinCode, teamUsers, addUserToTeam, teamByJoinCode, userTeams, userTeamStripeId, userTeamByEmailAndTeamId }
