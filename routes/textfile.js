@@ -8,9 +8,9 @@ const express = require('express')
       folder_db = require('../utils/db/folder')
       file_db = require('../utils/db/textfile')
       require('express-async-errors');
-      const { user, is_in_team, tiimi_admin } = require('../middleware/authMiddleware');
+      const { user, is_in_team, tiimi_admin, inline_is_in_team } = require('../middleware/authMiddleware');
 
-router.get('/team/:team_id',is_in_team, user, async (req, res) => {
+router.get('/team/:team_id', user, is_in_team(), async (req, res) => {
   if(!req.params.team_id) throw new Error('bad request');
 
   const files = await file_db.byTeam({ team_id: req.params.team_id })
@@ -20,14 +20,15 @@ router.get('/team/:team_id',is_in_team, user, async (req, res) => {
 
 router.get('/:id', user, async (req, res) => {
   if(!req.params.id) throw new Error('bad request');
-  console.log(req.params.id)
-  console.log(req.params.id)
+
   const [ file ] = await file_db.byId({ id: req.params.id })
+
+  inline_is_in_team(file.team_id, req)
 
   res.json(file)
 })
 
-router.post('/', async (req, res) => {
+router.post('/', user, is_in_team(), async (req, res) => {
   const { title, text, team_id } = req.body;
 
   if(!title || !text || !team_id) throw new Error('bad request')
@@ -47,11 +48,7 @@ router.put('/:id', async (req, res, next) => {
 
   const [ file ] = await file_db.byId({ id })
 
-  try {
-    is_in_team(file.team_id)(req)
-  } catch(e) {
-    throw new Error(e)
-  }
+  inline_is_in_team(file.team_id, req)
 
   await file_db.update({ title, text, id })
 
