@@ -163,7 +163,7 @@ router.put('/:id/point', user, async (req, res) => {
 router.put('/:id/range', user, async (req, res) => {
   const { starttime, endtime } = req.body;
   let old_clip = await clip_db.clipById(req.params.id)
-  inline_is_in_team(old_clip.team_id, req)
+  inline_is_in_team(old_clip[0].team_id, req)
 
   if((!starttime && starttime !== 0) || !endtime) throw new Error('No starttime or endtime')
 
