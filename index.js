@@ -48,6 +48,7 @@ const template = require('./routes/template')
 // const league = require('./routes/admin/league')
 const share = require('./routes/share')
 const revenuecat = require('./routes/revenuecat')
+const upload = require('./routes/upload')
 
 // rate limiter needs this for usage in heroku
 app.set('trust proxy', 1);
@@ -74,6 +75,7 @@ app.use('/textfile', textfile)
 app.use('/template', template)
 app.use('/revenuecat', revenuecat)
 app.use('/share', share)
+app.use('/upload', upload)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);
