@@ -495,7 +495,6 @@ const archiveTagById = ({id, archived}) => {
 }
 
 const archiveTagsById = ({tagIds, archived}) => {
-  console.log(tagIds, archived)
   const placeholders = tagIds.map(() => '?').join(',');
   return query(`
     UPDATE tag
