@@ -343,6 +343,16 @@ router.put('/group/archive/:tag_group_id', user, async (req, res) => {
   res.send('ok!')
 })
 
+router.put('/tags/batch/archive', user, async (req, res) => {
+  inline_is_in_team(req.body.team_id, req)
+
+  const archived = req.body.archived
+  const tagIds = req.body.ids
+  await tag_db.archiveTagsById({ tagIds: tagIds, archived: archived })
+
+  res.status(200).send('ok!')
+})
+
 router.put('/group/tags/archive/:tag_group_id', user, async (req, res) => {
   // TODO archive mirroring too
   let [ group ] = await tag_db.tagGroupById(req.params.tag_group_id)
