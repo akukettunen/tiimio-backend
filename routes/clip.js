@@ -133,7 +133,9 @@ router.post('/', user, async (req, res, next) => {
 
   if(leaguewide && !req.tiimio_user.tiimio_admin) throw new Error('authentication error')
 
-  let added = await clip_db.addClip(req.body)
+  const email = req.tiimio_user.email
+
+  let added = await clip_db.addClip({...req.body, creator: email})
 
   if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id, p.end_x, p.end_y]))
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags, main_tag_id)
@@ -163,7 +165,7 @@ router.put('/:id/point', user, async (req, res) => {
 router.put('/:id/range', user, async (req, res) => {
   const { starttime, endtime } = req.body;
   let old_clip = await clip_db.clipById(req.params.id)
-  inline_is_in_team(old_clip.team_id, req)
+  inline_is_in_team(old_clip[0].team_id, req)
 
   if((!starttime && starttime !== 0) || !endtime) throw new Error('No starttime or endtime')
 
