@@ -133,7 +133,9 @@ router.post('/', user, async (req, res, next) => {
 
   if(leaguewide && !req.tiimio_user.tiimio_admin) throw new Error('authentication error')
 
-  let added = await clip_db.addClip(req.body)
+  const email = req.tiimio_user.email
+
+  let added = await clip_db.addClip({...req.body, creator: email})
 
   if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id, p.end_x, p.end_y]))
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags, main_tag_id)
