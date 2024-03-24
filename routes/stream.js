@@ -16,8 +16,6 @@ router.post('/', async (req, res) => {
   const { team_id } = req.tiimio_user.currentTeamId
   const streamTitle = req.body.title
 
-  is_in_team(team_id)
-
   const channel = await streamHelper.createChannel(streamTitle)
 
   res.json(channel)
@@ -73,6 +71,10 @@ router.get('/channel', user, async (req, res) => {
 
 router.post('/webhook', async (req, res) => {
   const body = req.body;
+
+  const { x-api-key } = req.headers;
+
+  if(x-api-key != process.env.STREAMING_HOOK_API_KEY) throw new Error('auth error')
   // const { team_id } = req.tiimio_user.currentTeamId || 404;
   // console.log(team_id)
 
