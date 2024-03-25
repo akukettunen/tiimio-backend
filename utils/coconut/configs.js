@@ -48,10 +48,12 @@ const high_definition = (file) => {
    //   'path': `${file}/720p.mp4`
    // },
    'mp4:1920x1080::quality=4': {
-     'path': `${file}/1080p.mp4`,
-     'video_codec': 'h264',
-     'audio_codec': 'mp3'
-   }
+    'path': `${file}/1080p.mp4`,
+    'format': {
+      'video_codec': 'h264',
+      'audio_codec': 'mp3'
+    }
+  }
    // 'httpstream': {
    //   'hls': { 'path': 'hls/' }
    // }
