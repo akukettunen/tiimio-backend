@@ -100,8 +100,7 @@ router.get('/export-state/clip/:clip_id', user, async (req, res) => {
   const [ clip ] = await clip_db.clipById(req.params.clip_id)
 
   if(!clip) {
-    throw new Error('clip not found')
-    return
+    throw new Error('Clip not found')
   }
 
   inline_is_in_team(clip.team_id, req)
@@ -120,7 +119,7 @@ router.get('/export-state/clip/:clip_id', user, async (req, res) => {
     if (result.Items.length > 0) {
       res.json(result.Items);
     } else {
-      res.status(404).json({ error: 'No exports found for the provided clip_id' });
+      res.send(null)
     }
   } catch (error) {
     console.error('Error fetching export state by clip_id:', error);

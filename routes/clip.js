@@ -223,8 +223,6 @@ router.post('/:id/export', user, async (req, res) => {
 
   inline_is_in_team(video.team_id, req)
 
-  console.log(video)
-
   const result = await axios.post(
     `${process.env.CLIP_EXPORT_API_BASE}/clip`, 
     {
@@ -241,10 +239,6 @@ router.post('/:id/export', user, async (req, res) => {
       }
     }
   )
-
-  console.log(result.data)
-
-
 
   res.json(result)
 })
