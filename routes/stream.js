@@ -72,10 +72,6 @@ router.get('/getstream', user, async (req, res) => {
 })
 
 router.post('/webhook', async (req, res) => {
-  const body = req.body;
-  // const { team_id } = req.tiimio_user.currentTeamId || 404;
-  // console.log(team_id)
-
   /*
   EXAMPLE EVENTS
 
@@ -128,8 +124,9 @@ router.post('/webhook', async (req, res) => {
 
   RECORDING_ENDED_WITH_FAILURE
   */
- 
-//  inline_is_in_team(team_id, req)
+  if(req.headers.tiimio_api_key !== process.env.IVS_WEBHOOK_API_KEY) throw new Error('auth error')
+
+  const body = req.body;
 
   const live_base = "https://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/"
   const base = "https://d3a8wbzbl3mii4.cloudfront.net/"
