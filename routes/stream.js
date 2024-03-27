@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express');
-const { user, is_in_team } = require('../middleware/authMiddleware');
+const { user, inline_is_in_team } = require('../middleware/authMiddleware');
 const { getChannelByArn } = require('../utils/stream/streamHelper');
       db = require('../utils/db/index')
       router = express.Router()
@@ -11,12 +11,15 @@ const { getChannelByArn } = require('../utils/stream/streamHelper');
       streamHelper = require('../utils/stream/streamHelper')
       require('express-async-errors');
       sport_db = require('../utils/db/sport')
+      video_db = require('../utils/db/video')
 
 router.post('/', async (req, res) => {
-  const { team_id } = req.tiimio_user.currentTeamId
+  const team_id = req.tiimio_user.currentTeamId
   const streamTitle = req.body.title
 
-  const channel = await streamHelper.createChannel(streamTitle)
+  inline_is_in_team(team_id, req)
+
+  const channel = await streamHelper.createChannel({streamTitle: streamTitle, team_id: team_id})
 
   res.json(channel)
 })
@@ -26,7 +29,7 @@ router.delete('/', user, async (req, res) => {
     const arn = req.body.arn;
     const team_id = req.tiimio_user.currentTeamId
 
-    is_in_team(team_id)
+    inline_is_in_team(team_id, req)
 
     const response = await streamHelper.deleteChannel(arn)
 
@@ -38,10 +41,9 @@ router.delete('/', user, async (req, res) => {
 })
 
 router.put('/updateDetails', user, async (req, res) => {
-  // streamHelper.getChannelByArn()
   const team_id = req.tiimio_user.currentTeamId
 
-  is_in_team(team_id)
+  inline_is_in_team(team_id, req)
 
   const {title, id} = req.body;
   const email = req.tiimio_user.email
@@ -56,28 +58,20 @@ router.put('/updateDetails', user, async (req, res) => {
   }
 })
 
-router.get('/channel', user, async (req, res) => {
-  // const { team_id } = req.body
-  const arn = req.query.arn;
-  // const arn = req.body.arn
+router.get('/getstream', user, async (req, res) => {
+  const team_id = req.tiimio_user.currentTeamId
+  const { arn } = req.query;
 
-  // console.log('test')
-  // console.log(arn)
+  inline_is_in_team(team_id, req)
 
-  const channel = await streamHelper.getChannelByArn(arn)
+  const stream = await streamHelper.getStreamByArn(arn)
 
-  res.json(channel)
+  if(!stream) throw new Error('stream not found')
+
+  res.json(stream)
 })
 
 router.post('/webhook', async (req, res) => {
-  const body = req.body;
-
-  const { x-api-key } = req.headers;
-
-  if(x-api-key != process.env.STREAMING_HOOK_API_KEY) throw new Error('auth error')
-  // const { team_id } = req.tiimio_user.currentTeamId || 404;
-  // console.log(team_id)
-
   /*
   EXAMPLE EVENTS
 
@@ -130,6 +124,9 @@ router.post('/webhook', async (req, res) => {
 
   RECORDING_ENDED_WITH_FAILURE
   */
+  if(req.headers.tiimio_api_key !== process.env.IVS_WEBHOOK_API_KEY) throw new Error('auth error')
+
+  const body = req.body;
 
   const live_base = "https://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/"
   const base = "https://d3a8wbzbl3mii4.cloudfront.net/"
@@ -142,22 +139,18 @@ router.post('/webhook', async (req, res) => {
   const live_url = live_base + prefix + end_prefix_live
   const thumb_url = live_base + prefix + end_prefix_thumb
   const uploaded = streamHelper.parseUploaded(new Date(body.time))
-
-  // console.log(recording_url)
-  // console.log(live_url)
-  // console.log(thumb_url)
-  // console.log(body)
-
+  
   if(body.detail.recording_status == 'Recording Start') {
-    const channel = await streamHelper.getChannelByArn(body.resources[0]); // Await added here
+    const {channel} = await streamHelper.getChannelByArn(body.resources[0]); // Await added here
+    const team_id = parseInt(channel.tags.team_id)
     const datat = {
       id: body.detail.stream_id,
-      team_id: 3,
+      team_id: team_id,
       s3_key: '',
       original_url: recording_url, // nämä varmaan toisinpäin ilmeisesti
       mp4_url: live_url,
       service: 'ivs',
-      title: channel.channel.tags.title || 'Name not set',
+      title: channel.tags.title || 'Name not set',
       original_type: 'hls',
       original_size: 1,
       hls_url: '',
