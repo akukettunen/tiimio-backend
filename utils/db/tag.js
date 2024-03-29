@@ -494,14 +494,14 @@ const archiveTagById = ({id, archived}) => {
   `, [archived, id, id])
 }
 
-const archiveTagsById = ({tagIds, archived}) => {
+const archiveTagsById = ({team_id, tagIds, archived}) => {
   const placeholders = tagIds.map(() => '?').join(',');
   return query(`
     UPDATE tag
     SET archived = ?
-    WHERE id IN (${placeholders})
-    OR original_id IN (${placeholders})
-  `, [archived, ...tagIds, ...tagIds])
+    WHERE (id IN (${placeholders}) OR original_id IN (${placeholders}))
+    AND team_id = ?
+  `, [archived, ...tagIds, ...tagIds, team_id ])
 }
 
 const groupMirrorsById = ({id}) => {

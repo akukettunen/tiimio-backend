@@ -344,11 +344,18 @@ router.put('/group/archive/:tag_group_id', user, async (req, res) => {
 })
 
 router.put('/tags/batch/archive', user, async (req, res) => {
-  inline_is_in_team(req.body.team_id, req)
+  const team_id = parseInt(req.body.team_id)
+  inline_is_in_team(team_id, req)
 
   const archived = req.body.archived
   const tagIds = req.body.ids
-  await tag_db.archiveTagsById({ tagIds: tagIds, archived: archived })
+  
+  for(let id of tagIds) {
+    const [ tag ] = await tag_db.tagById(id)
+    if(tag.team_id !== team_id) throw new Error('auth error')
+  }
+
+  await tag_db.archiveTagsById({ team_id: team_id, tagIds: tagIds, archived: archived })
 
   res.status(200).send('ok!')
 })
