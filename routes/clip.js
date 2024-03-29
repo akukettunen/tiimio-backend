@@ -11,6 +11,7 @@ const express = require('express')
       map_db = require('../utils/db/maps')
       folder_db = require('../utils/db/folder')
       clip_helper = require('../utils/clip/clipHelper')
+      axios = require('axios')
       require('express-async-errors');
       const { user, is_in_team, tiimi_admin, inline_is_in_team } = require('../middleware/authMiddleware');
 
@@ -133,7 +134,9 @@ router.post('/', user, async (req, res, next) => {
 
   if(leaguewide && !req.tiimio_user.tiimio_admin) throw new Error('authentication error')
 
-  let added = await clip_db.addClip(req.body)
+  const email = req.tiimio_user.email
+
+  let added = await clip_db.addClip({...req.body, creator: email})
 
   if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id, p.end_x, p.end_y]))
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags, main_tag_id)
@@ -162,7 +165,8 @@ router.put('/:id/point', user, async (req, res) => {
 
 router.put('/:id/range', user, async (req, res) => {
   const { starttime, endtime } = req.body;
-  let old_clip = await clip_db.clipById(req.params.id)
+  
+  let [ old_clip ] = await clip_db.clipById(req.params.id)
   inline_is_in_team(old_clip.team_id, req)
 
   if((!starttime && starttime !== 0) || !endtime) throw new Error('No starttime or endtime')
@@ -212,6 +216,33 @@ router.post('/:id/folder/:folder_id', user, async (req, res) => {
   const [ folder_object ] = await clip_db.folderObjectById(clip_id, folder_id)
 
   res.json(folder_object)
+})
+
+router.post('/:id/export', user, async (req, res) => {
+  const clip_id = req.params.id
+  const { starttime, endtime } = req.body
+  const [ video ] = await clip_db.videoByClipId(clip_id)
+
+  inline_is_in_team(video.team_id, req)
+
+  const result = await axios.post(
+    `${process.env.CLIP_EXPORT_API_BASE}/clip`, 
+    {
+      videoUrl: video.mp4_url,
+      startTime: starttime,
+      endTime: endtime,
+      outputKey: `${clip_id}-${video.video_id}`
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': process.env.CLIP_EXPORT_API_KEY,
+        'Authorization': `Bearer ${process.env.CLIP_EXPORT_API_KEY}`
+      }
+    }
+  )
+
+  res.json(result)
 })
 
 // Route to delete multiple clips
