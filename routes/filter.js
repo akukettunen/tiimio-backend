@@ -175,7 +175,7 @@ router.delete('/filters', user, async (req, res) => {
   for(let id of req.body.ids) {
     const [ filter ] = await filter_db.byId(id)
     if(!filter?.id) throw new Error('bad request')
-    if(filter.team_id != team_id) throw new Error('auth error')
+    if(filter.team_id !== team_id) throw new Error('auth error')
   }
 
   await filter_db.batchDeleteById(req.body.ids)
