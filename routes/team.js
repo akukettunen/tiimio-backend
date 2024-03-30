@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require('express');
 const { query } = require('../utils/db/index')
-const { user, is_in_team } = require('../middleware/authMiddleware');
+const { user, is_in_team, inline_is_in_team } = require('../middleware/authMiddleware');
 const { createCustomer } = require('../utils/stripe/index')
 const db = require('../utils/db/index');
       router = express.Router()
@@ -120,7 +120,7 @@ router.post('/join', user, async (req, res) => {
   let team;
   if(join_code) {
     [ team ] = await team_db.teamByJoinCode(join_code.toUpperCase())
-    if(team.join_code_disabled == 1) throw new Error('The join code has been disabled for this team. Ask this teams moderator to activate the code to join this team!')
+    if(team.join_code_disabled == 1) throw new Error('Join code disabled')
 
   }
   else [ team ] = await team_db.teamByInviteCode(invite_code.toLowerCase())
@@ -214,10 +214,13 @@ router.post('/:team_id/invite', user, is_in_team(), async (req, res) => {
 })
 
 router.post('/:id/joincodestate', user, async (req, res) => {
+  const team_id = req.params.id
+  inline_is_in_team(team_id, req)
+  const user = req.tiimio_user
+  let team = user.teams.find(team => team.id == team_id)
   
-  let user = req.tiimio_user
-  let team = user.teams.find(team => team.id == req.params.id)
-  if(!team) throw new Error('invalid auth')
+  if(!team) throw new Error('no team')
+  if(!team.team_admin) throw new Error('Not team admin')
 
   let disabledValue = req.body.data.disabledValue
   
@@ -249,11 +252,13 @@ router.get('/:id/users', user, async (req, res) => {
 })
 
 router.get('/:id/joincodestate', user, async (req, res) => {
+  const team_id = req.params.id
+  inline_is_in_team(team_id, req)
   let user = req.tiimio_user
-  let team = user.teams.find(team => team.id == req.params.id)
+  let team = user.teams.find(team => team.id == team_id)
   if(!team) throw new Error('invalid auth')
   
-  let disabled = await team_db.getJoinCodeState(req.params.id)
+  let disabled = await team_db.getJoinCodeState(team_id)
 
   res.json({disabled})
 })
