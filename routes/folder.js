@@ -151,12 +151,16 @@ router.put('/:id', user, async (req, res) => {
 
 router.delete('/batch', user, async (req, res) => {
     if(!req.body.ids) throw new Error('bad request')
-    for(let id of req.body.ids) {
+    const team_id = parseInt(req.body.team_id)
+    const ids = req.body.ids 
+
+    for(let id of ids) {
       const [ folder ] = await folder_db.byId(id)
       if(!folder?.id) throw new Error('bad request')
+      if(folder.team_id !== team_id) throw new Error('auth error')
     }
   
-    is_in_team(req.tiimio_user.team_id)
+    inline_is_in_team(team_id, req)
   
     await folder_db.batchDeleteById(req.body.ids)
     res.json({ids: req.body.ids})
