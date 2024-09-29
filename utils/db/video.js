@@ -53,8 +53,8 @@ const leagueGamesLimits = (league_id, index, limit) => {
     SELECT
       *, league_game.id as id, home_team.short_name as home_short_name, away_team.short_name as away_short_name
     FROM league_game
-    LEFT JOIN league_team as home_team ON league_game.home_team_id = home_team.id
-    LEFT JOIN league_team as away_team ON league_game.away_team_id = away_team.id
+    LEFT JOIN league_club as home_team ON league_game.home_team_id = home_team.id
+    LEFT JOIN league_club as away_team ON league_game.away_team_id = away_team.id
     WHERE league_game.league_id = ?
     ORDER BY starttime_unix DESC
     ${ limit ? 'LIMIT ?, ?' : '' };
@@ -88,8 +88,8 @@ const teamGamesByIdsLimits = (id, ids, index, limit) => {
     SELECT
       *, league_game.id as id, home_team.short_name as home_short_name, away_team.short_name as away_short_name
     FROM league_game
-    LEFT JOIN league_team as home_team ON league_game.home_team_id = home_team.id
-    LEFT JOIN league_team as away_team ON league_game.away_team_id = away_team.id
+    LEFT JOIN league_club as home_team ON league_game.home_team_id = home_team.id
+    LEFT JOIN league_club as away_team ON league_game.away_team_id = away_team.id
     WHERE league_game.league_id = ? AND league_game.id IN (?)
     ORDER BY starttime_unix DESC
     ${ limit ? 'LIMIT ?, ?' : ''};

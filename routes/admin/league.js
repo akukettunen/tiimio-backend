@@ -20,7 +20,7 @@ router.get('/', user, async (req, res) => {
   }
 
   let teamPromises = leagues.map(l => {
-    return league_db.leagueTeams(l.id)
+    return league_db.leagueClubs(l.id)
   })
 
   let teams = await Promise.all(teamPromises)
@@ -33,10 +33,27 @@ router.get('/', user, async (req, res) => {
   res.json(leagues)
 })
 
-router.get('/:id/team', user, async (req, res) => {
+router.patch('/:id', tiimi_admin, async (req, res) => {
+  const { id } = req.params;
+  const { archived, league_name } = req.body;
+
+  let updates = {}
+
+  if(typeof archived !== 'undefined') updates.archived = archived
+  if(league_name) updates.league_name = league_name
+
+  const [ league ] = await league_db.getLeague(id)
+  if(!league) throw new Error('league not found')
+
+  await league_db.updateLeague(id, updates)
+
+  res.send({ ...league, ...updates })
+})
+
+router.get('/:id/club', user, async (req, res) => {
   const { id } = req.params
 
-  const teams = await league_db.leagueTeams(id)
+  const teams = await league_db.leagueClubs(id)
 
   res.json(teams)
 })
@@ -101,7 +118,7 @@ router.post('/team', tiimi_admin, async (req, res) => {
   const { league_id, team_name, logo_url } = req.body
   if(!team_name || !league_id) throw new Error('bad request')
 
-  const insertData = await league_db.addTeamToLeague([league_id, team_name, logo_url])
+  const insertData = await league_db.addClubToLeague([league_id, team_name, logo_url])
   const team = await league_db.leagueByTeamId(insertData.insertId)
 
   res.json(team)

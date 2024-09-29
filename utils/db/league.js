@@ -6,9 +6,36 @@ const getLeagues = () => {
   `)
 }
 
-const leagueTeams = id => {
+const getLeague = (id) => {
   return query(`
-    SELECT * FROM league_team
+    SELECT * FROM league
+    WHERE id = ?;
+  `, [id])
+}
+
+const updateLeague = (id, updates) => {
+  let fields = [];
+  let values = [];
+
+  for (const field in updates) {
+    fields.push(`${ field } = ?`);
+    values.push(updates[ field ]);
+  }
+  
+  values.push(id);
+
+  const q = `
+    UPDATE league
+    SET ${fields.join(', ')}
+    WHERE id = ?;
+  `
+
+  return query(q, values)
+}
+
+const leagueClubs = id => {
+  return query(`
+    SELECT * FROM league_club
     WHERE league_id = ?;
   `, [id])
 }
@@ -38,8 +65,8 @@ const leagueGames = (id, season) => {
       league.season_start_month as stmonth
     FROM league_game
     LEFT JOIN league ON league.id = league_game.league_id
-    LEFT JOIN league_team as home_team ON home_team.id = league_game.home_team_id
-    LEFT JOIN league_team as away_team ON away_team.id = league_game.away_team_id
+    LEFT JOIN league_club as home_team ON home_team.id = league_game.home_team_id
+    LEFT JOIN league_club as away_team ON away_team.id = league_game.away_team_id
     WHERE league_game.league_id = ? AND
       (
         ( 
@@ -77,9 +104,9 @@ const leagueWhereAdmin = email => {
   `, [email])
 }
 
-const addTeamToLeague = team => {
+const addClubToLeague = team => {
   return query(`
-    INSERT INTO league_team (league_id, team_name, logo_url)
+    INSERT INTO league_club (league_id, team_name, logo_url)
     VALUES ?;
   `, team)
 }
@@ -106,8 +133,8 @@ const getLeagueGameById = id => {
       away_team.short_name away_team_short_name,
       home_team.short_name home_team_short_name
     FROM league_game
-    LEFT JOIN league_team as home_team ON home_team.id = league_game.home_team_id
-    LEFT JOIN league_team as away_team ON away_team.id = league_game.away_team_id
+    LEFT JOIN league_club as home_team ON home_team.id = league_game.home_team_id
+    LEFT JOIN league_club as away_team ON away_team.id = league_game.away_team_id
     WHERE league_game.id = ?;
   `, [id])
 }
@@ -121,14 +148,14 @@ const deleteGame = id => {
 
 const leagueTeamById = id => {
   return query(`
-    SELECT * FROM league_team
+    SELECT * FROM league_club
     WHERE id = ?;
   `, [id])
 }
 
 const deleteLeagueTeamById = id => {
   return query(`
-    DELETE FROM league_team
+    DELETE FROM league_club
     WHERE id = ?;
   `, [id])
 }
@@ -136,14 +163,16 @@ const deleteLeagueTeamById = id => {
 module.exports = { 
   getLeagues, 
   leagueWhereAdmin, 
-  addTeamToLeague, 
+  addClubToLeague, 
   leagueTeamById,
   deleteLeagueTeamById,
-  leagueTeams,
+  leagueClubs,
   addGameToLeague,
   getLeagueGameById,
   leagueGames,
   putLeagueGame,
   deleteGame,
-  leagueJoinedTeams
+  leagueJoinedTeams,
+  updateLeague,
+  getLeague
 }
