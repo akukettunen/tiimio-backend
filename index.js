@@ -51,6 +51,7 @@ const stream = require('./routes/stream')
 const revenuecat = require('./routes/revenuecat')
 const exp = require('./routes/export.js')
 const upload = require('./routes/upload.js')
+const season = require('./routes/season.js')
 
 // rate limiter needs this for usage in heroku
 app.set('trust proxy', 1);
@@ -80,6 +81,7 @@ app.use('/share', share)
 app.use('/stream', stream)
 app.use('/export', exp)
 app.use('/file', upload)
+app.use('/season', season)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);

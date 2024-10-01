@@ -121,14 +121,14 @@ const leagueGames = (id, season) => {
 }
 
 const putLeagueGame = game => {
-  let { id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live } = game
+  let { id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id } = game
   return query(`
     UPDATE league_game
     SET home_club_id=?, away_club_id=?, score_home=?,
     score_away=?, starttime_unix=?, publishtime_unix=?,
-    analyzed=?, will_be_analyzed=?, video_url=?, video_type=?, game_info=?, game_error=?, shown_live=?
+    analyzed=?, will_be_analyzed=?, video_url=?, video_type=?, game_info=?, game_error=?, shown_live=?, season_id=?
     WHERE id = ?;
-  `, [ home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, id ])
+  `, [ home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, id ])
 }
 
 const leagueWhereAdmin = email => {
@@ -149,13 +149,13 @@ const addClubToLeague = team => {
 }
 
 const addGameToLeague = game => {
-  let { league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live } = game
+  let { league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id } = game
   analyzed = false
 
   return query(`
-    INSERT INTO league_game (league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-  `, [ league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live ])
+    INSERT INTO league_game (league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `, [ league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id ])
 }
 
 const getLeagueGameById = id => {

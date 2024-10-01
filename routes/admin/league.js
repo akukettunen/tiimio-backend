@@ -6,6 +6,7 @@ const express = require('express');
       cookieParser = require('cookie-parser')
       router.use(cookieParser())
       league_db = require('../../utils/db/league')
+      season_db = require('../../utils/db/season')
       require('express-async-errors');
 const { user, is_in_team, tiimi_admin } = require('../../middleware/authMiddleware');
 
@@ -55,6 +56,14 @@ router.get('/:id/club', user, async (req, res) => {
   const clubs = await league_db.leagueClubs(id)
 
   res.json(clubs)
+})
+
+router.get('/:id/seasons', user, async (req, res) => {
+  const { id } = req.params
+
+  const seasons = await season_db.leagueSeasons(id)
+
+  res.json(seasons)
 })
 
 router.post('/:id/club', tiimi_admin, async (req, res) => {
