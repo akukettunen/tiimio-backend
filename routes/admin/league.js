@@ -1,5 +1,4 @@
 const express = require('express');
-const { kill } = require('ngrok');
       router = express.Router()
       bcrypt = require('bcryptjs')
       saltRounds = 10;
@@ -8,7 +7,7 @@ const { kill } = require('ngrok');
       router.use(cookieParser())
       league_db = require('../../utils/db/league')
       require('express-async-errors');
-      const { user, is_in_team, tiimi_admin } = require('../../middleware/authMiddleware');
+const { user, is_in_team, tiimi_admin } = require('../../middleware/authMiddleware');
 
 router.get('/', user, async (req, res) => {
   let leagues;
@@ -19,15 +18,15 @@ router.get('/', user, async (req, res) => {
     leagues = await league_db.leagueWhereAdmin(req.tiimio_user.email)
   }
 
-  let teamPromises = leagues.map(l => {
+  let clubPromises = leagues.map(l => {
     return league_db.leagueClubs(l.id)
   })
 
-  let teams = await Promise.all(teamPromises)
-  teams = teams.flat()
+  let clubs = await Promise.all(clubPromises)
+  clubs = clubs.flat()
   
   leagues = leagues.map(l => {
-    return {...l, teams: teams.filter(t => t.league_id == l.id)}
+    return {...l, clubs: clubs.filter(t => t.league_id == l.id)}
   })
 
   res.json(leagues)
@@ -53,9 +52,44 @@ router.patch('/:id', tiimi_admin, async (req, res) => {
 router.get('/:id/club', user, async (req, res) => {
   const { id } = req.params
 
-  const teams = await league_db.leagueClubs(id)
+  const clubs = await league_db.leagueClubs(id)
 
-  res.json(teams)
+  res.json(clubs)
+})
+
+router.post('/:id/club', tiimi_admin, async (req, res) => {
+  const { id } = req.params
+  const { logo_url, small_logo_url, club_name, club_name_short } = req.body;
+
+  const response = await league_db.addLeagueClub({ 
+    league_id: id,
+    logo_url, 
+    small_logo_url, 
+    club_name, 
+    club_name_short 
+  })
+
+  const [club] = await league_db.clubById(response.insertId)
+
+  res.json( club )
+})
+
+router.patch('/club/:id', tiimi_admin, async (req, res) => {
+  const { id } = req.params;
+  const { logo_url, small_logo_url, club_name, club_name_short } = req.body;
+
+  let updates = {}
+  if(logo_url) updates.logo_url = logo_url
+  if(small_logo_url) updates.small_logo_url = small_logo_url
+  if(club_name) updates.club_name = club_name
+  if(club_name_short) updates.club_name_short = club_name_short
+
+  const response = await league_db.updateClub(id, updates)
+
+  if(response.affectedRows === 0) throw new Error('club not found')
+
+  const [ new_club ] = await league_db.clubById(id)
+  res.json({ ...new_club, ...updates })
 })
 
 router.get('/:id/game', user, async (req, res) => {
@@ -108,9 +142,8 @@ router.delete('/game/:id', tiimi_admin, async (req, res) => {
   res.json('ok!')
 })
 
-router.get('/:id/joinedteam', tiimi_admin, async (req, res) => {
-  let teams = await league_db.leagueJoinedTeams(req.params.id)
-
+router.get('/:id/teams', tiimi_admin, async (req, res) => {
+  let teams = await league_db.leagueTeams(req.params.id)
   res.json(teams)
 })
 
@@ -124,10 +157,10 @@ router.post('/team', tiimi_admin, async (req, res) => {
   res.json(team)
 })
 
-router.post('/game', user, async (req, res) => {
+router.post('/:id/game', user, async (req, res) => {
   const insertData = await league_db.addGameToLeague(req.body)
 
-  const [addedGame] = await league_db.getLeagueGameById(insertData.insertId)
+  const [ addedGame ] = await league_db.getLeagueGameById(insertData.insertId)
 
   res.json(addedGame)
 })
