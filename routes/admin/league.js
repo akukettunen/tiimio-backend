@@ -35,11 +35,12 @@ router.get('/', user, async (req, res) => {
 
 router.patch('/:id', tiimi_admin, async (req, res) => {
   const { id } = req.params;
-  const { archived, league_name } = req.body;
+  const { archived, league_name, configuration } = req.body;
 
   let updates = {}
 
   if(typeof archived !== 'undefined') updates.archived = archived
+  if(configuration && typeof configuration === 'object') updates.configuration = JSON.stringify(configuration)
   if(league_name) updates.league_name = league_name
 
   const [ league ] = await league_db.getLeague(id)
