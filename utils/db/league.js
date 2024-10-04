@@ -6,14 +6,76 @@ const getLeagues = () => {
   `)
 }
 
-const leagueTeams = id => {
+const getLeague = (id) => {
   return query(`
-    SELECT * FROM league_team
-    WHERE league_id = ?;
+    SELECT * FROM league
+    WHERE id = ?;
   `, [id])
 }
 
-const leagueJoinedTeams = id => {
+const updateClub = (id, updates) => {
+  let fields = [];
+  let values = [];
+
+  for (const field in updates) {
+    fields.push(`${ field } = ?`);
+    values.push(updates[ field ]);
+  }
+  
+  values.push(id);
+
+  const q = `
+    UPDATE league_club
+    SET ${fields.join(', ')}
+    WHERE id = ?;
+  `
+
+  return query(q, values)
+}
+
+const updateLeague = (id, updates) => {
+  let fields = [];
+  let values = [];
+
+  for (const field in updates) {
+    fields.push(`${ field } = ?`);
+    values.push(updates[ field ]);
+  }
+  
+  values.push(id);
+
+  const q = `
+    UPDATE league
+    SET ${fields.join(', ')}
+    WHERE id = ?;
+  `
+
+  return query(q, values)
+}
+
+const leagueClubs = id => {
+  return query(`
+    SELECT * FROM league_club
+    WHERE league_id = ?
+    ORDER BY club_name;
+  `, [id])
+}
+
+const addLeagueClub = ({ league_id, logo_url, small_logo_url, club_name, club_name_short }) => {
+  return query(`
+    INSERT INTO league_club ( league_id, club_name, club_name_short, logo_url, small_logo_url )
+    VALUES ( ?, ?, ?, ?, ? );
+  `, [ league_id, club_name, club_name_short, logo_url, small_logo_url ])
+}
+
+const clubById = id => {
+  return query(`
+    SELECT * FROM league_club
+    WHERE id = ?;
+  `, [ id ])
+}
+
+const leagueTeams = id => {
   return query(`
     SELECT * FROM team
     WHERE league_id = ?;
@@ -27,19 +89,21 @@ const leagueGames = (id, season) => {
     SELECT 
       *, 
       league_game.id id,
-      home_team.logo_url home_team_logo_url, 
-      away_team.logo_url away_team_logo_url,
-      home_team.team_name home_team_name,
-      away_team.team_name away_team_name,
-      away_team.short_name away_team_short_name,
-      home_team.short_name home_team_short_name,
+      home_club.logo_url home_club_logo_url, 
+      home_club.small_logo_url home_small_club_logo_url, 
+      away_club.logo_url away_club_logo_url,
+      away_club.small_logo_url away_small_club_logo_url,
+      home_club.club_name home_club_name,
+      away_club.club_name away_club_name,
+      away_club.club_name_short away_club_short_name,
+      home_club.club_name_short home_club_short_name,
       YEAR(FROM_UNIXTIME(league_game.starttime_unix / 1000)) - 1 as ye,
       MONTH(FROM_UNIXTIME(league_game.starttime_unix / 1000)) as mo,
       league.season_start_month as stmonth
     FROM league_game
     LEFT JOIN league ON league.id = league_game.league_id
-    LEFT JOIN league_team as home_team ON home_team.id = league_game.home_team_id
-    LEFT JOIN league_team as away_team ON away_team.id = league_game.away_team_id
+    LEFT JOIN league_club as home_club ON home_club.id = league_game.home_club_id
+    LEFT JOIN league_club as away_club ON away_club.id = league_game.away_club_id
     WHERE league_game.league_id = ? AND
       (
         ( 
@@ -57,14 +121,14 @@ const leagueGames = (id, season) => {
 }
 
 const putLeagueGame = game => {
-  let { id, home_team_id, away_team_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type } = game
+  let { id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id } = game
   return query(`
     UPDATE league_game
-    SET home_team_id=?, away_team_id=?, score_home=?,
-    score_away=?, starttime_unix=?, publishtime_unix=?, 
-    analyzed=?, will_be_analyzed=?, video_url=?, video_type=?
+    SET home_club_id=?, away_club_id=?, score_home=?,
+    score_away=?, starttime_unix=?, publishtime_unix=?,
+    analyzed=?, will_be_analyzed=?, video_url=?, video_type=?, game_info=?, game_error=?, shown_live=?, season_id=?, external_service_id=?
     WHERE id = ?;
-  `, [ home_team_id, away_team_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, id ])
+  `, [ home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id, id ])
 }
 
 const leagueWhereAdmin = email => {
@@ -77,21 +141,21 @@ const leagueWhereAdmin = email => {
   `, [email])
 }
 
-const addTeamToLeague = team => {
+const addClubToLeague = team => {
   return query(`
-    INSERT INTO league_team (league_id, team_name, logo_url)
+    INSERT INTO league_club (league_id, team_name, logo_url)
     VALUES ?;
   `, team)
 }
 
 const addGameToLeague = game => {
-  let { league_id, home_team_id, away_team_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type } = game
+  let { id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id } = game
   analyzed = false
 
   return query(`
-    INSERT INTO league_game (league_id, home_team_id, away_team_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-  `, [ league_id, home_team_id, away_team_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type ])
+    INSERT INTO league_game (id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `, [ id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id ])
 }
 
 const getLeagueGameById = id => {
@@ -99,15 +163,17 @@ const getLeagueGameById = id => {
     SELECT 
       *,
       league_game.id as id,
-      home_team.logo_url home_team_logo_url, 
-      away_team.logo_url away_team_logo_url,
-      home_team.team_name home_team_name,
-      away_team.team_name away_team_name,
-      away_team.short_name away_team_short_name,
-      home_team.short_name home_team_short_name
+      home_club.small_logo_url home_club_small_logo_url,
+      home_club.logo_url home_club_logo_url,
+      away_club.small_logo_url away_club_small_logo_url,
+      away_club.logo_url away_club_logo_url,
+      home_club.club_name home_club_name,
+      away_club.club_name away_club_name,
+      away_club.club_name_short away_club_short_name,
+      home_club.club_name_short home_club_short_name
     FROM league_game
-    LEFT JOIN league_team as home_team ON home_team.id = league_game.home_team_id
-    LEFT JOIN league_team as away_team ON away_team.id = league_game.away_team_id
+    LEFT JOIN league_club as home_club ON home_club.id = league_game.home_club_id
+    LEFT JOIN league_club as away_club ON away_club.id = league_game.away_club_id
     WHERE league_game.id = ?;
   `, [id])
 }
@@ -121,14 +187,14 @@ const deleteGame = id => {
 
 const leagueTeamById = id => {
   return query(`
-    SELECT * FROM league_team
+    SELECT * FROM league_club
     WHERE id = ?;
   `, [id])
 }
 
 const deleteLeagueTeamById = id => {
   return query(`
-    DELETE FROM league_team
+    DELETE FROM league_club
     WHERE id = ?;
   `, [id])
 }
@@ -136,14 +202,19 @@ const deleteLeagueTeamById = id => {
 module.exports = { 
   getLeagues, 
   leagueWhereAdmin, 
-  addTeamToLeague, 
+  addClubToLeague, 
   leagueTeamById,
   deleteLeagueTeamById,
-  leagueTeams,
+  leagueClubs,
   addGameToLeague,
   getLeagueGameById,
   leagueGames,
   putLeagueGame,
   deleteGame,
-  leagueJoinedTeams
+  leagueTeams,
+  updateLeague,
+  getLeague,
+  addLeagueClub,
+  clubById,
+  updateClub
 }

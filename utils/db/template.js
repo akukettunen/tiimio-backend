@@ -11,7 +11,7 @@ const answersByVideoId = (video_id) => {
   return query(`
     SELECT button_template_prequisite_answer.*, tag.tag_name as tag_name FROM button_template_prequisite_answer
     LEFT JOIN tag ON tag.id = button_template_prequisite_answer.tag_id
-    WHERE video_id = ?;
+    WHERE video_id = '?';
   `, [ video_id ])
 }
 
@@ -25,7 +25,7 @@ const postAnswers = answers => {
 const deleteAnswersByVideoId = video_id => {
   return query(`
     DELETE FROM button_template_prequisite_answer
-    WHERE video_id = ?;
+    WHERE video_id = '?';
   `, [video_id])
 }
 

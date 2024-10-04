@@ -10,6 +10,7 @@ const { json } = require('body-parser')
       router.use(cookieParser())
       logger = require('../utils/logger')
       sport_db = require('../utils/db/sport')
+      user_db = require('../utils/db/user')
       team_db = require('../utils/db/team')
       stripe = require('../utils/stripe/index')
       userHelper = require('../utils/user/userHelper')
@@ -29,6 +30,39 @@ router.get('/sports', tiimi_admin, async (req, res) => {
   const sports = await sport_db.allSports()
 
   res.json(sports)
+})
+
+router.get('/team/:id/users', tiimi_admin, async (req, res) => {
+  const { id } = req.params;
+  const users = await team_db.teamUsers(id)
+  res.json(users)
+})
+
+router.patch('/team/:team_id/user/:user_id', tiimi_admin, async (req, res) => {
+  const { team_id, user_id } = req.params;
+  const { team_admin } = req.body;
+
+  let updates = {}
+
+  if(typeof team_admin !== 'undefined') updates.team_admin = team_admin
+
+  const [ user ] = await user_db.getUserByEmail(user_id)
+  delete user.password
+  const [ user_team ] = await user_db.getUserTeam(user_id, team_id)
+  if(!user_team) throw new Error('user_team not found')
+
+  await user_db.updateUserTeam(team_id, user_id, updates)
+
+  res.send({ ...user, ...user_team, ...updates })
+})
+
+router.delete('/team/:team_id/user/:user_id', tiimi_admin, async (req, res) => {
+  // DELETE A USER FROM TEAM
+  const { team_id, user_id } = req.params;
+
+  await user_db.deleteUserTeam(user_id, team_id)
+
+  res.json('ok')
 })
 
 module.exports = router;

@@ -29,8 +29,12 @@ const { v4: uuidv4 } = require('uuid');
 const { default: videoHelper } = require('../utils/video/videoHelper');
 
 router.post('/', user, async (req, res) => {
-  const { team_name, sport_id, dont_add_user, plan_id, initial_admin } = req.body
+  let { team_name, sport_id, dont_add_user, plan_id, initial_admin, league_id } = req.body
+
+  const admin = req.tiimio_user.tiimio_admin
+
   if(!team_name || !sport_id) throw new Error('bad request')
+  league_id = admin ? league_id : undefined
 
   const joinCode = await team_helper.generateJoinCode()
 
@@ -39,19 +43,13 @@ router.post('/', user, async (req, res) => {
   if(!initialFunc) initial = { timenames: ['Start', 'End'] }
   else initial = initialFunc()
 
-  // const [{ planId }] = await query(`
-  //   SELECT id AS planId 
-  //   FROM plan
-  //   WHERE is_the_freemium = true;
-  // `)
-
   const planId = plan_id ? plan_id : 1;
 
   const { insertId } = await team_db.createTeam({
     sportId: sport_id,
     name: team_name,
     joinCode, 
-    leagueId: undefined,
+    leagueId: league_id,
     joinCode,
     planId,
     initialAdmin: initial_admin

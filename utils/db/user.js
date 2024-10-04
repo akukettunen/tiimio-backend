@@ -70,5 +70,33 @@ const getUserTeam = (email, team_id) => {
     WHERE email = ? AND team_id = ?;
   `, [email, team_id])
 }
+
+const deleteUserTeam = (email, team_id) => {
+  return query(`
+    DELETE FROM user_team
+    WHERE email = ? AND team_id = ?;
+    `, [email, team_id])
+}
+
+const updateUserTeam = (team_id, email, updates) => {
+  let fields = [];
+  let values = [];
+
+  for (const field in updates) {
+    fields.push(`${ field } = ?`);
+    values.push(updates[ field ]);
+  }
+  
+  values.push(team_id);
+  values.push(email);
+
+  const q = `
+    UPDATE user_team
+    SET ${fields.join(', ')}
+    WHERE team_id = ? AND email = ?;
+  `
+
+  return query(q, values)
+}
  
-module.exports = { getUserTeam, userByConfirmationCode, userByConfirmationToken, confirmEmail, setNewPassword, resetTokenByHash, deleteAllResetTokensByEmail, addUser, getUserByEmail, addPasswordResetToken }
+module.exports = { updateUserTeam, deleteUserTeam, getUserTeam, userByConfirmationCode, userByConfirmationToken, confirmEmail, setNewPassword, resetTokenByHash, deleteAllResetTokensByEmail, addUser, getUserByEmail, addPasswordResetToken }
