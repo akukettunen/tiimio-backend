@@ -9,6 +9,7 @@ const express = require('express');
       season_db = require('../../utils/db/season')
       require('express-async-errors');
 const { user, is_in_team, tiimi_admin } = require('../../middleware/authMiddleware');
+const { v4: uuidv4 } = require('uuid');
 
 router.get('/', user, async (req, res) => {
   let leagues;
@@ -113,10 +114,15 @@ router.get('/:id/game', user, async (req, res) => {
 
 router.get('/game/:id', user, async (req, res) => {
   const { id } = req.params
-  const [game] = await league_db.getLeagueGameById(id)
+  const [ game ] = await league_db.getLeagueGameById(id)
   if(!game) throw new Error('video not found')
+
+  const current_team = req.tiimio_user.teams.find(t => t.id == req.tiimio_user?.currentTeamId)
+  if(current_team.league_id !== game.league_id && !req.tiimio_user.tiimio_admin) throw new Error('game not in current league')
+
   let clips = await clip_db.gameClips(game.id, req.tiimio_user?.currentTeamId)
   let times = await timeHelper.videoTimes(game.id)
+
   let mapped_times = times.map(t => {
     let parsed = JSON.parse(t.tags)
     return {
@@ -167,10 +173,11 @@ router.post('/team', tiimi_admin, async (req, res) => {
   res.json(team)
 })
 
-router.post('/:id/game', user, async (req, res) => {
-  const insertData = await league_db.addGameToLeague(req.body)
+router.post('/:id/game', tiimi_admin, async (req, res) => {
+  const id = uuidv4()
+  await league_db.addGameToLeague({ id, ...req.body })
 
-  const [ addedGame ] = await league_db.getLeagueGameById(insertData.insertId)
+  const [ addedGame ] = await league_db.getLeagueGameById(id)
 
   res.json(addedGame)
 })

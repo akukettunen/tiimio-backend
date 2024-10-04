@@ -201,6 +201,8 @@ const gameClips = (id, team_id) => {
 }
 
 const videoClips = id => {
+  id = id.toString()
+
   return query(`
   SELECT 
   clip.*,
@@ -245,8 +247,8 @@ const videoClips = id => {
     JOIN map_base ON map_point.map_base_id = map_base.id
     GROUP BY map_point.clip_id
   ) AS point_aggregates ON clip.id = point_aggregates.clip_id
-  WHERE clip.video_id = ? OR clip.game_id = ?
-  ORDER BY starttime; 
+  WHERE BINARY clip.video_id = ?
+  ORDER BY starttime;
   `, [id, id])
 }
 
