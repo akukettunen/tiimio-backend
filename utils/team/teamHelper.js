@@ -67,15 +67,11 @@ const addInitialTags = async (team_id, sport_id) => {
   // gets all columns
   const initialTags = await tag_db.tagsInGroups(sport_id, group_id_array)
 
-  console.log("Initial tags: ", initialTags)
-
   let tagPromises = teamGroups.map(group => {
     let originalGroupId = og_groups.find(f => f.group_name == group.group_name)?.id
 
     // adds tag_name group_id map_color hotkey and archived
     let tags = initialTags.filter(t => t.group_id == originalGroupId)
-
-    console.log(tags)
 
     tags = tags.map(tag => {
       return [

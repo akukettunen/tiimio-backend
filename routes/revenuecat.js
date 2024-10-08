@@ -33,7 +33,6 @@ router.post('/webhooks', async (req, res) => {
   const subtype = parsed_payload.subtype
   const product_ios_id = JSON.parse(transaction_info.payload).productId
 
-  console.log(type, subtype, product_ios_id)
   const team_id = 119
   const user_id = 'apple-test@tiimi.io'
 

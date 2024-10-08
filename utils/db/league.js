@@ -82,9 +82,7 @@ const leagueTeams = id => {
   `, [id])
 }
 
-const leagueGames = (id, season) => {
-  season = season == 'all' ? season : parseInt(season)
-
+const leagueGames = (id, season_id) => {
   return query(`
     SELECT 
       *, 
@@ -104,31 +102,20 @@ const leagueGames = (id, season) => {
     LEFT JOIN league ON league.id = league_game.league_id
     LEFT JOIN league_club as home_club ON home_club.id = league_game.home_club_id
     LEFT JOIN league_club as away_club ON away_club.id = league_game.away_club_id
-    WHERE league_game.league_id = ? AND
-      (
-        ( 
-          YEAR(FROM_UNIXTIME(league_game.starttime_unix / 1000)) = ? AND MONTH(FROM_UNIXTIME(league_game.starttime_unix / 1000)) >= league.season_start_month 
-        )
-        OR
-        (
-          YEAR(FROM_UNIXTIME(league_game.starttime_unix / 1000)) - 1 = ? AND MONTH(FROM_UNIXTIME(league_game.starttime_unix / 1000)) < league.season_start_month 
-        )
-        OR
-        ? = 'all'
-      ) 
+    WHERE league_game.league_id = ? AND league_game.season_id = ?
     ORDER BY starttime_unix DESC;
-  `, [id, season, season, season])
+  `, [id, season_id])
 }
 
 const putLeagueGame = game => {
-  let { id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id } = game
+  let { id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_live_url, video_type, game_info, game_error, shown_live, season_id, external_service_id, done_analysis_state } = game
   return query(`
     UPDATE league_game
     SET home_club_id=?, away_club_id=?, score_home=?,
     score_away=?, starttime_unix=?, publishtime_unix=?,
-    analyzed=?, will_be_analyzed=?, video_url=?, video_type=?, game_info=?, game_error=?, shown_live=?, season_id=?, external_service_id=?
+    analyzed=?, will_be_analyzed=?, video_url=?, video_type=?, game_info=?, game_error=?, shown_live=?, season_id=?, external_service_id=?, video_live_url=?, done_analysis_state=?
     WHERE id = ?;
-  `, [ home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id, id ])
+  `, [ home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id, video_live_url, done_analysis_state, id ])
 }
 
 const leagueWhereAdmin = email => {
@@ -149,13 +136,13 @@ const addClubToLeague = team => {
 }
 
 const addGameToLeague = game => {
-  let { id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id } = game
+  let { id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_live_url, video_type, game_info, game_error, shown_live, season_id, external_service_id, done_analysis_state } = game
   analyzed = false
 
   return query(`
-    INSERT INTO league_game (id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-  `, [ id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_type, game_info, game_error, shown_live, season_id, external_service_id ])
+    INSERT INTO league_game (id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_live_url, video_type, game_info, game_error, shown_live, season_id, external_service_id, done_analysis_state)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `, [ id, league_id, home_club_id, away_club_id, score_home, score_away, starttime_unix, publishtime_unix, analyzed, will_be_analyzed, video_url, video_live_url, video_type, game_info, game_error, shown_live, season_id, external_service_id, done_analysis_state ])
 }
 
 const getLeagueGameById = id => {
@@ -199,7 +186,17 @@ const deleteLeagueTeamById = id => {
   `, [id])
 }
 
+const getLatestLeagueSeason = id => {
+  return query(`
+    SELECT * FROM league_season
+    WHERE league_id = ? AND archived = 0
+    ORDER BY starttime DESC
+    LIMIT 1;
+  `, [ id ])
+}
+
 module.exports = { 
+  getLatestLeagueSeason,
   getLeagues, 
   leagueWhereAdmin, 
   addClubToLeague, 

@@ -21,7 +21,6 @@ const getTemplateById = async (id, video_id) => {
 
 const copySportTemplatesToTeam = async (sport_id, team_id) => {
   // templates
-  console.log('Running')
   const templates = await template_db.sportTemplates(sport_id)
 
   // template items
@@ -44,12 +43,10 @@ const copySportTemplatesToTeam = async (sport_id, team_id) => {
           return new Promise(async (resolve, reject) => {
             let tag_group_id;
             let tag_id;
-            console.log('Item: ', i)
             try {
               if(i.tag_id) {
                 let [ res ] = await tag_db.tagIdByNameAndTeamId({ name: i.tag_name, team_id })
                 tag_id = res?.id
-                console.log('Res: ', res)
               } else if(i.tag_group_id) {
                 let [ res ] = await tag_db.tagGroupIdByNameAndTeamId({ name: i.tag_group_name, team_id })
                 tag_group_id = res?.id

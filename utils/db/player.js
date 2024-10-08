@@ -7,11 +7,18 @@ const getPlayerByName = name => {
   `, [ name ])
 }
 
-const createPlayer = ({ league_id, league_club_id, picture_url, external_service_id, player_name }) => {
+const getPlayerById = id => {
   return query(`
-    INSERT INTO player (league_id, league_club_id, picture_url, external_service_id, player_name)
-    VALUES (?, ?, ?, ?, ?);
-  `, [league_id, league_club_id, picture_url, external_service_id, player_name]);
+    SELECT * FROM player
+    WHERE id = ?;
+  `, [ id ])
+}
+
+const createPlayer = ({ league_id, league_club_id, picture_url, picture_url_lg, external_service_id, player_name }) => {
+  return query(`
+    INSERT INTO player (league_id, league_club_id, picture_url, picture_url_lg, external_service_id, player_name)
+    VALUES (?, ?, ?, ?, ?, ?);
+  `, [league_id, league_club_id, picture_url, picture_url_lg, external_service_id, player_name]);
 };
 
 const deleteGamePlayers = (league_game_id) => {
@@ -39,8 +46,36 @@ const getGamePlayers = (league_game_id) => {
 const leaguePlayers = league_id => {
   return query(`
     SELECT * FROM player
-    WHERE league_id = ?;
+    WHERE league_id = ?
+    ORDER BY league_club_id;
   `, league_id)
 }
 
-module.exports = { getPlayerByName, createPlayer, deleteGamePlayers, createGamePlayer, getGamePlayers, leaguePlayers }
+const updatePlayer = (id, updates) => {
+  let fields = [];
+  let values = [];
+
+  for (const field in updates) {
+    fields.push(`${ field } = ?`);
+    values.push(updates[ field ]);
+  }
+  
+  values.push(id);
+
+  const q = `
+    UPDATE player
+    SET ${fields.join(', ')}
+    WHERE id = ?;
+  `
+
+  return query(q, values)
+}
+
+const checkPlayerByName = (name) => {
+  return query(`
+    SELECT id FROM player
+    WHERE player_name = ?;
+  `, [name])
+}
+
+module.exports = { checkPlayerByName, getPlayerById, updatePlayer, getPlayerByName, createPlayer, deleteGamePlayers, createGamePlayer, getGamePlayers, leaguePlayers }

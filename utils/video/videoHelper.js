@@ -7,8 +7,6 @@ const video_db = require('../db/video')
 
 const deleteVideoFromS3 = async key => {
   const keys = await listByKey(key)
-
-  console.log(keys)
 }
 
 const addSampleVideo = async (team_id) => {
@@ -40,8 +38,6 @@ const addSampleVideo = async (team_id) => {
     duration_ts: 0,
     job_id
   })
-
-  console.log('yea')
 }
 
 const getVideo = async id => {

@@ -105,12 +105,24 @@ router.patch('/club/:id', tiimi_admin, async (req, res) => {
 })
 
 router.get('/:id/game', user, async (req, res) => {
-  const { id } = req.params
-  const { season } = req.query
+  const { id } = req.params;
+  let { season_id } = req.query;
 
-  const games = await league_db.leagueGames(id, season)
+  if(typeof season_id == 'string') season_id = parseInt(season_id)
 
-  res.json(games)
+  const currentTeam = req.tiimio_user.teams.find(t => t.id == req.tiimio_user.currentTeamId)
+  if(currentTeam.league_id != id && !req.tiimio_user.tiimio_admin) throw new Error('team not in league')
+
+  let games;
+  if(season_id) {
+    games = await league_db.leagueGames(id, season_id)
+  } else {
+    const [ season ] = await league_db.getLatestLeagueSeason(id)
+    season_id = season.id
+    games = await league_db.leagueGames(id, season_id)
+  }
+
+  res.json({ games, season_id })
 })
 
 router.get('/game/:id', user, async (req, res) => {

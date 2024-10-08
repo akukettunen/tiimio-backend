@@ -65,4 +65,25 @@ router.delete('/team/:team_id/user/:user_id', tiimi_admin, async (req, res) => {
   res.json('ok')
 })
 
+router.patch('/player/:id', tiimi_admin, async (req, res) => {
+  const { league_club_id } = req.body;
+  const { id } = req.params;
+  let updates = {}
+
+  if(league_club_id) updates['league_club_id'] = league_club_id
+
+  const [ player ] = await player_db.getPlayerById(id)
+  await player_db.updatePlayer(player.id, updates)
+
+  const re = { ...player, ...updates }
+
+  res.json(re)
+})
+
+router.get('/player-check', tiimi_admin, async (req, res) => {
+  const { player_name } = req.query;
+  const [ result ] = await player_db.checkPlayerByName(player_name)
+  res.json({ found: !!result })
+})
+
 module.exports = router;

@@ -41,4 +41,46 @@ const updateSeason = (id, updates) => {
   return query(q, values)
 }
 
-module.exports = { updateSeason, leagueSeasons, createSeason, getSeasonById }
+const getSeasonStates = id => {
+  return query(`
+    SELECT * FROM season_analysis_state
+    WHERE season_id = ?
+    ORDER BY state_order;
+  `, [ id ])
+}
+
+const updateState = (id, updates) => {
+  let fields = [];
+  let values = [];
+
+  for (const field in updates) {
+    fields.push(`${field} = ?`);
+    values.push(updates[field]);
+  }
+
+  values.push(id);
+
+  const q = `
+    UPDATE season_analysis_state
+    SET ${fields.join(', ')}
+    WHERE id = ?;
+  `;
+
+  return query(q, values);
+}
+
+const createStateForSeason = ({ season_id, state_name, state_text, game_done, state_order }) => {
+  return query(`
+    INSERT INTO season_analysis_state (season_id, state_name, state_text, game_done, state_order)
+    VALUES (?, ?, ?, ?, ?);
+  `, [season_id, state_name, state_text, game_done, state_order]);
+}
+
+const getSeasonStateById = id => {
+  return query(`
+    SELECT * FROM season_analysis_state
+    WHERE id = ?;
+  `, [id]);
+}
+
+module.exports = { getSeasonStateById, createStateForSeason, updateState, getSeasonStates, updateSeason, leagueSeasons, createSeason, getSeasonById }
