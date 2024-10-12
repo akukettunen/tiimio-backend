@@ -100,9 +100,9 @@ router.post('/:id/group', user, is_in_team(), async (req, res, next) => {
     immutable, 
     buffer_start, 
     buffer_end, 
-    action_type, 
-    enduring, 
-    show_in_filtering 
+    action_type,
+    enduring,
+    show_in_filtering
   })
   let [ tag_group ] = await tag_db.tagGroupById(insertId)
 
