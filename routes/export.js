@@ -142,10 +142,8 @@ router.get('/export-state/:export_id', (req, res) => {
       res.status(500).json({ error: 'Could not fetch export object by export_id' });
     } else {
       if (result.Item) {
-        console.log(result.Item)
         res.json(result.Item);
       } else {
-        console.log('not found')
         res.send(null)
       }
     }

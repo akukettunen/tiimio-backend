@@ -6,6 +6,7 @@ const express = require('express');
       cookieParser = require('cookie-parser')
       router.use(cookieParser())
       league_db = require('../../utils/db/league')
+      player_db = require('../../utils/db/player')
       season_db = require('../../utils/db/season')
       require('express-async-errors');
 const { user, is_in_team, tiimi_admin } = require('../../middleware/authMiddleware');
@@ -104,12 +105,24 @@ router.patch('/club/:id', tiimi_admin, async (req, res) => {
 })
 
 router.get('/:id/game', user, async (req, res) => {
-  const { id } = req.params
-  const { season } = req.query
+  const { id } = req.params;
+  let { season_id } = req.query;
 
-  const games = await league_db.leagueGames(id, season)
+  if(typeof season_id == 'string') season_id = parseInt(season_id)
 
-  res.json(games)
+  const currentTeam = req.tiimio_user.teams.find(t => t.id == req.tiimio_user.currentTeamId)
+  if(currentTeam.league_id != id && !req.tiimio_user.tiimio_admin) throw new Error('team not in league')
+
+  let games;
+  if(season_id) {
+    games = await league_db.leagueGames(id, season_id)
+  } else {
+    const [ season ] = await league_db.getLatestLeagueSeason(id)
+    season_id = season.id
+    games = await league_db.leagueGames(id, season_id)
+  }
+
+  res.json({ games, season_id })
 })
 
 router.get('/game/:id', user, async (req, res) => {
@@ -185,6 +198,83 @@ router.post('/:id/game', tiimi_admin, async (req, res) => {
 router.delete('/team/:id', tiimi_admin, async (req, res) => {
   await league_db.deleteLeagueTeamById(req.params.id)
   res.send('ok!')
-}) 
+})
+
+router.get('/game/:league_game_id/game-player', tiimi_admin, async (req, res) => {
+  const { league_game_id } = req.params;
+  
+  const players = await player_db.getGamePlayers(league_game_id)
+
+  res.json(players)
+})
+
+router.post('/:league_id/game/:league_game_id/game-player/batch', tiimi_admin, async (req, res) => {
+  const { league_id, league_game_id } = req.params;
+  const { game_players } = req.body;
+  
+  const getPromises = game_players.map(player => {
+    return player_db.getPlayerByName( player.player_name )
+  })
+
+  const results = await Promise.all(getPromises)
+  const saveFoundGamePlayers = results.flat()
+  const foundPlayers = saveFoundGamePlayers.map(result => result.player_name);
+
+  // Find the players that were not found by comparing with game_players
+  const toBeSaved = game_players.filter(player => !foundPlayers.includes(player.player_name));
+
+  const savePromises = toBeSaved.map(p => {
+    return player_db.createPlayer({ 
+      league_id, 
+      league_club_id: p.league_club_id, 
+      picture_url: p.picture_url, 
+      external_service_id: p.external_service_id, 
+      player_name: p.player_name
+    })
+  })
+  await Promise.all(savePromises)
+  const getNewPromises = toBeSaved.map(player => {
+    return player_db.getPlayerByName( player.player_name )
+  })
+  const new_results = await Promise.all(getNewPromises)
+  const saveNewlyAddedPlayers = new_results.flat()
+
+  await player_db.deleteGamePlayers(league_game_id)
+
+  const allGamePlayers = saveNewlyAddedPlayers.concat(saveFoundGamePlayers)
+  const playersWithIds = game_players.map(p => {
+    return {
+      ...p,
+      id: allGamePlayers.find(p2 => p2.player_name === p.player_name)?.id
+    }
+  })
+
+  const gamePlayerSavePromises = playersWithIds.map(pla => {
+    return player_db.createGamePlayer({
+      player_id: pla.id,
+      league_game_id,
+      league_club_id: pla.league_club_id,
+      num: pla.num,
+      pos: pla.pos
+    })
+  })
+
+  await Promise.all(gamePlayerSavePromises)
+  const players = await player_db.getGamePlayers(league_game_id)
+
+  res.json({ game_players: players, added_players: saveNewlyAddedPlayers })
+  /*
+    1. tsekkaa onko kukin pelaaja olemassa player-tablessa (nimen mukaan)
+    2. ne, jotka ei, tallenna player-tableen
+    3. ne, jotka on, hae heidän data
+    4. tallenna game_player tableen
+    5. lähetä takaisin joined queryn tulos kaikista pelin pelaajista
+  */
+})
+
+router.get('/:id/player', tiimi_admin, async (req, res) => {
+  const players = await player_db.leaguePlayers(req.params.id)
+  res.json(players)
+})
 
 module.exports = router;

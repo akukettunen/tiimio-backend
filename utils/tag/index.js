@@ -41,7 +41,6 @@ const teamTagGroupIds = async team_id => {
 }
 
 const getSportTagGroups = async id => {
-  console.log(id)
   let groups = await tag_db.sportGroups(id)
   let mirrors = await tag_db.sportMirrors(id)
   let tags = await tag_db.sportTags(id)

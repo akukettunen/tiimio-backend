@@ -461,9 +461,6 @@ const init = async () => {
   await team_helper.addInitialTags('1', 'pesapallo')
 
   let tables = await query(`show tables;`)
-  tables.map(table => {
-    console.log(table.Tables_in_tiimio)
-  })
 
   await promisePoolEnd()
 

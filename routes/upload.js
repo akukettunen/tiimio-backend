@@ -16,7 +16,7 @@ const s3 = new AWS.S3();
 router.post('/get-presigned-url', tiimi_admin, async (req, res) => {
   try {
     const { fileName, fileType, folder } = req.body;
-    console.log(req.body)
+
     if (!fileName || !fileType || !folder) {
       return res.status(400).json({ error: 'Missing fileName or fileType' });
     }
