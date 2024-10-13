@@ -6,8 +6,32 @@ const express = require('express');
       tag_db = require('../utils/db/tag_view')
       tagHelper = require('../utils/tag')
       require('express-async-errors');
-      const { user, is_in_team, tiimi_admin, inline_is_in_team, inline_tiimi_admin } = require('../middleware/authMiddleware');
+      const { user, is_in_team, inline_is_in_league_or_admin, inline_is_in_team, inline_aku_kettunen, inline_tiimi_admin } = require('../middleware/authMiddleware');
 
+// LEAGUE
+router.get('/league/:league_id', user, async (req, res) => {
+  const { league_id } = req.params;
+
+  inline_is_in_league_or_admin(league_id, req)
+
+  const views = await tag_db.getLeagueViews(league_id)
+
+  const groupPromises = views.map(v => {
+    return tag_db.getTagViewGroups(v.id)
+  })
+  let groups = await Promise.all(groupPromises)
+  groups = groups.flat()
+
+  const tagPromises = groups.map(g => {
+    return tag_db.getTagGroupTags(g.id)
+  })
+  let tags = await Promise.all(tagPromises)
+  tags = tags.flat()
+
+  res.json({ tag_views: views, tag_groups: groups, tags })
+})
+
+// TEAM
 router.get('/team/:team_id', user, async (req, res) => {
   const { team_id } = req.params;
 
@@ -66,17 +90,20 @@ router.get('/team/:team_id', user, async (req, res) => {
   res.json({ tag_views, tag_groups, tags, default_view_created, groups_added_to_view, fetched_unix: Date.now() })
 })
 
+// TEAM & LEAGUE
 router.post('/', user, async (req, res) => {
-  const { position, tag_view_name, team_id } = req.body;
+  const { position, tag_view_name, team_id, league_id } = req.body;
 
-  inline_is_in_team(team_id, req)
+  if(league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(team_id, req)
 
-  const { insertId } = await tag_db.createTagView({ position, tag_view_name, team_id })
+  const { insertId } = await tag_db.createTagView({ position, tag_view_name, team_id, league_id })
   const [ new_tag_view ] = await tag_db.tagViewById(insertId)
 
   res.json(new_tag_view)
 })
 
+// TEAM & LEAGUE
 router.post('/:id/group', user, is_in_team(), async (req, res, next) => {
   let { tag_view_id, position, team_id, group_name, league_id, one_tag_only, sport_id, immutable, buffer_start, buffer_end, action_type, enduring, show_in_filtering } = req.body
 
@@ -85,7 +112,8 @@ router.post('/:id/group', user, is_in_team(), async (req, res, next) => {
 
   // get tag view and check that user is in that team
   const [ tag_view ] = await tag_db.tagViewById(tag_view_id)
-  inline_is_in_team(tag_view.team_id, req)
+  if(tag_view.league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(tag_view.team_id, req)
 
   if(sport_id || league_id) inline_tiimi_admin(req)
 
@@ -109,15 +137,17 @@ router.post('/:id/group', user, is_in_team(), async (req, res, next) => {
   res.json(tag_group)
 })
 
+// TEAM & LEAGUE
 router.post(`/group/:id/tag`, user, async (req, res) => {
   const { tag_name, map_shape, map_color, hotkey, position, group_id } = req.body;
   if(!tag_name) throw new Error('bad request')
   const { id } = req.params;
 
   const [ data ] = await tag_db.teamIdByGroupId(id)
-  if(!data || !data.team_id) throw new Error('team not found')
+  if(!data || (!data.team_id && !data.league_id)) throw new Error('team not found')
 
-  inline_is_in_team(data.team_id, req)
+  if(data.league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(data.team_id, req)
 
   const insertData = await tag_db.createTag({ tag_name, map_shape, map_color, hotkey, position, group_id })
   const tag_id = insertData.insertId
@@ -127,13 +157,16 @@ router.post(`/group/:id/tag`, user, async (req, res) => {
   res.json(tag)
 })
 
+// TEAM & LEAGUE
 router.patch('/order/batch', user, async (req, res) => {
-  const { team_id, tag_views } = req.body;
+  const { league_id, team_id, tag_views } = req.body;
 
-  inline_is_in_team(team_id, req)
+  if(league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(team_id, req)
 
   const tag_view_promises = tag_views.map(v => {
-    return tag_db.updateTagViewPosition(v.id, v.position, team_id)
+    if(!league_id) return tag_db.updateTagViewPosition(v.id, v.position, team_id)
+    else return tag_db.updateTagViewPositionLeague(v.id, v.position, league_id)
   })
 
   await Promise.all(tag_view_promises)
@@ -141,6 +174,7 @@ router.patch('/order/batch', user, async (req, res) => {
   res.json('ok')
 })
 
+// TEAM & LEAGUE
 router.patch('/:tag_view_id/group/order/batch', user, async (req, res) => {
   const { tag_view_id } = req.params;
   const { groups } = req.body;
@@ -148,7 +182,8 @@ router.patch('/:tag_view_id/group/order/batch', user, async (req, res) => {
   const [ tag_view ] = await tag_db.tagViewById(tag_view_id)
   if(!tag_view) throw new Error('tag view not found')
 
-  inline_is_in_team(tag_view.team_id, req)
+  if(tag_view.league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(tag_view.team_id, req)
 
   const group_promises = groups.map(group => {
     return tag_db.updateGroupPosition( group.id, group.position, tag_view_id )
@@ -159,13 +194,15 @@ router.patch('/:tag_view_id/group/order/batch', user, async (req, res) => {
   res.json('ok')
 })
 
+// TEAM & LEAGUE
 router.patch('/tag/order/batch', user, async (req, res) => {
   const { group_id, tags } = req.body;
 
   const [ data ] = await tag_db.teamIdByGroupId(group_id)
   if(!data) throw new Error('group not found')
 
-  inline_is_in_team(data.team_id, req)
+  if(data.league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(data.team_id, req)
 
   // We know that user has this group_id
   const tag_promises = tags.map(t => {
@@ -177,6 +214,7 @@ router.patch('/tag/order/batch', user, async (req, res) => {
   res.json('ok')
 })
 
+// TEAM & LEAGUE
 router.patch('/:id', user, async (req, res) => {
   const { id } = req.params;
   const { position, tag_view_name } = req.body;
@@ -188,26 +226,15 @@ router.patch('/:id', user, async (req, res) => {
   const [ tag_view ] = await tag_db.tagViewById(id)
   if(!tag_view) throw new Error('tag view not found')
 
-  inline_is_in_team(tag_view.team_id, req)
+  if(tag_view.league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(tag_view.team_id, req)
 
   await tag_db.updateTagView(id, updates)
 
   res.json({ ...tag_view, ...updates })
 })
 
-router.delete('/:id', user, async (req, res) => {
-  const { id } = req.params;
-
-  const [ tag_view ] = await tag_db.tagViewById(id)
-  if(!tag_view) throw new Error('tag view not found')
-
-  inline_is_in_team(tag_view.team_id, req)
-
-  await tag_db.deleteTagView(req.params.id)
-
-  res.json('ok')
-})
-
+// TEAM & LEAGUE
 router.put('/tag-group/:id', user, async (req, res) => {
   const { id } = req.params;
   const updates = { 
@@ -221,21 +248,24 @@ router.put('/tag-group/:id', user, async (req, res) => {
   if(!tag_group) throw new Error('tag group not found')
   const [ tag_view ] = await tag_db.tagViewById(tag_group.tag_view_id)
 
-  inline_is_in_team(tag_view.team_id, req)
+  if(tag_view.league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(tag_view.team_id, req)
 
   await tag_db.updateTagGroup(id, updates)
 
   res.json({ ...tag_group, ...updates })
 })
 
+// TEAM & LEAGUE
 router.put('/tag/:id', user, async (req, res) => {
   const { id } = req.params;
 
   const [ data ] = await tag_db.teamIdByTagId(id)
   const [ tag ] = await tag_db.tagById(id)
-  if(!data || !data.team_id) throw new Error('team not found')
+  if(!data) throw new Error('team not found')
 
-  inline_is_in_team(data.team_id, req)
+  if(data.league_id) inline_tiimi_admin(req)
+  else inline_is_in_team(data.team_id, req)
 
   const updates = {
     tag_name, map_color, map_shape, hotkey
@@ -246,6 +276,22 @@ router.put('/tag/:id', user, async (req, res) => {
   res.json({ ...tag, ...updates })
 })
 
+// TEAM & LEAGUE
+router.delete('/:id', user, async (req, res) => {
+  const { id } = req.params;
+
+  const [ tag_view ] = await tag_db.tagViewById(id)
+  if(!tag_view) throw new Error('tag view not found')
+
+  if(tag_view.league_id) inline_aku_kettunen(req)
+  else inline_is_in_team(tag_view.team_id, req)
+
+  await tag_db.deleteTagView(req.params.id)
+
+  res.json('ok')
+})
+
+// TEAM & LEAGUE
 router.delete('/tag-group/:id', user, async (req, res) => {
   const { id } = req.params;
 
@@ -253,7 +299,8 @@ router.delete('/tag-group/:id', user, async (req, res) => {
   if(!tag_group) throw new Error('tag group not found')
   const [ tag_view ] = await tag_db.tagViewById(tag_group.tag_view_id)
 
-  inline_is_in_team(tag_view.team_id, req)
+  if(tag_view.league_id) inline_aku_kettunen(req)
+  else inline_is_in_team(tag_view.team_id, req)
 
   await tag_db.deleteTagGroup(id)
 
@@ -264,9 +311,10 @@ router.delete('/tag/:id', user, async (req, res) => {
   const { id } = req.params;
 
   const [ data ] = await tag_db.teamIdByTagId(id);
-  if(!data || !data.team_id) throw new Error('team not found')
+  if(!data) throw new Error('team not found')
 
-  inline_is_in_team(data.team_id, req)
+  if(data.league_id) inline_aku_kettunen(req)
+  else inline_is_in_team(data.team_id, req)
 
   await tag_db.deleteTag(id)
 

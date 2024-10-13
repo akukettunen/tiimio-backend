@@ -40,6 +40,13 @@ const inline_tiimi_admin = (req, res, next) => {
   if(!admin) throw new Error('authentication error')
 }
 
+// this is used for now only when deleting tags, views or groups at the league level
+const inline_aku_kettunen = (req, res, next) => {
+  const is_aku = req.tiimio_user.email === 'aku@kettunen.com'
+
+  if(!is_aku) throw new Error('not admin admin')
+}
+
 const inline_is_in_team = (team_id, req) => {
   if(!team_id) throw new Error('no team_id present')
 
@@ -48,6 +55,28 @@ const inline_is_in_team = (team_id, req) => {
 
   const is_in = teams.map(team => team.id).includes(parseInt(team_id))
   if(!is_in) throw new Error('wrong team')
+}
+
+const inline_is_in_league = (league_id, req) => {
+  if(!league_id) throw new Error('no league_id present')
+
+  const teams = req.tiimio_user?.teams
+  if(!teams) throw new Error('user not in any teams')
+  const team = teams.find(t => t.id === req.tiimio_user.currentTeamId)
+
+  if(team.league_id !== league_id) throw new Error('team not in league')
+}
+
+const inline_is_in_league_or_admin = (league_id, req) => {
+  if(req.tiimio_user.tiimio_admin) return true
+
+  if(!league_id) throw new Error('no league_id present')
+
+  const teams = req.tiimio_user?.teams
+  if(!teams) throw new Error('user not in any teams')
+  const team = teams.find(t => t.id === req.tiimio_user.currentTeamId)
+
+  if(team.league_id !== league_id) throw new Error('team not in league')
 }
 
 const is_in_team = (team_id) => {
@@ -66,4 +95,4 @@ const is_in_team = (team_id) => {
   }
 }
 
-module.exports = { inline_is_in_team, inline_tiimi_admin, tiimi_admin, user, is_in_team }
+module.exports = { inline_aku_kettunen, inline_is_in_league_or_admin, inline_is_in_league, inline_is_in_team, inline_tiimi_admin, tiimi_admin, user, is_in_team }
