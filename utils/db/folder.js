@@ -8,6 +8,40 @@ const byTeamId = teamId => {
   `, [teamId])
 }
 
+const deleteItemFolders = (id, id_type, team_id) => {
+  if(!['clip_id', 'time_id', 'folder_id', 'filter_id', 'map_id'].includes(id_type)) {
+    throw new Error('faulty id_type')
+  }
+
+  return query(`
+    DELETE FROM folder
+    WHERE ${id_type} = ? AND team_id = ?;
+  `, [ id, team_id ])
+}
+
+const itemFolders = (id, id_type, team_id) => {
+  if(!['clip_id', 'time_id', 'folder_id', 'filter_id', 'map_id'].includes(id_type)) {
+    throw new Error('faulty id_type')
+  }
+
+  return query(`
+    SELECT * FROM folder
+    WHERE folder.${id_type} = ? AND folder.team_id = ?;
+  `, [ id, team_id ])
+}
+
+const itemFolderParents = (id, id_type, team_id) => {
+  if(!['clip_id', 'time_id', 'folder_id', 'filter_id', 'map_id'].includes(id_type)) {
+    throw new Error('faulty id_type')
+  }
+
+  return query(`
+    SELECT * FROM folder
+    LEFT JOIN folder as parent ON parent.id = folder.parent
+    WHERE folder.${id_type} = ? AND folder.team_id = ?;
+  `, [ id, team_id ])
+}
+
 const byTeamIdByParent = (teamId, parentId) => {
   return query(`
     SELECT * FROM folder
@@ -70,4 +104,4 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { editFolderOrder, byTeamIdByParent, byTeamIdRoot, folderClips, byId, byTeamId, addFolder, updateFolder, deleteById }
+module.exports = { deleteItemFolders, itemFolders, itemFolderParents, editFolderOrder, byTeamIdByParent, byTeamIdRoot, folderClips, byId, byTeamId, addFolder, updateFolder, deleteById }

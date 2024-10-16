@@ -33,7 +33,7 @@ router.get('/team/:team_id/parent/:parent_id', user, is_in_team(), async (req, r
   let folders;
   let parent = req.params.parent_id
 
-  if(parent === 'root') folders = await await folder_db.byTeamIdRoot(req.params.team_id)
+  if(parent === 'root' || !parent) folders = await await folder_db.byTeamIdRoot(req.params.team_id)
   else folders = await folder_db.byTeamIdByParent(req.params.team_id, parent)
 
   res.json(folders)
@@ -51,6 +51,28 @@ router.get('/:id/clip', user, async (req, res) => {
   const clips = await folder_db.folderClips(folder.id)
 
   res.json(clips)
+})
+
+router.get('/item-folders', user, async (req, res) => {
+  const { id, id_type, team_id } = req.query // id_type: clip_id, time_id, folder_id, filter_id, map_id
+
+  inline_is_in_team(team_id, req)
+
+  let parents = await folder_db.itemFolderParents(id, id_type, team_id)
+  const folders = await folder_db.itemFolders(id, id_type, team_id)
+
+  const in_root = folders.some(f => !f.parent)
+  if(in_root) parents = parents.concat({ id: undefined, name: 'Root' })
+  res.json(parents)
+})
+
+router.delete('/item-folders', user, async (req, res) => {
+  const { id, id_type, team_id } = req.query // id_type: clip_id, time_id, folder_id, filter_id, map_id
+  inline_is_in_team(team_id, req)
+
+  await folder_db.deleteItemFolders(id, id_type, team_id)
+
+  res.json('ok')
 })
 
 router.put('/order', user, is_in_team(), async (req, res) => {
