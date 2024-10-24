@@ -11,7 +11,7 @@ const getTeamTagViews = id => {
 const getLeagueViews = id => {
   return query(`
     SELECT * FROM tag_view
-    WHERE league_id = ?;  
+    WHERE league_id = ?;
   `, [ id ])
 }
 
@@ -25,7 +25,8 @@ const getTagViewGroups = id => {
 
 const getTagGroupTags = id => {
   return query(`
-    SELECT * FROM tag
+    SELECT tag.*, hotkey.shift, hotkey.hotkey FROM tag
+    LEFT JOIN hotkey ON hotkey.tag_id = tag.id
     WHERE group_id = ?
     ORDER BY position;
   `, [ id ])
@@ -67,7 +68,7 @@ const updateTag = (id, updates) => {
     fields.push(`${ field } = ?`);
     values.push(updates[ field ]);
   }
-  
+
   values.push(id);
 
   const q = `
@@ -87,7 +88,7 @@ const updateTagGroup = (id, updates) => {
     fields.push(`${ field } = ?`);
     values.push(updates[ field ]);
   }
-  
+
   values.push(id);
 
   const q = `
@@ -149,8 +150,9 @@ const teamIdByTagId = tag_id => {
 
 const tagById = id => {
   return query(`
-    SELECT * FROM tag
-    WHERE id = ?;  
+    SELECT tag.*, hotkey.shift, hotkey.hotkey FROM tag
+    LEFT JOIN hotkey ON hotkey.tag_id = tag.id
+    WHERE tag.id = ?;
   `, [ id ])
 }
 
@@ -166,7 +168,7 @@ const updateGroupPosition = (id, position, tag_view_id) => {
   return query(`
     UPDATE tag_group
     SET position = ?
-    WHERE id = ? AND tag_view_id = ?;  
+    WHERE id = ? AND tag_view_id = ?;
   `, [ position, id, tag_view_id ])
 }
 
@@ -178,7 +180,7 @@ const updateTagView = (id, updates) => {
     fields.push(`${ field } = ?`);
     values.push(updates[ field ]);
   }
-  
+
   values.push(id);
 
   const q = `
@@ -211,11 +213,34 @@ const deleteTag = id => {
   `, [ id ])
 }
 
-const createTag = ({ tag_name, hotkey, map_shape, map_color, position,  group_id }) => {
+const createTag = ({ tag_name, map_shape, map_color, position,  group_id }) => {
   return query(`
-    INSERT INTO tag ( tag_name, hotkey, map_shape, map_color, position, group_id )
-    VALUES ( ?, ?, ?, ?, ?, ? );
-  `, [ tag_name, hotkey, map_shape, map_color, position, group_id])
+    INSERT INTO tag ( tag_name, map_shape, map_color, position, group_id )
+    VALUES ( ?, ?, ?, ?, ? );
+  `, [ tag_name, map_shape, map_color, position, group_id])
 }
 
-module.exports = { updateTagViewPositionLeague, getLeagueViews, updateGroupPosition, createTag, tagById, updateTag, teamIdByTagId, teamIdByGroupId, updateTagPosition, deleteTag, deleteTagGroup, deleteTagView, updateTagViewPosition, updateTagView, tagGroupById, createTagGroup, tagViewById, createTagView, teamTagGroups, createDefaultView, getTeamTagViews, getTagViewGroups, getTagGroupTags, updateTagGroup }
+const addTagHotkey = ({ tag_id, shift, hotkey, team_id }) => {
+  shift = shift || false;
+  return query(`
+    INSERT INTO hotkey ( shift, hotkey, tag_id, team_id )
+    VALUES ( ?, ?, ?, ? );
+  `, [ shift, hotkey, tag_id, team_id ])
+}
+
+const removeTagHotkey = (tag_id) => {
+  return query(`
+    DELETE FROM hotkey
+    WHERE tag_id = ?;
+  `, [ tag_id ])
+}
+
+const updateTagHotkey = ({ tag_id, shift, hotkey }) => {
+  return query(`
+    UPDATE hotkey
+    SET shift = ?, hotkey = ?
+    WHERE tag_id = ?;
+  `, [ shift, hotkey, tag_id ])
+}
+
+module.exports = { removeTagHotkey, updateTagHotkey, addTagHotkey, updateTagViewPositionLeague, getLeagueViews, updateGroupPosition, createTag, tagById, updateTag, teamIdByTagId, teamIdByGroupId, updateTagPosition, deleteTag, deleteTagGroup, deleteTagView, updateTagViewPosition, updateTagView, tagGroupById, createTagGroup, tagViewById, createTagView, teamTagGroups, createDefaultView, getTeamTagViews, getTagViewGroups, getTagGroupTags, updateTagGroup }

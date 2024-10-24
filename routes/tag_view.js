@@ -117,17 +117,17 @@ router.post('/:id/group', user, is_in_team(), async (req, res, next) => {
 
   if(sport_id || league_id) inline_tiimi_admin(req)
 
-  let { insertId } = await tag_db.createTagGroup({ 
-    tag_view_id, 
-    position, 
-    team_id, 
-    group_name, 
-    league_id, 
-    one_tag_only, 
-    sport_id, 
-    immutable, 
-    buffer_start, 
-    buffer_end, 
+  let { insertId } = await tag_db.createTagGroup({
+    tag_view_id,
+    position,
+    team_id,
+    group_name,
+    league_id,
+    one_tag_only,
+    sport_id,
+    immutable,
+    buffer_start,
+    buffer_end,
     action_type,
     enduring,
     show_in_filtering
@@ -139,7 +139,8 @@ router.post('/:id/group', user, is_in_team(), async (req, res, next) => {
 
 // TEAM & LEAGUE
 router.post(`/group/:id/tag`, user, async (req, res) => {
-  const { tag_name, map_shape, map_color, hotkey, position, group_id } = req.body;
+  const { tag_name, map_shape, map_color, hotkey, position, group_id, shift } = req.body;
+
   if(!tag_name) throw new Error('bad request')
   const { id } = req.params;
 
@@ -150,6 +151,10 @@ router.post(`/group/:id/tag`, user, async (req, res) => {
   else inline_is_in_team(data.team_id, req)
 
   const insertData = await tag_db.createTag({ tag_name, map_shape, map_color, hotkey, position, group_id })
+  if(hotkey) {
+    await tag_db.addTagHotkey({ shift: shift ? shift : false, hotkey, tag_id: insertData.insertId, team_id: data.team_id })
+  }
+
   const tag_id = insertData.insertId
 
   const [ tag ] = await tag_db.tagById(tag_id)
@@ -237,10 +242,10 @@ router.patch('/:id', user, async (req, res) => {
 // TEAM & LEAGUE
 router.put('/tag-group/:id', user, async (req, res) => {
   const { id } = req.params;
-  const updates = { 
-    group_name, team_id, league_id, show_in_filtering, 
-    show_in_tagging, position, dropdown, show_in_join_w_group, 
-    one_tag_only, immutable, sport_id, buffer_start, buffer_end, 
+  const updates = {
+    group_name, team_id, league_id, show_in_filtering,
+    show_in_tagging, position, dropdown, show_in_join_w_group,
+    one_tag_only, immutable, sport_id, buffer_start, buffer_end,
     action_type, enduring, archived, tag_view_id
   } = req.body;
 
@@ -267,13 +272,18 @@ router.put('/tag/:id', user, async (req, res) => {
   if(data.league_id) inline_tiimi_admin(req)
   else inline_is_in_team(data.team_id, req)
 
-  const updates = {
-    tag_name, map_color, map_shape, hotkey
-  } = req.body;
+  await tag_db.removeTagHotkey(id)
+
+  const { tag_name, map_color, map_shape } = req.body;
+  const updates =  { tag_name, map_color, map_shape }
+
+  const { hotkey, shift } = req.body;
+  const hotkey_updates = { hotkey, shift };
 
   await tag_db.updateTag(id, updates)
+  if(hotkey) await tag_db.addTagHotkey({ tag_id: id, hotkey, shift, team_id: data.team_id })
 
-  res.json({ ...tag, ...updates })
+  res.json({ ...tag, ...updates, ...hotkey_updates })
 })
 
 // TEAM & LEAGUE
