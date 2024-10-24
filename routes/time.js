@@ -24,6 +24,16 @@ router.get('/timename/team/:team_id', user, is_in_team(), async (req, res) => {
   res.json(timenames)
 })
 
+router.delete('/timename/:id/team/:team_id', user, async (req, res) => {
+  const { id, team_id } = req.params;
+
+  inline_is_in_team(team_id, req)
+
+  await time_db.deleteTimename(id, team_id)
+
+  res.send('ok')
+})
+
 router.put('/timename', user, is_in_team(), async (req, res) => {
   if(!req.body.name || !req.body.id) throw new Error('bad request')
 
@@ -86,7 +96,7 @@ router.put('/:time_id/tag', user, async (req, res) => {
   const removeIds = 
     current_tags_ids
       .filter(n => !new_tags_ids.includes(n))
-      .map(t => `'${t}'`)
+      .map(t => `${t}`)
 
   if(addIds?.length) {
     await time_db.batchAddTag(req.params.time_id, addIds)
