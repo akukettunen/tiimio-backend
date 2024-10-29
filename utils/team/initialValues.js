@@ -2,7 +2,7 @@ const baseball = () => {
   return {
     tags: [
       {
-        name: 'Base', 
+        name: 'Base',
         tags: [
           '1st',
           '2nd',
@@ -10,20 +10,20 @@ const baseball = () => {
         ]
       },
       {
-        name: 'Player', 
+        name: 'Player',
         tags: [
           'Jane Doe',
           'John Doe'
         ]
       },
       {
-        name: 'Opposing team', 
+        name: 'Opposing team',
         tags: [
           'New York Yankees'
         ]
       },
       {
-        name: 'Events', 
+        name: 'Events',
         tags: [
           'Hit',
           'Catch',
@@ -32,8 +32,8 @@ const baseball = () => {
       }
     ],
     timenames: [
-      'Pitch made', 
-      'Ball at catcher', 
+      'Pitch made',
+      'Ball at catcher',
       'Exchange',
       'Pop time',
       'Runner takeoff',
@@ -177,7 +177,7 @@ const other = () => {
       {
         name: 'Event',
         tags: [
-          'Attack', 
+          'Attack',
           'Defense'
         ]
       }
@@ -204,14 +204,14 @@ const basketball = () => {
         tags: [
           '2pt made',
           '3pt made',
-          'Attack', 
+          'Attack',
           'Defense'
         ]
       },
       {
         name: 'Shot value',
         tags: [
-          '1pt', 
+          '1pt',
           '2pt',
           '3pt'
         ]
@@ -219,7 +219,7 @@ const basketball = () => {
       {
         name: 'Shot type',
         tags: [
-          'Alley oop', 
+          'Alley oop',
           'Floater',
           'Jump shot',
           'Dunk',
@@ -257,7 +257,7 @@ const soccer = () => {
       {
         name: 'Player',
         tags: [
-          'John Doe', 
+          'John Doe',
           'Jane Doe'
         ]
       }
@@ -271,4 +271,29 @@ const soccer = () => {
   }
 }
 
-module.exports = { pesapallo, baseball, other, basketball, soccer }
+const init_hotkeys = () => {
+  return [
+    {
+      hotkey_action: "toggle_map",
+      hotkey: "M",
+      shift: false
+    },
+    {
+      hotkey_action: "next_clip",
+      hotkey: "N",
+      shift: true
+    },
+    {
+      hotkey_action: "previous_clip",
+      hotkey: "P",
+      shift: true
+    },
+    {
+      hotkey_action: "delete_latest_clip",
+      hotkey: "D",
+      shift: true
+    },
+  ]
+}
+
+module.exports = { init_hotkeys, pesapallo, baseball, other, basketball, soccer }

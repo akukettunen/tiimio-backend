@@ -3,6 +3,7 @@ const express = require('express');
 const { query } = require('../utils/db/index')
 const { user, is_in_team } = require('../middleware/authMiddleware');
 const { createCustomer } = require('../utils/stripe/index')
+const { initTeamHotkeys } = require('../utils/hotkey/initTeamHotkeys')
 const db = require('../utils/db/index');
       router = express.Router()
       bcrypt = require('bcryptjs');
@@ -24,7 +25,7 @@ const db = require('../utils/db/index');
       video_helper = require('../utils/video/videoHelper')
       require('express-async-errors');
       mail = require('../utils/email/mailchimp')
-      
+
 const { v4: uuidv4 } = require('uuid');
 const { default: videoHelper } = require('../utils/video/videoHelper');
 
@@ -48,7 +49,7 @@ router.post('/', user, async (req, res) => {
   const { insertId } = await team_db.createTeam({
     sportId: sport_id,
     name: team_name,
-    joinCode, 
+    joinCode,
     leagueId: league_id,
     joinCode,
     planId,
@@ -56,7 +57,7 @@ router.post('/', user, async (req, res) => {
   })
 
   if(!dont_add_user) {
-    const stripeCustomer = await createCustomer({ 
+    const stripeCustomer = await createCustomer({
       full_name: req.tiimio_user.name,
       email: req.tiimio_user.email,
       meta: {
@@ -89,6 +90,13 @@ router.post('/', user, async (req, res) => {
     throw new Error(err)
   }
 
+  // Init action hotkeys (like toggle map etc.)
+  try {
+    await initTeamHotkeys( insertId )
+  } catch(e) {
+    throw new Error(e)
+  }
+
   // try {
   //   await video_helper.addSampleVideo(insertId)
   // } catch(e) {
@@ -119,17 +127,17 @@ router.post('/join', user, async (req, res) => {
   if(join_code) [ team ] = await team_db.teamByJoinCode(join_code.toUpperCase())
   else [ team ] = await team_db.teamByInviteCode(invite_code.toLowerCase())
 
-  
+
   // get all user teams
   let teams = await team_db.userTeams(req.tiimio_user.email)
 
   if(!team) throw new Error('team not found :(')
-  if(teams.find(t => t.id == team.id)) throw new Error(`You belong to ${team.team_name} already!`)  
-  
+  if(teams.find(t => t.id == team.id)) throw new Error(`You belong to ${team.team_name} already!`)
+
   const [{ number_of_users }] = await team_db.numOfUsersInTeam(team.id)
 
   if(number_of_users >= team.users) throw new Error('Teams user limit reached :/')
-  
+
   let isInitialAdmin;
 
   if(!team.initial_admin) isInitialAdmin = false;
@@ -245,8 +253,8 @@ router.put('/:id/joincode', user, async (req, res) => {
   new_teams[i]['join_code'] = code
 
   const token = jwt.sign(
-    { 
-      ...user, 
+    {
+      ...user,
       teams: new_teams
     },
     process.env.SECRET_KEY
