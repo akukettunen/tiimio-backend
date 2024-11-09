@@ -149,6 +149,23 @@ router.put('/:id', user, async (req, res) => {
   res.json(updated)
 })
 
+router.delete('/batch', user, async (req, res) => {
+    if(!req.body.ids) throw new Error('bad request')
+    const team_id = parseInt(req.body.team_id)
+    const ids = req.body.ids 
+
+    for(let id of ids) {
+      const [ folder ] = await folder_db.byId(id)
+      if(!folder?.id) throw new Error('bad request')
+      if(folder.team_id !== team_id) throw new Error('auth error')
+    }
+  
+    inline_is_in_team(team_id, req)
+  
+    await folder_db.batchDeleteById(req.body.ids)
+    res.json({ids: req.body.ids})
+  })
+
 router.delete('/:id', user, async (req, res) => {
   // TODO should delete children also
 

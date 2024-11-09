@@ -72,4 +72,12 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { deleteById, updateTitle, filterTags, filterVideoIds, batchAddFilterParamVideo, teamFilters, addFilter, byId, batchAddFilterParamClip }
+const batchDeleteById = ids => {
+  const placeholders = ids.map(() => '?').join(',');
+  return query(`
+    DELETE FROM filter
+    WHERE id IN (${placeholders})
+  `, [...ids])
+}
+
+module.exports = { batchDeleteById, deleteById, updateTitle, filterTags, filterVideoIds, batchAddFilterParamVideo, teamFilters, addFilter, byId, batchAddFilterParamClip }
