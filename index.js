@@ -52,6 +52,8 @@ const revenuecat = require('./routes/revenuecat')
 const exp = require('./routes/export.js')
 const upload = require('./routes/upload.js')
 const season = require('./routes/season.js')
+const hotkey = require('./routes/hotkey.js')
+const tag_view = require('./routes/tag_view.js')
 
 // rate limiter needs this for usage in heroku
 app.set('trust proxy', 1);
@@ -82,6 +84,8 @@ app.use('/stream', stream)
 app.use('/export', exp)
 app.use('/file', upload)
 app.use('/season', season)
+app.use('/hotkey', hotkey)
+app.use('/tag-view', tag_view)
 
 // limits the amount of requests made from the same ip (500 / 1 min)
 // app.use(limiter);

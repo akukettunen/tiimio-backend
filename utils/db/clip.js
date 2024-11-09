@@ -19,7 +19,7 @@ const postClipGraphics = (Item) => {
 
 const teamClips = (team_id, index = 0, limit = 5) => {
   return query(`
-    SELECT 
+    SELECT
       video.id,
       video.title,
       JSON_ARRAYAGG(
@@ -77,7 +77,7 @@ const clipPointsByClipId = id => {
 
 const videoByClipId = id => {
   return query(`
-    SELECT 
+    SELECT
       *,
       clip.id AS id,
       clip.title as title,
@@ -91,7 +91,7 @@ const videoByClipId = id => {
 
 const gameByClipId = id => {
   return query(`
-    SELECT 
+    SELECT
       *,
       clip.id AS id,
       clip.title as title,
@@ -139,7 +139,7 @@ const folderObjectById = (clip_id, folder_id) => {
 
 const clipTags = id => {
   return query(`
-    SELECT 
+    SELECT
       clip_id,
       tag_id as id,
       group_id,
@@ -169,7 +169,7 @@ const deleteByIds = (ids, team_id) => {
 const gameClips = (id, team_id) => {
   return query(`
     SELECT DISTINCT
-      clip.*, 
+      clip.*,
       COUNT(object_tag.clip_id) as num_of_tags,
       JSON_ARRAYAGG(
         JSON_OBJECT(
@@ -204,14 +204,14 @@ const videoClips = id => {
   id = id.toString()
 
   return query(`
-  SELECT 
+  SELECT
   clip.*,
   COALESCE(tag_aggregates.num_of_tags, 0) AS num_of_tags,
   COALESCE(tag_aggregates.tags, JSON_ARRAY()) AS tags,
   COALESCE(point_aggregates.points, JSON_ARRAY()) AS points
   FROM clip
   LEFT JOIN (
-    SELECT 
+    SELECT
       object_tag.clip_id,
       COUNT(object_tag.clip_id) AS num_of_tags,
       JSON_ARRAYAGG(
@@ -219,7 +219,8 @@ const videoClips = id => {
           'name', tag.tag_name,
           'id', tag.id,
           'main_tag', object_tag.main_tag,
-          'group_id', tag.group_id
+          'group_id', tag.group_id,
+          'map_color', tag.map_color
         )
       ) AS tags
     FROM object_tag
@@ -227,7 +228,7 @@ const videoClips = id => {
     GROUP BY object_tag.clip_id
   ) AS tag_aggregates ON clip.id = tag_aggregates.clip_id
   LEFT JOIN (
-    SELECT 
+    SELECT
       map_point.clip_id,
       JSON_ARRAYAGG(
         JSON_OBJECT(

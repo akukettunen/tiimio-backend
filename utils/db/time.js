@@ -2,7 +2,7 @@ const { query } = require('./index.js')
 
 const byId = id => {
   return query(`
-    SELECT 
+    SELECT
       *,
       time.id as id,
       time.title as title
@@ -65,7 +65,7 @@ const deleteByIds = (ids, team_id) => {
   return query(`
     DELETE time FROM time
     LEFT JOIN video ON video.id = time.video_id
-    WHERE time.id IN (${placeholders}) 
+    WHERE time.id IN (${placeholders})
     AND video.team_id = ?;
   `, [...ids, team_id]);
 }
@@ -94,22 +94,26 @@ const updateTimename = (name, hidden, id) => {
     SET name = ?, hidden = ?
     WHERE id = ?;
   `, [name, hidden, id])
-} 
+}
 
 const batchRemoveTag = (time_id, tag_ids) => {
-  const vals = tag_ids.map(id => {
-    return [id, time_id]
-  })
+  // Create placeholders for each (tag_id, time_id) pair
+  const placeholders = tag_ids.map(() => `(tag_id = ? AND time_id = ?)`).join(' OR ');
 
-  return query(`
+  // Create an array of values to fill the placeholders
+  const values = tag_ids.reduce((acc, tag_id) => [...acc, tag_id, time_id], []);
+
+  const qu = `
     DELETE FROM object_tag
-    WHERE (tag_id, clip_id) IN (?);
-  `, [vals])
+    WHERE ${placeholders};
+  `
+
+  return query(qu, values);
 }
 
 const timeTags = time_id => {
   return query(`
-    SELECT 
+    SELECT
       time_id,
       tag_id as id,
       group_id,
@@ -133,11 +137,17 @@ const teamTimenames = team_id => {
   return query(`
     SELECT * FROM timename
     WHERE team_id = ?
-    ORDER BY 
-      hidden ASC,
+    ORDER BY
       position
     ;
   `, [ team_id ])
+}
+
+const deleteTimename = (id, team_id) => {
+  return query(`
+    DELETE FROM timename
+    WHERE id = ? AND team_id = ?;
+  `, [ id, team_id ])
 }
 
 const batchAddTimename = (team_id, timenameNames) => {
@@ -155,7 +165,7 @@ const teamTimes = (page = 0, itemsPerPage = 15, sortBy = 'video_id', sortDesc = 
   let start = page * itemsPerPage
 
   if(typeof tags != 'object') throw new Error('invalid tags type')
-  tags.forEach(e => { 
+  tags.forEach(e => {
     if(!Number(e) && Number(e) !== 0) {
       throw new Error('invalid tag id')
     }
@@ -218,7 +228,7 @@ const timenameByName = name => {
 }
 
 const teamTotalTimes = (team_id, columns, tags) => {
-  tags.forEach(e => { 
+  tags.forEach(e => {
     if(!Number(e) && Number(e) !== 0) {
       throw new Error('invalid tag id')
     }
@@ -234,8 +244,8 @@ const teamTotalTimes = (team_id, columns, tags) => {
       COUNT(*) OVER () AS amount,
       time.id AS timeid
     FROM timename
-    LEFT JOIN 
-      time_timename 
+    LEFT JOIN
+      time_timename
       ON time_timename.timename_id = timename.id
     RIGHT JOIN time ON time.id = time_timename.time_id
     ${ get_tags }
@@ -291,8 +301,8 @@ const videoTimes = (id, team_id) => {
   id = id.toString()
 
   return query(`
-    SELECT 
-      time.*, 
+    SELECT
+      time.*,
       COUNT(object_tag.time_id) as num_of_tags,
       JSON_ARRAYAGG(
         JSON_OBJECT(
@@ -344,4 +354,4 @@ const putTimeTitle = ({id, title}) => {
   `, [title, id])
 }
 
-module.exports = { deleteByIds, putTimeTitle, editTimenameOrder, updateTimename, batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }
+module.exports = { deleteTimename, deleteByIds, putTimeTitle, editTimenameOrder, updateTimename, batchAddTimename, timenameAverages, timeById, batchRemoveTag, timeAndVideoByTimeId, timeTags, fullById, timenameByName, teamTotalTimes,teamTimes, deleteById, videoTimes, batchAddTag, timeTimenameByTimeId, createTime, batchCreateTimeTimename, teamTimenames, byId, addTimename, timenameById }

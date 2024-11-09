@@ -17,9 +17,9 @@ const express = require('express')
 
 router.get('/team/:team_id', async (req, res) => {
   const { index, limit } = req.query;
-  
+
   inline_is_in_team(req.params.team_id, req)
-  
+
   const videos = await clip_db.teamClips(req.params.team_id, index, limit)
 
   const parsed_videos = videos.map(video => {
@@ -28,7 +28,7 @@ router.get('/team/:team_id', async (req, res) => {
       clips: JSON.parse(video?.clips)
     }
   })
- 
+
   res.json({ videos: parsed_videos })
 })
 
@@ -40,7 +40,7 @@ router.get('/:id/graphics', async (req, res) => {
 router.get('/:id', user, async (req, res) => {
   const [raw_clip] = await clip_db.clipById(req.params.id)
   const clip = await clip_helper.clipById(req.params.id, raw_clip?.game_id)
-  
+
   inline_is_in_team(clip.team_id, req)
 
   res.json(clip)
@@ -81,13 +81,13 @@ router.put('/:clip_id/tag', user, async (req, res) => {
   const current_tags = await clip_db.clipTags(req.params.clip_id)
   const new_tags_ids = req.body.tags
   const current_tags_ids = current_tags.map(t => t.id)
-  
+
   const addIds = new_tags_ids.filter(n => !current_tags_ids.includes(n))
-  const removeIds = 
+  const removeIds =
     current_tags_ids
       .filter(n => !new_tags_ids.includes(n))
       .map(t => `${t}`)
-  
+
   if(addIds?.length) {
     await clip_db.batchAddTag(req.params.clip_id, addIds)
   }
@@ -110,7 +110,7 @@ router.put('/:time_id/tag', user, async (req, res) => {
   const current_tags_ids = current_tags.map(t => t.id)
 
   const addIds = new_tags_ids.filter(n => !current_tags_ids.includes(n))
-  const removeIds = 
+  const removeIds =
     current_tags_ids
       .filter(n => !new_tags_ids.includes(n))
       .map(t => `${t}`)
@@ -130,7 +130,8 @@ router.put('/:time_id/tag', user, async (req, res) => {
 router.post('/', user, async (req, res, next) => {
   const { title, starttime, endtime, video_id, map_color, description, tags, points, leaguewide, team_id, game_id, is_point, main_tag_id } = req.body
   if(team_id) inline_is_in_team(team_id, req)
-  if(!title || (!starttime && starttime !== 0) || !(video_id || (leaguewide || team_id) || (!endtime  && !is_point) ) ) throw new Error('bad request')
+  console.log(req.body)
+  if((!starttime && starttime !== 0) || !(video_id || (leaguewide || team_id) || (!endtime  && !is_point) ) ) throw new Error('bad request')
 
   if(leaguewide && !req.tiimio_user.tiimio_admin) throw new Error('authentication error')
 
@@ -140,7 +141,7 @@ router.post('/', user, async (req, res, next) => {
 
   if(points && points.length) await map_db.addMapPoint(points.map(p => [p.id, undefined, p.x, p.y, p.color, p.style, added.insertId, p.map_base.id, p.end_x, p.end_y]))
   if(tags && tags.length) await clip_db.batchAddTag(added.insertId, tags, main_tag_id)
-  
+
   let clip = await clip_helper.clipById(added.insertId, game_id)
   if(!clip) throw new Error('added clip not found')
 
@@ -165,7 +166,7 @@ router.put('/:id/point', user, async (req, res) => {
 
 router.put('/:id/range', user, async (req, res) => {
   const { starttime, endtime } = req.body;
-  
+
   let [ old_clip ] = await clip_db.clipById(req.params.id)
   inline_is_in_team(old_clip.team_id, req)
 
@@ -177,7 +178,7 @@ router.put('/:id/range', user, async (req, res) => {
     is_point: false,
     clip_id: req.params.id
   })
-  
+
   const [ clip ] = await clip_db.clipById(req.params.id)
 
   res.json(clip)
@@ -192,7 +193,7 @@ router.put('/:id/range', user, async (req, res) => {
 
 //   is_in_team(video.team_id)
 
-  
+
 // })
 
 router.post('/:id/folder/:folder_id', user, async (req, res) => {
@@ -226,7 +227,7 @@ router.post('/:id/export', user, async (req, res) => {
   inline_is_in_team(video.team_id, req)
 
   const result = await axios.post(
-    `${process.env.CLIP_EXPORT_API_BASE}/clip`, 
+    `${process.env.CLIP_EXPORT_API_BASE}/clip`,
     {
       videoUrl: video.mp4_url,
       startTime: starttime,

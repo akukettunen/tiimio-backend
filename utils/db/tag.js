@@ -2,10 +2,10 @@ const { query } = require('./index.js')
 
 const teamGroups = team_id => {
   return query(`
-    SELECT 
+    SELECT
       tag_group.*,
-      JSON_ARRAYAGG( 
-        tag_group_in_join_with.in_join_with 
+      JSON_ARRAYAGG(
+        tag_group_in_join_with.in_join_with
       ) as show_in_join_w_group_tags
     FROM tag_group
     LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
@@ -17,10 +17,10 @@ const teamGroups = team_id => {
 
 const groupById = id => {
   return query(`
-    SELECT 
+    SELECT
       tag_group.*,
-      JSON_ARRAYAGG( 
-        tag_group_in_join_with.in_join_with 
+      JSON_ARRAYAGG(
+        tag_group_in_join_with.in_join_with
       ) as show_in_join_w_group_tags
     FROM tag_group
     LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
@@ -45,10 +45,10 @@ const tagIdByNameAndTeamId = ({ name, team_id }) => {
 
 const leagueGroups = league_id => {
   return query(`
-    SELECT 
+    SELECT
       tag_group.*,
-      JSON_ARRAYAGG( 
-        tag_group_in_join_with.in_join_with 
+      JSON_ARRAYAGG(
+        tag_group_in_join_with.in_join_with
       ) as show_in_join_w_group_tags
     FROM tag_group
     LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
@@ -60,10 +60,10 @@ const leagueGroups = league_id => {
 
 const sportGroups = sport_id => {
   return query(`
-    SELECT 
+    SELECT
       tag_group.*,
-      JSON_ARRAYAGG( 
-        tag_group_in_join_with.in_join_with 
+      JSON_ARRAYAGG(
+        tag_group_in_join_with.in_join_with
       ) as show_in_join_w_group_tags
     FROM tag_group
     LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id
@@ -205,7 +205,7 @@ const groupTags = id => {
 
 const teamTags = team_id => {
   return query(`
-    SELECT original_id, tag.team_id as team_id, tag_name, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey, tag.keep_chosen, tag.archived FROM tag
+    SELECT original_id, tag.team_id as team_id, tag_name, tag.map_color as map_color, tag.position, tag.id AS id, tag_group.one_tag_only AS one_tag_only ,group_id, tag.map_color, tag.hotkey, tag.keep_chosen, tag.archived FROM tag
     LEFT JOIN tag_group ON tag_group.id = tag.group_id
     WHERE tag_group.team_id = ?
     ORDER BY position;
@@ -324,10 +324,10 @@ const createTag = ({ tag_name, group_id, original_id, position, map_color, hotke
 
 const tagGroupById = id => {
   return query(`
-    SELECT 
+    SELECT
       tag_group.*,
-      JSON_ARRAYAGG( 
-        tag_group_in_join_with.in_join_with 
+      JSON_ARRAYAGG(
+        tag_group_in_join_with.in_join_with
       ) as show_in_join_w_group_tags
     FROM tag_group
     LEFT JOIN tag_group_in_join_with ON tag_group_in_join_with.tag_group_id = tag_group.id

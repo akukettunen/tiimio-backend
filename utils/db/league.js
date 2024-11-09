@@ -21,7 +21,7 @@ const updateClub = (id, updates) => {
     fields.push(`${ field } = ?`);
     values.push(updates[ field ]);
   }
-  
+
   values.push(id);
 
   const q = `
@@ -41,7 +41,7 @@ const updateLeague = (id, updates) => {
     fields.push(`${ field } = ?`);
     values.push(updates[ field ]);
   }
-  
+
   values.push(id);
 
   const q = `
@@ -84,11 +84,11 @@ const leagueTeams = id => {
 
 const leagueGames = (id, season_id) => {
   return query(`
-    SELECT 
-      *, 
+    SELECT
+      *,
       league_game.id id,
-      home_club.logo_url home_club_logo_url, 
-      home_club.small_logo_url home_small_club_logo_url, 
+      home_club.logo_url home_club_logo_url,
+      home_club.small_logo_url home_small_club_logo_url,
       away_club.logo_url away_club_logo_url,
       away_club.small_logo_url away_small_club_logo_url,
       home_club.club_name home_club_name,
@@ -147,7 +147,7 @@ const addGameToLeague = game => {
 
 const getLeagueGameById = id => {
   return query(`
-    SELECT 
+    SELECT
       *,
       league_game.id as id,
       home_club.small_logo_url home_club_small_logo_url,
@@ -195,11 +195,11 @@ const getLatestLeagueSeason = id => {
   `, [ id ])
 }
 
-module.exports = { 
+module.exports = {
   getLatestLeagueSeason,
-  getLeagues, 
-  leagueWhereAdmin, 
-  addClubToLeague, 
+  getLeagues,
+  leagueWhereAdmin,
+  addClubToLeague,
   leagueTeamById,
   deleteLeagueTeamById,
   leagueClubs,

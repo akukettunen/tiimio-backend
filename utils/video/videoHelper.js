@@ -28,12 +28,12 @@ const addSampleVideo = async (team_id) => {
     job_id
   })
 
-  await video_db.videoDone({ 
-    thumb_url: "http://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/ebec5338-783e-46b1-a1d9-05bb1a5c03c7/thumbnail_medium.jpg", 
-    lazy_thumb_url: "http://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/ebec5338-783e-46b1-a1d9-05bb1a5c03c7/thumbnail_low.jpg", 
-    job_id: null, 
+  await video_db.videoDone({
+    thumb_url: "http://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/ebec5338-783e-46b1-a1d9-05bb1a5c03c7/thumbnail_medium.jpg",
+    lazy_thumb_url: "http://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/ebec5338-783e-46b1-a1d9-05bb1a5c03c7/thumbnail_low.jpg",
+    job_id: null,
     mp4_url: "https://d3a8wbzbl3mii4.cloudfront.net/ebec5338-783e-46b1-a1d9-05bb1a5c03c7/720p.mp4",
-    mp4_s3_url: "http://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/ebec5338-783e-46b1-a1d9-05bb1a5c03c7/720p.mp4", 
+    mp4_s3_url: "http://tiimio-vid-prod.s3.eu-west-1.amazonaws.com/ebec5338-783e-46b1-a1d9-05bb1a5c03c7/720p.mp4",
     duration: 0,
     duration_ts: 0,
     job_id
@@ -42,7 +42,7 @@ const addSampleVideo = async (team_id) => {
 
 const getVideo = async id => {
   let [ video ] = await video_db.videoById(id)
-  
+
   if(!video) throw new Error('video not found')
   let clips = await clip_db.videoClips(id)
   let times = await timeHelper.videoTimes(id)

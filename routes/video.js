@@ -204,7 +204,7 @@ router.post('/webhook', (req, res) => {
 router.put('/:id', user, async (req, res) => {
   const { team_id, title } =  req.body;
   if(!team_id || !title || !req.params.id) throw new Error('bad request')
-  
+
   inline_is_in_team(team_id, req)
 
   await video_db.updateVideoTitle({
@@ -223,7 +223,7 @@ router.delete('/:id', user, async (req, res) => {
   let [ video ] = await video_db.videoById(req.params.id)
 
   inline_is_in_team(video.team_id, req)
-  
+
   await video_db.deleteById(req.params.id)
   await aws.deleteByFolder(video.s3_key)
 
