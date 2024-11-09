@@ -167,6 +167,22 @@ router.put('/:id', user, async (req, res) => {
   res.json(filter)
 })
 
+router.delete('/filters', user, async (req, res) => {
+  if(!req.body.ids) throw new Error('bad request')
+  const team_id = req.body.team_id
+  inline_is_in_team(team_id, req)
+
+  for(let id of req.body.ids) {
+    const [ filter ] = await filter_db.byId(id)
+    if(!filter?.id) throw new Error('bad request')
+    if(filter.team_id !== team_id) throw new Error('auth error')
+  }
+
+  await filter_db.batchDeleteById(req.body.ids)
+  res.json({ids: req.body.ids})
+})
+
+
 router.delete('/:id', user, async (req, res) => {
   const [ filter ] = await filter_db.byId(req.params.id)
 
