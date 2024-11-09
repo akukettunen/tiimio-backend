@@ -70,4 +70,12 @@ const deleteById = id => {
   `, [id])
 }
 
-module.exports = { editFolderOrder, byTeamIdByParent, byTeamIdRoot, folderClips, byId, byTeamId, addFolder, updateFolder, deleteById }
+const batchDeleteById = ids => {
+  const placeholders = ids.map(() => '?').join(',');
+  return query(`
+  DELETE FROM folder
+  WHERE id IN (${placeholders});
+  `, [...ids])
+}
+
+module.exports = { batchDeleteById, editFolderOrder, byTeamIdByParent, byTeamIdRoot, folderClips, byId, byTeamId, addFolder, updateFolder, deleteById }
